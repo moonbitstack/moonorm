@@ -15,7 +15,7 @@ pub struct MysqlConn {
   tcp : @socket.Tcp
   mut seq : Int
   mut closed : Bool
-  mut server_kind : @moon_mysql.ServerKind
+  mut server_kind : @moonmysql.ServerKind
   // Set while a `MysqlRowStream` is outstanding — the wire is a per-connection
   // pipeline, so issuing a command before the stream drains would read the old
   // result's leftover packets and desync the connection.
@@ -23,12 +23,12 @@ pub struct MysqlConn {
   // How this server reads a string literal. Asked for at connect time rather than
   // assumed: under NO_BACKSLASH_ESCAPES a backslash-escaping writer leaves a
   // value's own quote live, which is an injection.
-  mut quote_mode : @moon_mysql.QuoteMode
+  mut quote_mode : @moonmysql.QuoteMode
 }
 
 ///|
 /// The dialect (MySQL or MariaDB) reported by the server's handshake.
-pub fn MysqlConn::server_kind(self : MysqlConn) -> @moon_mysql.ServerKind {
+pub fn MysqlConn::server_kind(self : MysqlConn) -> @moonmysql.ServerKind {
   self.server_kind
 }
 
@@ -113,7 +113,7 @@ async fn MysqlConn::write_one_packet(
 /// the RSA full-auth path on a cache miss) are handled directly, whether the
 /// server drives them from its default or via an AuthSwitchRequest. A switch to any
 /// other plugin (e.g. client_ed25519, on the README roadmap) raises
-/// [`@moon_mysql.MysqlError::UnsupportedError`].
+/// [`@moonmysql.MysqlError::UnsupportedError`].
 pub async fn MysqlConn::connect(
   host : String,
   port : Int,
@@ -127,9 +127,9 @@ pub async fn MysqlConn::connect(
     tcp,
     seq: 0,
     closed: false,
-    server_kind: @moon_mysql.ServerKind::MySQL,
+    server_kind: @moonmysql.ServerKind::MySQL,
     streaming: false,
-    quote_mode: @moon_mysql.QuoteMode::Backslash,
+    quote_mode: @moonmysql.QuoteMode::Backslash,
   }
   let pw = @utf8.encode(password[:])
   // Close the socket on any handshake failure — a bad-credentials ERR is the
@@ -162,14 +162,14 @@ async fn MysqlConn::learn_quoting(self : MysqlConn) -> Unit {
     _ => ""
   }
   if mode_text.contains("NO_BACKSLASH_ESCAPES") {
-    self.quote_mode = @moon_mysql.QuoteMode::DoubleQuote
+    self.quote_mode = @moonmysql.QuoteMode::DoubleQuote
     return
   }
   // The charsets whose trailing bytes can be 0x5C. Doubling a quote is safe in all
   // of them; escaping with a backslash is not.
   for unsafe_cs in ["gbk", "big5", "sjis", "cp932", "gb18030"] {
     if charset == unsafe_cs {
-      raise @moon_mysql.ProtocolError(
+      raise @moonmysql.ProtocolError(
         "connection charset '" +
         charset +
         "' cannot be escaped safely without NO_BACKSLASH_ESCAPES or prepared statements",
@@ -186,29 +186,29 @@ async fn MysqlConn::do_handshake(
   pw : Bytes,
   database : String,
 ) -> Unit {
-  let handshake = @moon_mysql.parse_handshake(self.read_packet())
+  let handshake = @moonmysql.parse_handshake(self.read_packet())
   self.server_kind = handshake.server_kind
-  let response = @moon_mysql.build_handshake_response(
+  let response = @moonmysql.build_handshake_response(
     handshake, user, pw, database,
   )
   // The handshake response is sequence id 1 (the server's handshake was 0).
   self.write_packet(self.seq + 1, response)
   let auth = self.read_packet()
-  if @moon_mysql.is_err_packet(auth) {
-    raise @moon_mysql.parse_err(auth)
+  if @moonmysql.is_err_packet(auth) {
+    raise @moonmysql.parse_err(auth)
   }
-  if @moon_mysql.is_ok_packet(auth) {
+  if @moonmysql.is_ok_packet(auth) {
     return
   }
   // AuthSwitchRequest (0xFE + body): the server offers a different plugin — answer
   // mysql_native_password directly, or caching_sha2_password / client_ed25519 via
   // their scramble + AuthMoreData exchange.
-  if @moon_mysql.is_auth_switch_request(auth) {
-    let (plugin, new_salt) = @moon_mysql.parse_auth_switch_request(auth)
+  if @moonmysql.is_auth_switch_request(auth) {
+    let (plugin, new_salt) = @moonmysql.parse_auth_switch_request(auth)
     if plugin == "mysql_native_password" || plugin == "" {
       self.write_packet(
         self.seq + 1,
-        @moon_mysql.native_password_scramble(pw, new_salt),
+        @moonmysql.native_password_scramble(pw, new_salt),
       )
       expect_ok_or_err(self.read_packet())
       return
@@ -216,7 +216,7 @@ async fn MysqlConn::do_handshake(
     if plugin == "caching_sha2_password" {
       self.write_packet(
         self.seq + 1,
-        @moon_mysql.caching_sha2_scramble(pw, new_salt),
+        @moonmysql.caching_sha2_scramble(pw, new_salt),
       )
       self.finish_caching_sha2(pw, new_salt, self.read_packet())
       return
@@ -224,15 +224,15 @@ async fn MysqlConn::do_handshake(
     if plugin == "client_ed25519" {
       // MariaDB signs the raw 32-byte nonce (not the NUL-stripped salt) with the
       // password-keyed Ed25519 secret.
-      let nonce = @moon_mysql.parse_ed25519_challenge(auth)
+      let nonce = @moonmysql.parse_ed25519_challenge(auth)
       self.write_packet(
         self.seq + 1,
-        @moon_mysql.mariadb_ed25519_response(pw, nonce),
+        @moonmysql.mariadb_ed25519_response(pw, nonce),
       )
       expect_ok_or_err(self.read_packet())
       return
     }
-    raise @moon_mysql.UnsupportedError(
+    raise @moonmysql.UnsupportedError(
       "server requested auth-switch to '" +
       plugin +
       "'; only mysql_native_password, caching_sha2_password and client_ed25519 are implemented",
@@ -244,7 +244,7 @@ async fn MysqlConn::do_handshake(
     self.finish_caching_sha2(pw, handshake.salt, auth)
     return
   }
-  raise @moon_mysql.UnsupportedError("unexpected packet during authentication")
+  raise @moonmysql.UnsupportedError("unexpected packet during authentication")
 }
 
 ///|
@@ -260,7 +260,7 @@ async fn MysqlConn::finish_caching_sha2(
   more_data : Bytes,
 ) -> Unit {
   guard more_data.length() >= 2 && more_data[0].to_int() == 0x01 else {
-    raise @moon_mysql.ProtocolError("caching_sha2: expected AuthMoreData")
+    raise @moonmysql.ProtocolError("caching_sha2: expected AuthMoreData")
   }
   match more_data[1].to_int() {
     0x03 => expect_ok_or_err(self.read_packet()) // fast auth success
@@ -269,19 +269,19 @@ async fn MysqlConn::finish_caching_sha2(
       self.write_packet(self.seq + 1, b"\x02")
       let key_pkt = self.read_packet()
       guard key_pkt.length() >= 1 && key_pkt[0].to_int() == 0x01 else {
-        raise @moon_mysql.ProtocolError("caching_sha2: expected public key")
+        raise @moonmysql.ProtocolError("caching_sha2: expected public key")
       }
-      let pem = @moon_mysql.bytes_to_string(key_pkt[1:].to_owned())
+      let pem = @moonmysql.bytes_to_string(key_pkt[1:].to_owned())
       let seed = match @env.rand(20) {
         Some(b) => b
-        None => raise @moon_mysql.ProtocolError("no CSPRNG for the OAEP seed")
+        None => raise @moonmysql.ProtocolError("no CSPRNG for the OAEP seed")
       }
-      let token = @moon_mysql.caching_sha2_full_auth_token(pw, nonce, pem, seed)
+      let token = @moonmysql.caching_sha2_full_auth_token(pw, nonce, pem, seed)
       self.write_packet(self.seq + 1, token)
       expect_ok_or_err(self.read_packet())
     }
     other =>
-      raise @moon_mysql.ProtocolError(
+      raise @moonmysql.ProtocolError(
         "caching_sha2: unexpected status " + other.to_string(),
       )
   }
@@ -290,22 +290,22 @@ async fn MysqlConn::finish_caching_sha2(
 ///|
 /// A terminal auth packet must be OK (success) or ERR (raise); anything else is a
 /// protocol violation.
-fn expect_ok_or_err(pkt : Bytes) -> Unit raise @moon_mysql.MysqlError {
-  if @moon_mysql.is_err_packet(pkt) {
-    raise @moon_mysql.parse_err(pkt)
+fn expect_ok_or_err(pkt : Bytes) -> Unit raise @moonmysql.MysqlError {
+  if @moonmysql.is_err_packet(pkt) {
+    raise @moonmysql.parse_err(pkt)
   }
-  if @moon_mysql.is_ok_packet(pkt) {
+  if @moonmysql.is_ok_packet(pkt) {
     return
   }
-  raise @moon_mysql.ProtocolError("unexpected packet after auth")
+  raise @moonmysql.ProtocolError("unexpected packet after auth")
 }
 
 ///|
 /// The outcome of one command: either an OK (no result set) or a materialised
 /// text result set (column definitions plus raw row packets).
 priv enum Outcome {
-  Exec(@moon_mysql.OkPacket)
-  Rows(Array[@moon_mysql.ColumnDef], Array[Bytes])
+  Exec(@moonmysql.OkPacket)
+  Rows(Array[@moonmysql.ColumnDef], Array[Bytes])
 }
 
 ///|
@@ -316,7 +316,7 @@ async fn MysqlConn::command(self : MysqlConn, query_bytes : Bytes) -> Outcome {
     raise @moondb.Closed
   }
   if self.streaming {
-    raise @moon_mysql.ProtocolError(
+    raise @moonmysql.ProtocolError(
       "a query stream is still open on this connection; drain it or call close() before the next command",
     )
   }
@@ -326,37 +326,37 @@ async fn MysqlConn::command(self : MysqlConn, query_bytes : Bytes) -> Outcome {
   // A fresh command always starts at sequence id 0.
   self.write_packet(0, payload.to_bytes())
   let first = self.read_packet()
-  if @moon_mysql.is_err_packet(first) {
-    raise @moon_mysql.parse_err(first)
+  if @moonmysql.is_err_packet(first) {
+    raise @moonmysql.parse_err(first)
   }
-  if @moon_mysql.is_ok_packet(first) {
-    return Exec(@moon_mysql.parse_ok(first))
+  if @moonmysql.is_ok_packet(first) {
+    return Exec(@moonmysql.parse_ok(first))
   }
   if first.length() > 0 && first[0].to_int() == 0xFB {
-    raise @moon_mysql.UnsupportedError("LOCAL INFILE is not supported")
+    raise @moonmysql.UnsupportedError("LOCAL INFILE is not supported")
   }
-  let reader = @moon_mysql.PacketReader::new(first)
+  let reader = @moonmysql.PacketReader::new(first)
   let column_count = reader.lenenc_uint().to_int()
-  let columns : Array[@moon_mysql.ColumnDef] = []
+  let columns : Array[@moonmysql.ColumnDef] = []
   for _ in 0..<column_count {
-    columns.push(@moon_mysql.parse_column_def(self.read_packet()))
+    columns.push(@moonmysql.parse_column_def(self.read_packet()))
   }
   // CLIENT_DEPRECATE_EOF is not negotiated, so an EOF closes the column block.
   let after_columns = self.read_packet()
-  if @moon_mysql.is_err_packet(after_columns) {
-    raise @moon_mysql.parse_err(after_columns)
+  if @moonmysql.is_err_packet(after_columns) {
+    raise @moonmysql.parse_err(after_columns)
   }
   let rows : Array[Bytes] = []
   // If the column-terminator was itself a row (defensive), keep it.
-  if !@moon_mysql.is_eof_packet(after_columns) {
+  if !@moonmysql.is_eof_packet(after_columns) {
     rows.push(after_columns)
   }
   for ;; {
     let p = self.read_packet()
-    if @moon_mysql.is_err_packet(p) {
-      raise @moon_mysql.parse_err(p)
+    if @moonmysql.is_err_packet(p) {
+      raise @moonmysql.parse_err(p)
     }
-    if @moon_mysql.is_eof_packet(p) {
+    if @moonmysql.is_eof_packet(p) {
       break
     }
     rows.push(p)
@@ -373,14 +373,14 @@ pub async fn MysqlConn::execute(
   params : Array[@moondb.Value],
 ) -> @moondb.ExecResult {
   match
-    self.command(@moon_mysql.bind_params(sql, params, mode=self.quote_mode)) {
+    self.command(@moonmysql.bind_params(sql, params, mode=self.quote_mode)) {
     Exec(ok) =>
       @moondb.ExecResult::{
         rows_affected: ok.affected_rows,
         last_insert_id: ok.last_insert_id,
       }
     Rows(_, _) =>
-      raise @moon_mysql.ProtocolError(
+      raise @moonmysql.ProtocolError(
         "execute() was given a row-returning statement; use query()",
       )
   }
@@ -394,9 +394,9 @@ pub async fn MysqlConn::query(
   params : Array[@moondb.Value],
 ) -> Array[@moondb.Row] {
   match
-    self.command(@moon_mysql.bind_params(sql, params, mode=self.quote_mode)) {
+    self.command(@moonmysql.bind_params(sql, params, mode=self.quote_mode)) {
     Rows(columns, row_payloads) =>
-      @moon_mysql.build_text_rows(columns, row_payloads)
+      @moonmysql.build_text_rows(columns, row_payloads)
     Exec(_) => []
   }
 }
@@ -410,7 +410,7 @@ pub async fn MysqlConn::query(
 /// before another statement runs on that connection.
 pub struct MysqlRowStream {
   conn : MysqlConn
-  columns : Array[@moon_mysql.ColumnDef]
+  columns : Array[@moonmysql.ColumnDef]
   mut pending : Bytes?
   mut done : Bool
 }
@@ -428,40 +428,40 @@ pub async fn MysqlConn::query_stream(
     raise @moondb.Closed
   }
   if self.streaming {
-    raise @moon_mysql.ProtocolError(
+    raise @moonmysql.ProtocolError(
       "a query stream is still open on this connection; drain it or call close() first",
     )
   }
   let payload = Buffer()
   payload.write_byte(b'\x03') // COM_QUERY
   payload.write_bytes(
-    @moon_mysql.bind_params(sql, params, mode=self.quote_mode)[:],
+    @moonmysql.bind_params(sql, params, mode=self.quote_mode)[:],
   )
   self.write_packet(0, payload.to_bytes())
   let first = self.read_packet()
-  if @moon_mysql.is_err_packet(first) {
-    raise @moon_mysql.parse_err(first)
+  if @moonmysql.is_err_packet(first) {
+    raise @moonmysql.parse_err(first)
   }
   // OK ⇒ no result set: an already-exhausted stream.
-  if @moon_mysql.is_ok_packet(first) {
+  if @moonmysql.is_ok_packet(first) {
     return { conn: self, columns: [], pending: None, done: true, }
   }
   if first.length() > 0 && first[0].to_int() == 0xFB {
-    raise @moon_mysql.UnsupportedError("LOCAL INFILE is not supported")
+    raise @moonmysql.UnsupportedError("LOCAL INFILE is not supported")
   }
-  let reader = @moon_mysql.PacketReader::new(first)
+  let reader = @moonmysql.PacketReader::new(first)
   let column_count = reader.lenenc_uint().to_int()
-  let columns : Array[@moon_mysql.ColumnDef] = []
+  let columns : Array[@moonmysql.ColumnDef] = []
   for _ in 0..<column_count {
-    columns.push(@moon_mysql.parse_column_def(self.read_packet()))
+    columns.push(@moonmysql.parse_column_def(self.read_packet()))
   }
   let after_columns = self.read_packet()
-  if @moon_mysql.is_err_packet(after_columns) {
-    raise @moon_mysql.parse_err(after_columns)
+  if @moonmysql.is_err_packet(after_columns) {
+    raise @moonmysql.parse_err(after_columns)
   }
   // CLIENT_DEPRECATE_EOF is unset, so an EOF closes the column block; anything else
   // is defensively the first row.
-  let pending = if @moon_mysql.is_eof_packet(after_columns) {
+  let pending = if @moonmysql.is_eof_packet(after_columns) {
     None
   } else {
     Some(after_columns)
@@ -484,15 +484,15 @@ pub async fn MysqlRowStream::next(self : MysqlRowStream) -> @moondb.Row? {
     }
     None => self.conn.read_packet()
   }
-  if @moon_mysql.is_err_packet(packet) {
+  if @moonmysql.is_err_packet(packet) {
     self.finish()
-    raise @moon_mysql.parse_err(packet)
+    raise @moonmysql.parse_err(packet)
   }
-  if @moon_mysql.is_eof_packet(packet) {
+  if @moonmysql.is_eof_packet(packet) {
     self.finish()
     return None
   }
-  Some(@moon_mysql.build_text_rows(self.columns, [packet])[0])
+  Some(@moonmysql.build_text_rows(self.columns, [packet])[0])
 }
 
 ///|
@@ -512,7 +512,7 @@ pub async fn MysqlRowStream::close(self : MysqlRowStream) -> Unit {
   self.pending = None
   for ;; {
     let p = self.conn.read_packet()
-    if @moon_mysql.is_eof_packet(p) || @moon_mysql.is_err_packet(p) {
+    if @moonmysql.is_eof_packet(p) || @moonmysql.is_err_packet(p) {
       break
     }
   }

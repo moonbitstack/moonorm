@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Lfan-ke/moon-mysql"
+package "Lfan-ke/moonmysql"
 
 import {
   "Lfan-ke/moondb",

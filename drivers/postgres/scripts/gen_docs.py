@@ -198,40 +198,40 @@ def esc(t):
     return html.escape(t)
 
 
-REPO = "https://github.com/Lfan-ke/moon-postgres"
+REPO = "https://github.com/moonbitstack/moonorm/tree/master/drivers/postgres"
 
 
 def main():
     HEAD = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            '<title>moon-postgres — MoonBit API</title>'
+            '<title>moonpostgres — MoonBit API</title>'
             '<link rel="preconnect" href="https://fonts.googleapis.com">'
             '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
             '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&'
             'family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">'
             '<style>' + CSS + '</style></head><body>')
 
-    side = ['<aside class="sidebar"><div class="brand"><span class="dot"></span>moon-postgres</div>'
+    side = ['<aside class="sidebar"><div class="brand"><span class="dot"></span>moonpostgres</div>'
             '<p class="brand-sub">MoonBit API reference</p><nav class="side-nav">']
     side += ['<a href="#%s"><span class="at">§</span>%s</a>' % (n, n) for n, _, _ in PKGS]
     side += ['</nav>'
              '<button class="theme-btn" id="theme">◐ toggle theme</button>'
              '<div class="side-foot">'
-             '<a href="%s/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Lfan-ke/moon-postgres/ci.yml?branch=master&label=CI&logo=github"></a>'
-             '<a href="https://mooncakes.io/docs/Lfan-ke/moon-postgres"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-Lfan--ke%%2Fmoon--postgres-1f6feb"></a>'
+             '<a href="%s/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/moonbitstack/moonorm/ci.yml?branch=master&label=CI&logo=github"></a>'
+             '<a href="https://mooncakes.io/docs/Lfan-ke/moonpostgres"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-Lfan--ke%%2Fmoon--postgres-1f6feb"></a>'
              '</div></aside>' % REPO]
 
-    hero = ('<main><header class="hero"><h1>moon-postgres</h1>'
+    hero = ('<main><header class="hero"><h1>moonpostgres</h1>'
             '<p class="tag">A pure-MoonBit PostgreSQL wire-protocol driver (v3) — zero C, like asyncpg. '
             'Speaks StartupMessage, MD5/trust auth, and simple + extended queries over async TCP, '
             'and implements the <code>@moondb.Driver</code> seam.</p>'
             '<div class="badges">'
-            '<a href="%s/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Lfan-ke/moon-postgres/ci.yml?branch=master&label=CI&logo=github"></a>'
+            '<a href="%s/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/moonbitstack/moonorm/ci.yml?branch=master&label=CI&logo=github"></a>'
             '<img alt="pure MoonBit" src="https://img.shields.io/badge/pure-MoonBit-ff6b35">'
             '<a href="%s"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-source-24292f?logo=github"></a>'
             '<img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-3b7bd6"></div>'
-            '<div class="install"><span class="prompt">$</span><code>moon add Lfan-ke/moon-postgres</code>'
-            '<button class="copy" data-copy="moon add Lfan-ke/moon-postgres">copy</button></div>'
+            '<div class="install"><span class="prompt">$</span><code>moon add Lfan-ke/moonpostgres</code>'
+            '<button class="copy" data-copy="moon add Lfan-ke/moonpostgres">copy</button></div>'
             '<div class="note"><h2><span class="spark">✦</span> The async wall</h2>'
             '<p>PostgreSQL is spoken over async TCP, so the real driver is the async <code>PgConn</code> '
             '(asyncpg-shaped: <code>connect</code> → <code>execute</code>/<code>query</code>/'
@@ -251,7 +251,7 @@ def main():
                         % (kind, kind, tint(sig), ('<p class="doc">%s</p>' % prose(doc)) if doc else ''))
         body.append('</section>')
     body.append('<footer>Generated from source <code>///</code> doc-comments · '
-                '<a href="https://mooncakes.io/docs/Lfan-ke/moon-postgres">mooncakes</a> · '
+                '<a href="https://mooncakes.io/docs/Lfan-ke/moonpostgres">mooncakes</a> · '
                 '<a href="%s">GitHub</a> · Apache-2.0 © Leo Cheng</footer>' % REPO)
     body.append('</main></div><script>' + JS + '</script></body></html>')
 

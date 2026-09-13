@@ -1,7 +1,7 @@
 // The execution layer: an explicit `Session` that runs the query builder's
 // statements against any `@moondb.Driver` and hands back typed rows. moonorm owns
 // no driver contract of its own — the seam is `@moondb`, so a `Session` drives a
-// SQLite backend (moon-sqlite), a Postgres backend, or the dependency-free
+// SQLite backend (moonsqlite), a Postgres backend, or the dependency-free
 // `@moondb.MockDriver` interchangeably. Values still travel as bound parameters end
 // to end, so the injection-safety guarantee reaches all the way to the wire.
 
@@ -108,9 +108,9 @@ pub fn Session::fetch(
 /// Stream a raw query's rows through a [`@moondb.Cursor`] instead of materialising
 /// them — the bounded-memory counterpart to [`query`] (SQLAlchemy's
 /// `stream_results`). This seam is synchronous, so only a synchronous driver with
-/// incremental fetch streams lazily here: moon-sqlite steps its prepared statement
+/// incremental fetch streams lazily here: moonsqlite steps its prepared statement
 /// row by row. A wire driver's cursor is async and cannot come through here at all
-/// — moon-postgres implements `@moondb.AsyncDriver` instead, so it never sits
+/// — moonpostgres implements `@moondb.AsyncDriver` instead, so it never sits
 /// behind a `Session`; MySQL's synchronous adapter falls back to a materialised
 /// cursor. For lazy streaming over the wire call `PgConn`/`MysqlConn::query_stream`
 /// directly under an event loop.

@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Lfan-ke/moon-mysql/client"
+package "Lfan-ke/moonmysql/client"
 
 import {
-  "Lfan-ke/moon-mysql",
   "Lfan-ke/moondb",
+  "Lfan-ke/moonmysql",
   "moonbitlang/async/socket",
 }
 
@@ -16,9 +16,9 @@ pub struct MysqlConn {
   tcp : @socket.Tcp
   mut seq : Int
   mut closed : Bool
-  mut server_kind : @moon-mysql.ServerKind
+  mut server_kind : @moonmysql.ServerKind
   mut streaming : Bool
-  mut quote_mode : @moon-mysql.QuoteMode
+  mut quote_mode : @moonmysql.QuoteMode
 }
 pub async fn MysqlConn::begin(Self) -> Unit
 pub fn MysqlConn::close(Self) -> Unit
@@ -28,7 +28,7 @@ pub async fn MysqlConn::execute(Self, String, Array[@moondb.Value]) -> @moondb.E
 pub async fn MysqlConn::query(Self, String, Array[@moondb.Value]) -> Array[@moondb.Row]
 pub async fn MysqlConn::query_stream(Self, String, Array[@moondb.Value]) -> MysqlRowStream
 pub async fn MysqlConn::rollback(Self) -> Unit
-pub fn MysqlConn::server_kind(Self) -> @moon-mysql.ServerKind
+pub fn MysqlConn::server_kind(Self) -> @moonmysql.ServerKind
 
 pub struct MysqlDriver {
   host : String
@@ -42,7 +42,7 @@ pub impl @moondb.Driver for MysqlDriver
 
 pub struct MysqlRowStream {
   conn : MysqlConn
-  columns : Array[@moon-mysql.ColumnDef]
+  columns : Array[@moonmysql.ColumnDef]
   mut pending : Bytes?
   mut done : Bool
 }

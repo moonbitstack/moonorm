@@ -1,7 +1,7 @@
 // Copyright 2026 Leo Cheng
 // SPDX-License-Identifier: Apache-2.0
 
-// The deferred DoD, made real: published moonorm + published moon-sqlite, driven
+// The deferred DoD, made real: published moonorm + published moonsqlite, driven
 // against a genuine SQLite file (not :memory:, not the MockDriver). One test walks
 // the whole stack — versioned migrations up, a Session doing CRUD through a declared
 // Model, a CTE + IN-subquery SELECT, an optimistic-locked update that both succeeds

@@ -8,7 +8,7 @@
 // in. So the engine's real behaviour — apply pending ascending, skip already-applied
 // (idempotent re-run), roll back descending, track the current version — is
 // exercised and mutation-checkable on every backend. Applying migrations against a
-// real SQLite database is covered separately by moon-sqlite's native suite.
+// real SQLite database is covered separately by moonsqlite's native suite.
 
 ///|
 /// A driver that models only the migrations bookkeeping table plus a log of the

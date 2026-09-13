@@ -1,10 +1,10 @@
-name = "Lfan-ke/moon-sqlite"
+name = "Lfan-ke/moonsqlite"
 
-version = "0.2.2"
+version = "0.3.0"
 
 readme = "README.md"
 
-repository = "https://github.com/Lfan-ke/moonorm"
+repository = "https://github.com/moonbitstack/moonorm"
 
 license = "Apache-2.0"
 

@@ -1,10 +1,12 @@
-# moon-postgres
+# moonpostgres
 
 A **pure-MoonBit PostgreSQL driver** — the v3 frontend/backend wire protocol spoken directly over async TCP, with **zero C** and no `libpq`. Like [asyncpg](https://github.com/MagicStack/asyncpg) or [pg8000](https://github.com/tlocke/pg8000), it talks to a real PostgreSQL server itself. `PgConn` implements the [`@moondb.AsyncDriver`](https://mooncakes.io/docs/Lfan-ke/moondb) contract, so a moondb-based stack (e.g. `moonorm`) can sit on top of it.
 
 ```
-moon add Lfan-ke/moon-postgres
+moon add Lfan-ke/moonpostgres
 ```
+
+Previously published as `Lfan-ke/moon-postgres`.
 
 Native-only: the connection layer rides `moonbitlang/async` sockets, which have no JS/wasm backend.
 
@@ -14,7 +16,7 @@ The real driver is the async `PgConn` (asyncpg-shaped), used inside an event loo
 
 ```moonbit
 async fn run() -> Unit raise {
-  let conn = @moon_postgres.PgConn::connect(
+  let conn = @moonpostgres.PgConn::connect(
     "127.0.0.1", 5432, "postgres", "postgres", "test",
   )
   conn.execute("CREATE TABLE hero (id int, name text)", []) |> ignore
@@ -67,7 +69,7 @@ sequenceDiagram
 
 ## Why the driver is async
 
-`@moondb.Driver`'s methods are **synchronous** (`fn execute(...) raise DbError`), which fits an FFI-backed driver like `moon-sqlite` whose C calls block. PostgreSQL is reached over TCP, and MoonBit's only socket stack (`moonbitlang/async`) is **async-only**: an `async fn` cannot be called from a synchronous one, and the runtime exposes no public "run this async thunk to completion" bridge (`with_event_loop` lives in an import-blocked `internal` package). A synchronous method therefore cannot perform a PostgreSQL round trip.
+`@moondb.Driver`'s methods are **synchronous** (`fn execute(...) raise DbError`), which fits an FFI-backed driver like `moonsqlite` whose C calls block. PostgreSQL is reached over TCP, and MoonBit's only socket stack (`moonbitlang/async`) is **async-only**: an `async fn` cannot be called from a synchronous one, and the runtime exposes no public "run this async thunk to completion" bridge (`with_event_loop` lives in an import-blocked `internal` package). A synchronous method therefore cannot perform a PostgreSQL round trip.
 
 That is why moondb has a second seam. **`PgConn` implements [`@moondb.AsyncDriver`]** — the same eight operations as `Driver`, every one of them awaited — and `PgDriver` is now just the connection descriptor you open one from. Use it inside an event loop (`async test` / `async fn main`):
 

@@ -1,4 +1,4 @@
-// moon-sqlite: the native SQLite driver for the moondb interface. It implements
+// moonsqlite: the native SQLite driver for the moondb interface. It implements
 // `@moondb.Driver` over the vendored SQLite amalgamation (in `sqlite/`), so every
 // moondb-based query layer (moonorm and friends) runs on real SQLite. This is the
 // only package in the stack that touches C; it is native-gated for that reason, and

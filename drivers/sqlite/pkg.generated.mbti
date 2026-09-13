@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Lfan-ke/moon-sqlite"
+package "Lfan-ke/moonsqlite"
 
 import {
   "Lfan-ke/moondb",

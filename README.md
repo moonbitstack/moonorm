@@ -4,7 +4,7 @@
 
 **An ORM / SQL toolkit for MoonBit — `← SQLAlchemy / SQLModel`.**
 
-[![Check and Test](https://github.com/Lfan-ke/moonorm/actions/workflows/ci.yml/badge.svg)](https://github.com/Lfan-ke/moonorm/actions/workflows/ci.yml)
+[![Check and Test](https://github.com/moonbitstack/moonorm/actions/workflows/ci.yml/badge.svg)](https://github.com/moonbitstack/moonorm/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 [![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonorm-brightgreen)](https://mooncakes.io/docs/Lfan-ke/moonorm)
 
@@ -12,13 +12,13 @@
 
 `moonorm` is the MoonBit counterpart to SQLAlchemy: the heart of SQLAlchemy Core — a **parameterized, injection-safe query builder** — plus a model/session execution layer. Values are never spliced into the SQL the builder produces: every bound value becomes a `?` placeholder plus an entry in a params list. How far that reaches depends on the driver — SQLite and Postgres bind out-of-band, while the MySQL driver still renders parameters as escaped literals over the text protocol (see its README), so there the safety rests on the escaper matching the server's `sql_mode` rather than on the wire format.
 
-`moonorm` owns **no driver contract of its own**. It is written entirely against the [`moondb`](https://github.com/Lfan-ke/moondb) interface — the standard database-access seam for MoonBit — so it is **pure MoonBit with zero C** and compiles on every backend (`wasm` / `wasm-gc` / `js` / `native`). A concrete backend is a separate package you supply: the native SQLite driver lives in [`moon-sqlite`](https://github.com/Lfan-ke/moon-sqlite), and a `Session` drives any `@moondb.Driver` — including the dependency-free `@moondb.MockDriver` for tests.
+`moonorm` owns **no driver contract of its own**. It is written entirely against the [`moondb`](https://github.com/moonbitstack/moonorm/tree/master/db) interface — the standard database-access seam for MoonBit — so it is **pure MoonBit with zero C** and compiles on every backend (`wasm` / `wasm-gc` / `js` / `native`). A concrete backend is a separate package you supply: the native SQLite driver lives in [`moonsqlite`](https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite), and a `Session` drives any `@moondb.Driver` — including the dependency-free `@moondb.MockDriver` for tests.
 
 > **Imports.** Bound-value constructors (`Int`, `Text`, `Null`, …) are moondb's —
 > the `Value` type is re-exported by moonorm, but you construct values as `@moondb.Int`
 > / `@moondb.Text` (add `moon add Lfan-ke/moondb`). The SQLite driver's package name is
 > hyphenated, so import it under an alias in `moon.pkg.json`
-> (`{"path": "Lfan-ke/moon-sqlite", "alias": "sqlite"}`) and reach it as `@sqlite`.
+> (`{"path": "Lfan-ke/moonsqlite", "alias": "sqlite"}`) and reach it as `@sqlite`.
 
 ## Quickstart
 
@@ -64,7 +64,7 @@ site, never as a silent zero value), so call them inside a function that propaga
 that error:
 
 ```moonbit
-// native target only — moon-sqlite links the vendored amalgamation.
+// native target only — moonsqlite links the vendored amalgamation.
 fn demo() -> Unit raise @moondb.DbError {
   let sess = @moonorm.Session::new(@sqlite.SqliteDriver::open(":memory:"))
   sess.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)", []) |> ignore
@@ -202,11 +202,11 @@ sess.begin_with({ isolation: Some(@moonorm.Serializable), read_only: false }, di
 - **Pure, zero C.** moonorm is written entirely against the `@moondb` seam, so the
   whole library compiles on **every** backend (`wasm` / `wasm-gc` / `js` /
   `native`) and drags no backend behind it. The C lives in one isolated place —
-  [`moon-sqlite`](https://github.com/Lfan-ke/moon-sqlite) — not here. A Postgres
+  [`moonsqlite`](https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite) — not here. A Postgres
   wire-protocol backend and a JS `node:sqlite` backend are next.
 - **Tested against a real driver.** The Session/Model/relationship layer is covered
   on every backend against `@moondb.MockDriver`; real SQL execution is proven end to
-  end in moon-sqlite's native integration tests, which open an actual SQLite database
+  end in moonsqlite's native integration tests, which open an actual SQLite database
   and are mutation-verified (neutering the C bind path turns them red).
 
 ## Subqueries, CTEs & optimistic locking
@@ -275,7 +275,7 @@ Verified across all backends (`wasm`, `wasm-gc`, `js`, `native`) in CI, 0 warnin
 
 ## Roadmap (transliterating SQLAlchemy)
 
-`select` / `insert` / `update` / `delete` with WHERE / ORDER BY / LIMIT / OFFSET, inner/left `JOIN`, `GROUP BY` / `HAVING`, aggregate columns (`count()` / `raw()`), `WITH` CTEs, `IN (subquery)` and `IN (values)` predicates, window functions (`OVER (PARTITION BY … ORDER BY …)`), dialect-aware `RETURNING` and upsert (`ON CONFLICT … DO UPDATE` / `ON DUPLICATE KEY UPDATE`), and a `Table` descriptor are all here — and they **execute** against any `@moondb.Driver` via an explicit `Session` (`add` / `fetch` / `modify` / `remove` / `commit` / `rollback`, optimistic-locked updates, isolation-level and read-only transactions via `begin_with`, depth-tracked nested savepoints via `begin_nested`, plus declarative models — hand-built or `from_fields` from `moonctl`-generated metadata — eager-loaded relationships with N+1-avoiding batch loading, and versioned migrations). Connection pooling lives in [`moondb`](https://github.com/Lfan-ke/moonorm) as `Pool[D]`: idle reuse, a size ceiling, a `pre_ping` health probe that evicts dead connections on acquire, `max_lifetime` recycling, a non-blocking `try_acquire`, and close-all. The native SQLite backend is [`moon-sqlite`](https://github.com/Lfan-ke/moon-sqlite); Postgres and MySQL/MariaDB backends live in [`moon-postgres`](https://github.com/Lfan-ke/moon-postgres) and [`moon-mysql`](https://github.com/Lfan-ke/moon-mysql). Still to come: Alembic-style schema-diff migrations reflected from a live database, and multiple-inheritance / polymorphic mapping.
+`select` / `insert` / `update` / `delete` with WHERE / ORDER BY / LIMIT / OFFSET, inner/left `JOIN`, `GROUP BY` / `HAVING`, aggregate columns (`count()` / `raw()`), `WITH` CTEs, `IN (subquery)` and `IN (values)` predicates, window functions (`OVER (PARTITION BY … ORDER BY …)`), dialect-aware `RETURNING` and upsert (`ON CONFLICT … DO UPDATE` / `ON DUPLICATE KEY UPDATE`), and a `Table` descriptor are all here — and they **execute** against any `@moondb.Driver` via an explicit `Session` (`add` / `fetch` / `modify` / `remove` / `commit` / `rollback`, optimistic-locked updates, isolation-level and read-only transactions via `begin_with`, depth-tracked nested savepoints via `begin_nested`, plus declarative models — hand-built or `from_fields` from `moonctl`-generated metadata — eager-loaded relationships with N+1-avoiding batch loading, and versioned migrations). Connection pooling lives in [`moondb`](https://github.com/moonbitstack/moonorm) as `Pool[D]`: idle reuse, a size ceiling, a `pre_ping` health probe that evicts dead connections on acquire, `max_lifetime` recycling, a non-blocking `try_acquire`, and close-all. The native SQLite backend is [`moonsqlite`](https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite); Postgres and MySQL/MariaDB backends live in [`moonpostgres`](https://github.com/moonbitstack/moonorm/tree/master/drivers/postgres) and [`moonmysql`](https://github.com/moonbitstack/moonorm/tree/master/drivers/mysql). Still to come: Alembic-style schema-diff migrations reflected from a live database, and multiple-inheritance / polymorphic mapping.
 
 ## License
 

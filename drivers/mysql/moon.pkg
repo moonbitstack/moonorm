@@ -1,4 +1,4 @@
-// moon-mysql (root) — the pure, target-portable half of the driver: SHA-1, the
+// moonmysql (root) — the pure, target-portable half of the driver: SHA-1, the
 // MySQL packet codec (length-encoded ints/strings, fixed-width little-endian
 // integers), the handshake parser, the mysql_native_password scramble, and the
 // text-protocol value decoder. No sockets and no async live here, so every byte

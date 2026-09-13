@@ -19,7 +19,7 @@ SECTIONS = [
      "updates (modify_versioned raises LostUpdate on a stale version), and eager "
      "relationship loading including N+1-avoiding batch loads (load_batch / "
      "load_one_batch). moonorm owns no driver contract - the seam is @moondb, so a "
-     "Session drives moon-sqlite, a Postgres backend, or MockDriver."),
+     "Session drives moonsqlite, a Postgres backend, or MockDriver."),
     ("models", "models.mbt", "Models & relationships",
      "The declarative model layer: typed columns and Fields, a Model[T] Row<->record "
      "mapper (built by hand or via from_fields from a field list, the shape moonctl "
@@ -260,7 +260,7 @@ def main():
     side += ['</nav>'
              '<button class="theme-btn" id="theme">◐ toggle theme</button>'
              '<div class="side-foot">'
-             '<a href="https://github.com/Lfan-ke/moonorm/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Lfan-ke/moonorm/ci.yml?branch=master&label=CI&logo=github"></a>'
+             '<a href="https://github.com/moonbitstack/moonorm/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/moonbitstack/moonorm/ci.yml?branch=master&label=CI&logo=github"></a>'
              '<a href="https://mooncakes.io/docs/Lfan-ke/moonorm"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonorm-1f6feb"></a>'
              '</div></aside>']
 
@@ -269,9 +269,9 @@ def main():
             'query builder, the way SQLAlchemy Core is for Python. Bound values become '
             '? placeholders, never spliced into the SQL string.</p>'
             '<div class="badges">'
-            '<a href="https://github.com/Lfan-ke/moonorm/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Lfan-ke/moonorm/ci.yml?branch=master&label=CI&logo=github"></a>'
+            '<a href="https://github.com/moonbitstack/moonorm/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/moonbitstack/moonorm/ci.yml?branch=master&label=CI&logo=github"></a>'
             '<img alt="tests" src="https://img.shields.io/badge/tests-15%20passing%20%2B%20real%20SQLite-0ca678">'
-            '<a href="https://github.com/Lfan-ke/moonorm"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-source-24292f?logo=github"></a>'
+            '<a href="https://github.com/moonbitstack/moonorm"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-source-24292f?logo=github"></a>'
             '<img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-6d5efc"></div>'
             '<div class="install"><span class="prompt">$</span><code>moon add Lfan-ke/moonorm</code>'
             '<button class="copy" data-copy="moon add Lfan-ke/moonorm">copy</button></div>'
@@ -292,7 +292,7 @@ def main():
         body.append('</section>')
     body.append('<footer>Generated from source <code>///</code> doc-comments · '
                 '<a href="https://mooncakes.io/docs/Lfan-ke/moonorm">mooncakes</a> · '
-                '<a href="https://github.com/Lfan-ke/moonorm">GitHub</a> · Apache-2.0 &#169; Leo Cheng</footer>')
+                '<a href="https://github.com/moonbitstack/moonorm">GitHub</a> · Apache-2.0 &#169; Leo Cheng</footer>')
     body.append('</main></div><script>' + JS + '</script></body></html>')
 
     out = ROOT / "docs" / "index.html"

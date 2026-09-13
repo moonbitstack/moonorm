@@ -11,7 +11,7 @@
 /// `next` advances and returns the next row, or `None` once the result is
 /// exhausted; `close` releases the cursor early (a driver holding a server-side
 /// cursor or prepared statement frees it here). A driver with real incremental
-/// fetch — moon-sqlite steps its prepared statement, an async driver reads rows off
+/// fetch — moonsqlite steps its prepared statement, an async driver reads rows off
 /// the wire on demand — returns a live cursor; the default [`Driver::query_stream`]
 /// falls back to an [`ArrayCursor`] over a materialised result, which honours the
 /// same interface without the memory bound.

@@ -184,37 +184,37 @@ def esc(t):
 def main():
     HEAD = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
-            '<title>moon-sqlite — SQLite driver for moondb API</title>'
+            '<title>moonsqlite — SQLite driver for moondb API</title>'
             '<link rel="preconnect" href="https://fonts.googleapis.com">'
             '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
             '<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&'
             'family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">'
             '<style>' + CSS + '</style></head><body>')
 
-    side = ['<aside class="sidebar"><div class="brand"><span class="dot"></span>moon-sqlite</div>'
+    side = ['<aside class="sidebar"><div class="brand"><span class="dot"></span>moonsqlite</div>'
             '<p class="brand-sub">SQLite driver for moondb — API reference</p><nav class="side-nav">']
     side += ['<a href="#%s"><span class="at">§</span>%s</a>' % (sid, title)
              for sid, _, title, _ in SECTIONS]
     side += ['</nav>'
              '<button class="theme-btn" id="theme">◐ toggle theme</button>'
              '<div class="side-foot">'
-             '<a href="https://github.com/Lfan-ke/moon-sqlite/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Lfan-ke/moon-sqlite/ci.yml?branch=master&label=CI&logo=github"></a>'
-             '<a href="https://mooncakes.io/docs/Lfan-ke/moon-sqlite"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoon--sqlite-1f6feb"></a>'
+             '<a href="https://github.com/moonbitstack/moonorm/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/moonbitstack/moonorm/ci.yml?branch=master&label=CI&logo=github"></a>'
+             '<a href="https://mooncakes.io/docs/Lfan-ke/moonsqlite"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonsqlite-1f6feb"></a>'
              '</div></aside>']
 
-    hero = ('<main><header class="hero"><h1>moon-sqlite</h1>'
+    hero = ('<main><header class="hero"><h1>moonsqlite</h1>'
             '<p class="tag">The native SQLite driver for the '
-            '<a href="https://github.com/Lfan-ke/moondb">moondb</a> interface &#8212; it '
+            '<a href="https://github.com/moonbitstack/moonorm/tree/master/db">moondb</a> interface &#8212; it '
             'implements @moondb.Driver over the vendored SQLite amalgamation, so every '
             'moondb-based query layer (moonorm and friends) runs on real SQLite. The only '
             'C-touching package in the stack.</p>'
             '<div class="badges">'
-            '<a href="https://github.com/Lfan-ke/moon-sqlite/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Lfan-ke/moon-sqlite/ci.yml?branch=master&label=CI&logo=github"></a>'
+            '<a href="https://github.com/moonbitstack/moonorm/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/moonbitstack/moonorm/ci.yml?branch=master&label=CI&logo=github"></a>'
             '<img alt="tests" src="https://img.shields.io/badge/tests-7%20native%20%2B%20mutation--verified-0ca678">'
-            '<a href="https://github.com/Lfan-ke/moon-sqlite"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-source-24292f?logo=github"></a>'
+            '<a href="https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-source-24292f?logo=github"></a>'
             '<img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-6d5efc"></div>'
-            '<div class="install"><span class="prompt">$</span><code>moon add Lfan-ke/moon-sqlite</code>'
-            '<button class="copy" data-copy="moon add Lfan-ke/moon-sqlite">copy</button></div>'
+            '<div class="install"><span class="prompt">$</span><code>moon add Lfan-ke/moonsqlite</code>'
+            '<button class="copy" data-copy="moon add Lfan-ke/moonsqlite">copy</button></div>'
             '<div class="contract"><h2><span class="spark">&#10038;</span> The contract at a glance</h2>'
             '<pre>' + tint(CONTRACT) + '</pre></div></header>')
 
@@ -230,8 +230,8 @@ def main():
                         % (kind, kind, tint(sig), ('<p class="doc">%s</p>' % prose(doc)) if doc else ''))
         body.append('</section>')
     body.append('<footer>Generated from source <code>///</code> doc-comments · '
-                '<a href="https://mooncakes.io/docs/Lfan-ke/moon-sqlite">mooncakes</a> · '
-                '<a href="https://github.com/Lfan-ke/moon-sqlite">GitHub</a> · Apache-2.0 &#169; Leo Cheng</footer>')
+                '<a href="https://mooncakes.io/docs/Lfan-ke/moonsqlite">mooncakes</a> · '
+                '<a href="https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite">GitHub</a> · Apache-2.0 &#169; Leo Cheng</footer>')
     body.append('</main></div><script>' + JS + '</script></body></html>')
 
     out = ROOT / "docs" / "index.html"

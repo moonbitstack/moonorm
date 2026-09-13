@@ -1,18 +1,20 @@
 <div align="center">
 
-# moon-sqlite
+# moonsqlite
 
-**The native SQLite driver for [`moondb`](https://github.com/Lfan-ke/moondb) — `impl @moondb.Driver`.**
+**The native SQLite driver for [`moondb`](https://github.com/moonbitstack/moonorm/tree/master/db) — `impl @moondb.Driver`.**
 
-[![Check and Test](https://github.com/Lfan-ke/moon-sqlite/actions/workflows/ci.yml/badge.svg)](https://github.com/Lfan-ke/moon-sqlite/actions/workflows/ci.yml)
+[![Check and Test](https://github.com/moonbitstack/moonorm/actions/workflows/ci.yml/badge.svg)](https://github.com/moonbitstack/moonorm/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoon--sqlite-brightgreen)](https://mooncakes.io/docs/Lfan-ke/moon-sqlite)
+[![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonsqlite-brightgreen)](https://mooncakes.io/docs/Lfan-ke/moonsqlite)
 
 </div>
 
-`moon-sqlite` implements the [`moondb`](https://github.com/Lfan-ke/moondb) `Driver`
+Previously published as `Lfan-ke/moon-sqlite`.
+
+`moonsqlite` implements the [`moondb`](https://github.com/moonbitstack/moonorm/tree/master/db) `Driver`
 interface over the **vendored SQLite amalgamation** (`sqlite/sqlite3.c`, public
-domain). Any moondb-based query layer — [`moonorm`](https://github.com/Lfan-ke/moonorm)'s
+domain). Any moondb-based query layer — [`moonorm`](https://github.com/moonbitstack/moonorm)'s
 `Session`, or a hand-written statement — runs against a real SQLite database through
 it, unchanged.
 
@@ -23,7 +25,7 @@ is native-gated (`supported_targets = "native"`) because it links C.
 ## Quickstart
 
 > The package name is hyphenated, so import it under an alias in `moon.pkg.json`
-> — `{"path": "Lfan-ke/moon-sqlite", "alias": "sqlite"}` — and reach it as `@sqlite`
+> — `{"path": "Lfan-ke/moonsqlite", "alias": "sqlite"}` — and reach it as `@sqlite`
 > (as below). `Value` constructors come from `@moondb` (`moon add Lfan-ke/moondb`).
 
 ```moonbit
@@ -60,7 +62,7 @@ let rows = sess.fetch(@moonorm.select("users").where_("name", "=", @moondb.Text(
 ```
 
 The query builder is dialect-neutral and pure; this driver adapts it to SQLite's
-wire. Because moonorm and moon-sqlite both speak `@moondb`, swapping SQLite for
+wire. Because moonorm and moonsqlite both speak `@moondb`, swapping SQLite for
 another backend is a one-line change at `Session::new`.
 
 ## Design & boundaries (honest)

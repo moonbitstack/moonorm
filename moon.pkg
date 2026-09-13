@@ -4,7 +4,7 @@
 // (injection-safe by construction). moonorm owns no driver contract: it is written
 // entirely against the `@moondb` seam and runs on any `@moondb.Driver`. This whole
 // package is pure MoonBit with zero C and compiles on every backend; a concrete
-// backend (moon-sqlite, moon-postgres, …) is a separate package the caller supplies.
+// backend (moonsqlite, moonpostgres, …) is a separate package the caller supplies.
 
 import {
   "Lfan-ke/moondb",

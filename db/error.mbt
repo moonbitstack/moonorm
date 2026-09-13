@@ -16,7 +16,7 @@
 ///   not exist in the row.
 /// * `Closed`       — the connection or statement was used after `close`.
 ///
-/// Declared `pub(all)` so out-of-tree drivers (moon-postgres, moon-mysql, …) that
+/// Declared `pub(all)` so out-of-tree drivers (moonpostgres, moonmysql, …) that
 /// live in their own packages can *construct and raise* these cases — a plain `pub`
 /// suberror would let them catch a `DbError` but not build one.
 pub(all) suberror DbError {

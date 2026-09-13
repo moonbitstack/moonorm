@@ -51,4 +51,4 @@ on every backend. A few — `13-relationships`, `17-optimistic-lock`, `19-migrat
 fixed-rows result set or a small bookkeeping table) to drive logic the echo store cannot,
 without pulling in a native backend. For real SQL, point a `Session` at a concrete
 `@moondb.Driver` — the native SQLite driver lives in
-[`moon-sqlite`](https://github.com/Lfan-ke/moon-sqlite); the builders are identical.
+[`moonsqlite`](https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite); the builders are identical.

@@ -1,10 +1,10 @@
-name = "Lfan-ke/moon-mysql"
+name = "Lfan-ke/moonmysql"
 
-version = "0.3.1"
+version = "0.4.0"
 
 readme = "README.md"
 
-repository = "https://github.com/Lfan-ke/moonorm"
+repository = "https://github.com/moonbitstack/moonorm"
 
 license = "Apache-2.0"
 

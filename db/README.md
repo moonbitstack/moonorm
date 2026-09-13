@@ -6,9 +6,9 @@
 
 The small, pure contract that sits between database *drivers* and query *layers* — MoonBit's answer to Go's [`database/sql/driver`](https://pkg.go.dev/database/sql/driver) and Python's [DB-API 2.0 (PEP 249)](https://peps.python.org/pep-0249/).
 
-[![Check and Test](https://img.shields.io/github/actions/workflow/status/Lfan-ke/moondb/ci.yml?branch=master&label=CI&logo=github)](https://github.com/Lfan-ke/moondb/actions)
+[![Check and Test](https://img.shields.io/github/actions/workflow/status/moonbitstack/moonorm/ci.yml?branch=master&label=CI&logo=github)](https://github.com/moonbitstack/moonorm/actions)
 [![tests](https://img.shields.io/badge/tests-19%20passing-2ea44f)](#tests)
-[![API docs](https://img.shields.io/badge/docs-lfan--ke.github.io-7c5cff)](https://lfan-ke.github.io/moondb/)
+[![API docs](https://img.shields.io/badge/docs-moonbitstack.github.io-7c5cff)](https://moonbitstack.github.io/moonorm/db/)
 [![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoondb-1f6feb)](https://mooncakes.io/docs/Lfan-ke/moondb)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
@@ -26,9 +26,9 @@ flowchart TD
     end
     IFACE(["<b>@moondb</b><br/><small>Value · Row · ExecResult · DbError · Driver</small>"])
     subgraph drivers["drivers — implement moondb"]
-      SQLITE["moon-sqlite<br/><small>C-FFI, native</small>"]
-      PG["moon-postgres<br/><small>pure-MoonBit wire</small>"]
-      MYSQL["moon-mysql<br/><small>pure-MoonBit wire</small>"]
+      SQLITE["moonsqlite<br/><small>C-FFI, native</small>"]
+      PG["moonpostgres<br/><small>pure-MoonBit wire</small>"]
+      MYSQL["moonmysql<br/><small>pure-MoonBit wire</small>"]
       MOCK["MockDriver<br/><small>in-memory, ships here</small>"]
     end
     APP --> ORM --> IFACE
@@ -89,7 +89,7 @@ test "round-trip through the interface" {
 }
 ```
 
-Swap `MockDriver` for `moon-sqlite` / `moon-postgres` / `moon-mysql` and the same code runs against a real database — that substitutability *is* the point of the package.
+Swap `MockDriver` for `moonsqlite` / `moonpostgres` / `moonmysql` and the same code runs against a real database — that substitutability *is* the point of the package.
 
 ## Implementing a driver
 
@@ -110,7 +110,7 @@ pub impl @moondb.Driver for MyConn with execute(self, sql, params) {
 - **Why raise, not `Result`.** Typed accessors and driver calls `raise DbError` rather than returning `Result[_, DbError]`, so a decode bug or a dropped connection surfaces at the call site instead of being silently swallowed. A caller opts into recovery with `try`/`catch`.
 - **Typed accessors are strict.** `row.int(i)` raises `TypeError` if the cell is not an integer — including when it is `NULL`. Guard nullable columns with `is_null` first. Integer→integer and integer→double conversions are allowed and lossless; `int` narrows an `Int64` and says so.
 - **`DbError` is `pub(all)`.** A plain `pub suberror` can be *caught* from another package but not *constructed* — which would stop out-of-tree drivers from raising it. `pub(all)` opens the constructors.
-- **There are two driver traits, on purpose.** `Driver` is synchronous, which is right for a backend whose calls block in C (moon-sqlite steps a prepared statement and returns). A backend reached over TCP cannot be written that way: MoonBit's only socket stack is async-only, and an `async fn` cannot be called from a synchronous one. A wire driver forced to conform to `Driver` can do nothing but raise from every method — and because `ping` is a *defaulted* method built on `query`, it swallows that raise into `false`, so a `Pool` with `pre_ping` judges every one of its connections permanently unhealthy. `AsyncDriver` is the seam for those backends: the same eight operations, each awaited. It is a peer of `Driver`, not a replacement — a synchronous backend keeps implementing `Driver` and never becomes async. Declaring async methods pulls in no async runtime, so moondb stays dependency-free and still compiles on every backend; only a driver that implements the trait, and a caller that runs it in an event loop, need one.
+- **There are two driver traits, on purpose.** `Driver` is synchronous, which is right for a backend whose calls block in C (moonsqlite steps a prepared statement and returns). A backend reached over TCP cannot be written that way: MoonBit's only socket stack is async-only, and an `async fn` cannot be called from a synchronous one. A wire driver forced to conform to `Driver` can do nothing but raise from every method — and because `ping` is a *defaulted* method built on `query`, it swallows that raise into `false`, so a `Pool` with `pre_ping` judges every one of its connections permanently unhealthy. `AsyncDriver` is the seam for those backends: the same eight operations, each awaited. It is a peer of `Driver`, not a replacement — a synchronous backend keeps implementing `Driver` and never becomes async. Declaring async methods pulls in no async runtime, so moondb stays dependency-free and still compiles on every backend; only a driver that implements the trait, and a caller that runs it in an event loop, need one.
 
 - **The pool is synchronous.** `Pool[D]` reuses idle connections under a size ceiling, evicts a connection that fails its `pre_ping` probe or outlives `max_lifetime` (age measured by an injected `clock`, the way `database/sql` swaps `nowFunc` in tests), and offers a non-blocking `try_acquire`. Because moondb's base contract is sync and the pure backends have no threads, an exhausted `acquire` fails immediately rather than blocking — the `acquire_timeout` is the budget an async driver layers real waiting on top of. `ping` is a default `Driver` method (`SELECT 1`), so every driver gets a health probe for free.
 

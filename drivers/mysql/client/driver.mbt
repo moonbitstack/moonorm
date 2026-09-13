@@ -53,9 +53,9 @@ fn to_db_error(e : Error) -> @moondb.DbError {
     @moondb.ConnectError(m) => @moondb.ConnectError(m)
     @moondb.QueryError(m) => @moondb.QueryError(m)
     @moondb.TypeError(m) => @moondb.TypeError(m)
-    @moon_mysql.ServerError(_, _, _)
-    | @moon_mysql.ProtocolError(_)
-    | @moon_mysql.UnsupportedError(_) => @moondb.QueryError(e.to_string())
+    @moonmysql.ServerError(_, _, _)
+    | @moonmysql.ProtocolError(_)
+    | @moonmysql.UnsupportedError(_) => @moondb.QueryError(e.to_string())
     _ => @moondb.ConnectError(e.to_string())
   }
 }

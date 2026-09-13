@@ -6,7 +6,7 @@
 // bracket. That is enough to exercise the whole execution layer — the SQL the builder
 // emits, the params it binds, the record mapping, and the transaction semantics —
 // without pinning any one backend. Real SQL execution is covered end to end in
-// moon-sqlite's native integration tests.
+// moonsqlite's native integration tests.
 
 ///|
 struct Team {

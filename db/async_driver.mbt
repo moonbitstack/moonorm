@@ -8,7 +8,7 @@
 /// ## Why there are two driver traits
 ///
 /// [`Driver`] is synchronous, which fits a backend whose calls block in C:
-/// moon-sqlite steps a prepared statement and returns. A backend reached over TCP
+/// moonsqlite steps a prepared statement and returns. A backend reached over TCP
 /// cannot be written that way in MoonBit, because the only socket stack
 /// (`moonbitlang/async`) is async-only and an `async fn` cannot be called from a
 /// synchronous one. A wire driver forced to conform to [`Driver`] can therefore do
@@ -30,7 +30,7 @@
 /// dependency-free and still compiles on every backend. Only a driver that
 /// implements it, and a caller that runs it inside an event loop, need the runtime.
 ///
-/// `pub(open)` so out-of-tree drivers (moon-postgres, moon-mysql, …) implement it.
+/// `pub(open)` so out-of-tree drivers (moonpostgres, moonmysql, …) implement it.
 pub(open) trait AsyncDriver {
   /// Run a non-row statement with bound `params`; report rows changed and last id.
   async fn execute(Self, String, Array[Value]) -> ExecResult raise DbError

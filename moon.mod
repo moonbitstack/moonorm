@@ -1,10 +1,10 @@
 name = "Lfan-ke/moonorm"
 
-version = "0.8.0"
+version = "0.8.1"
 
 readme = "README.md"
 
-repository = "https://github.com/Lfan-ke/moonorm"
+repository = "https://github.com/moonbitstack/moonorm"
 
 license = "Apache-2.0"
 

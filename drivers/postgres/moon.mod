@@ -1,10 +1,10 @@
-name = "Lfan-ke/moon-postgres"
+name = "Lfan-ke/moonpostgres"
 
-version = "0.3.0"
+version = "0.4.0"
 
 readme = "README.md"
 
-repository = "https://github.com/Lfan-ke/moonorm"
+repository = "https://github.com/moonbitstack/moonorm"
 
 license = "Apache-2.0"
 

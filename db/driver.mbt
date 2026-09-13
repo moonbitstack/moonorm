@@ -31,8 +31,8 @@
 /// * `close` releases the connection. It does not raise: closing is best-effort and
 ///   idempotent, matching Go's `io.Closer` discipline for connections.
 ///
-/// This trait is `pub(open)` so out-of-tree drivers (moon-sqlite, moon-postgres,
-/// moon-mysql, …) can implement it. A future prepared-`Stmt` handle and a streaming
+/// This trait is `pub(open)` so out-of-tree drivers (moonsqlite, moonpostgres,
+/// moonmysql, …) can implement it. A future prepared-`Stmt` handle and a streaming
 /// `Rows` cursor are noted in the README roadmap; v0.1 fixes exactly the operations
 /// below so the contract everything pins to stays small and stable.
 pub(open) trait Driver {

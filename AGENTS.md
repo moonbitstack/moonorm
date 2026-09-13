@@ -25,7 +25,7 @@ The driver suites talk to real servers and are gated on environment variables �
 
 # Things worth knowing
 
-- The ORM must not reach past `@moondb`. Anything database-specific belongs in a driver; the C lives in `moon-sqlite` only.
+- The ORM must not reach past `@moondb`. Anything database-specific belongs in a driver; the C lives in `moonsqlite` only.
 - Anything holding a connection across a call into user code releases it with `defer`, so it comes back on every path including cancellation. `Session::with_pool` and `Pool::with_conn` are the reference; a `catch` that re-raises is what the compiler's `fragile_catch_all` lint rejects. Where the resource is handed on to the caller on success — the postgres and mysql handshakes — it is `errdefer` instead.
 - `.moonignore` keeps `.git/` out of the published package. `.gitignore` un-ignores `.git*` so that `.gitignore` and `.github` stay tracked, and `moon publish` reads the same file, which is how the whole object database used to end up in the tarball.
 - `integration/` pins published versions on purpose: it is the check that what is on mooncakes.io actually works together, so bump those deliberately after a release, not as part of a feature.
