@@ -1,12 +1,12 @@
 // The moonorm end-to-end suite: it depends on the published moonorm ORM and the
-// published moon-sqlite driver, opens a real SQLite database, and drives the whole
+// published moonsqlite driver, opens a real SQLite database, and drives the whole
 // stack — migrations, Session CRUD, a CTE/subquery SELECT, and an optimistic-locked
-// update — through it. moon-sqlite links the vendored amalgamation, so the package
+// update — through it. moonsqlite links the vendored amalgamation, so the package
 // is native-only.
 supported_targets = "native"
 
 import {
   "Lfan-ke/moonorm" @orm,
-  "Lfan-ke/moon-sqlite" @sqlite,
+  "Lfan-ke/moonsqlite" @sqlite,
   "Lfan-ke/moondb",
 }
