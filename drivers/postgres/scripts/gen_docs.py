@@ -218,7 +218,7 @@ def main():
              '<button class="theme-btn" id="theme">◐ toggle theme</button>'
              '<div class="side-foot">'
              '<a href="%s/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/moonbitstack/moonorm/ci.yml?branch=master&label=CI&logo=github"></a>'
-             '<a href="https://mooncakes.io/docs/Lfan-ke/moonpostgres"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-Lfan--ke%%2Fmoon--postgres-1f6feb"></a>'
+             '<a href="https://mooncakes.io/docs/moonbitstack/moonpostgres"><img alt="mooncakes" src="https://img.shields.io/badge/mooncakes-Lfan--ke%%2Fmoon--postgres-1f6feb"></a>'
              '</div></aside>' % REPO]
 
     hero = ('<main><header class="hero"><h1>moonpostgres</h1>'
@@ -230,8 +230,8 @@ def main():
             '<img alt="pure MoonBit" src="https://img.shields.io/badge/pure-MoonBit-ff6b35">'
             '<a href="%s"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-source-24292f?logo=github"></a>'
             '<img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-3b7bd6"></div>'
-            '<div class="install"><span class="prompt">$</span><code>moon add Lfan-ke/moonpostgres</code>'
-            '<button class="copy" data-copy="moon add Lfan-ke/moonpostgres">copy</button></div>'
+            '<div class="install"><span class="prompt">$</span><code>moon add moonbitstack/moonpostgres</code>'
+            '<button class="copy" data-copy="moon add moonbitstack/moonpostgres">copy</button></div>'
             '<div class="note"><h2><span class="spark">✦</span> The async wall</h2>'
             '<p>PostgreSQL is spoken over async TCP, so the real driver is the async <code>PgConn</code> '
             '(asyncpg-shaped: <code>connect</code> → <code>execute</code>/<code>query</code>/'
@@ -251,7 +251,7 @@ def main():
                         % (kind, kind, tint(sig), ('<p class="doc">%s</p>' % prose(doc)) if doc else ''))
         body.append('</section>')
     body.append('<footer>Generated from source <code>///</code> doc-comments · '
-                '<a href="https://mooncakes.io/docs/Lfan-ke/moonpostgres">mooncakes</a> · '
+                '<a href="https://mooncakes.io/docs/moonbitstack/moonpostgres">mooncakes</a> · '
                 '<a href="%s">GitHub</a> · Apache-2.0 © Leo Cheng</footer>' % REPO)
     body.append('</main></div><script>' + JS + '</script></body></html>')
 

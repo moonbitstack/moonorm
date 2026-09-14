@@ -1,9 +1,9 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Lfan-ke/moonpostgres"
+package "moonbitstack/moonpostgres"
 
 import {
-  "Lfan-ke/moondb",
   "moonbitlang/async/socket",
+  "moonbitstack/moondb",
 }
 
 // Values

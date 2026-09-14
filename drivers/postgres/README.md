@@ -1,9 +1,11 @@
 # moonpostgres
 
-A **pure-MoonBit PostgreSQL driver** — the v3 frontend/backend wire protocol spoken directly over async TCP, with **zero C** and no `libpq`. Like [asyncpg](https://github.com/MagicStack/asyncpg) or [pg8000](https://github.com/tlocke/pg8000), it talks to a real PostgreSQL server itself. `PgConn` implements the [`@moondb.AsyncDriver`](https://mooncakes.io/docs/Lfan-ke/moondb) contract, so a moondb-based stack (e.g. `moonorm`) can sit on top of it.
+> Moved on mooncakes from `Lfan-ke/moonpostgres` to `moonbitstack/moonpostgres`.
+
+A **pure-MoonBit PostgreSQL driver** — the v3 frontend/backend wire protocol spoken directly over async TCP, with **zero C** and no `libpq`. Like [asyncpg](https://github.com/MagicStack/asyncpg) or [pg8000](https://github.com/tlocke/pg8000), it talks to a real PostgreSQL server itself. `PgConn` implements the [`@moondb.AsyncDriver`](https://mooncakes.io/docs/moonbitstack/moondb) contract, so a moondb-based stack (e.g. `moonorm`) can sit on top of it.
 
 ```
-moon add Lfan-ke/moonpostgres
+moon add moonbitstack/moonpostgres
 ```
 
 Previously published as `Lfan-ke/moon-postgres`.
