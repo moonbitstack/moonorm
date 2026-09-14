@@ -1,4 +1,4 @@
-name = "Lfan-ke/moondb"
+name = "moonbitstack/moondb"
 
 version = "0.1.8"
 

@@ -1,5 +1,5 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Lfan-ke/moondb"
+package "moonbitstack/moondb"
 
 // Values
 pub fn drain(&Cursor) -> Array[Row] raise DbError

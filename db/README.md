@@ -9,10 +9,12 @@ The small, pure contract that sits between database *drivers* and query *layers*
 [![Check and Test](https://img.shields.io/github/actions/workflow/status/moonbitstack/moonorm/ci.yml?branch=master&label=CI&logo=github)](https://github.com/moonbitstack/moonorm/actions)
 [![tests](https://img.shields.io/badge/tests-19%20passing-2ea44f)](#tests)
 [![API docs](https://img.shields.io/badge/docs-moonbitstack.github.io-7c5cff)](https://moonbitstack.github.io/moonorm/db/)
-[![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoondb-1f6feb)](https://mooncakes.io/docs/Lfan-ke/moondb)
+[![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoondb-1f6feb)](https://mooncakes.io/docs/moonbitstack/moondb)
 [![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 </div>
+
+> Moved on mooncakes from `Lfan-ke/moondb` to `moonbitstack/moondb`.
 
 `moondb` defines **one thing**: the boundary every SQL database backend implements and every ORM / query builder is written against. It has **zero dependencies**, is **pure** (compiles on wasm, wasm-gc, js, and native alike), and ships a dependency-free reference driver so the whole stack above it can be tested without a database.
 
@@ -43,7 +45,7 @@ The value of a contract package is that the two sides are written by different p
 ## Install
 
 ```bash
-moon add Lfan-ke/moondb
+moon add moonbitstack/moondb
 ```
 
 ## The interface at a glance
