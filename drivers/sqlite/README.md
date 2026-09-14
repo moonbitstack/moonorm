@@ -6,9 +6,11 @@
 
 [![Check and Test](https://github.com/moonbitstack/moonorm/actions/workflows/ci.yml/badge.svg)](https://github.com/moonbitstack/moonorm/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonsqlite-brightgreen)](https://mooncakes.io/docs/Lfan-ke/moonsqlite)
+[![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonsqlite-brightgreen)](https://mooncakes.io/docs/moonbitstack/moonsqlite)
 
 </div>
+
+> Moved on mooncakes from `Lfan-ke/moonsqlite` to `moonbitstack/moonsqlite`.
 
 Previously published as `Lfan-ke/moon-sqlite`.
 
@@ -25,8 +27,8 @@ is native-gated (`supported_targets = "native"`) because it links C.
 ## Quickstart
 
 > The package name is hyphenated, so import it under an alias in `moon.pkg.json`
-> — `{"path": "Lfan-ke/moonsqlite", "alias": "sqlite"}` — and reach it as `@sqlite`
-> (as below). `Value` constructors come from `@moondb` (`moon add Lfan-ke/moondb`).
+> — `{"path": "moonbitstack/moonsqlite", "alias": "sqlite"}` — and reach it as `@sqlite`
+> (as below). `Value` constructors come from `@moondb` (`moon add moonbitstack/moondb`).
 
 ```moonbit
 // native target only — this package links the vendored amalgamation.

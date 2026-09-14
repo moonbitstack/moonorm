@@ -1,4 +1,4 @@
-name = "Lfan-ke/moonsqlite"
+name = "moonbitstack/moonsqlite"
 
 version = "0.3.0"
 
@@ -23,5 +23,5 @@ description = "SQLite driver for moondb/moonorm — native FFI, amalgamation ven
 preferred_target = "native"
 
 import {
-  "Lfan-ke/moondb@0.1.7",
+  "moonbitstack/moondb@0.1.8",
 }
