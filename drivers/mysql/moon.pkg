@@ -5,7 +5,7 @@
 // of the wire format is unit-tested on *all* backends. The socket transport and
 // the @moondb.Driver implementation live in the native-only `client` package.
 import {
-  "Lfan-ke/moondb",
+  "moonbitstack/moondb",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/string",
 }

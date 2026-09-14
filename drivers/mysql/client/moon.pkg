@@ -1,8 +1,8 @@
 supported_targets = "native"
 
 import {
-  "Lfan-ke/moonmysql",
-  "Lfan-ke/moondb",
+  "moonbitstack/moonmysql",
+  "moonbitstack/moondb",
   "moonbitlang/async",
   "moonbitlang/async/socket",
   "moonbitlang/async/io",

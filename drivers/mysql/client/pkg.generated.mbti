@@ -1,10 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Lfan-ke/moonmysql/client"
+package "moonbitstack/moonmysql/client"
 
 import {
-  "Lfan-ke/moondb",
-  "Lfan-ke/moonmysql",
   "moonbitlang/async/socket",
+  "moonbitstack/moondb",
+  "moonbitstack/moonmysql",
 }
 
 // Values

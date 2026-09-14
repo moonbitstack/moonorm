@@ -209,7 +209,7 @@ def main():
     side += ['</nav>'
              '<button class="theme-btn" id="theme">◐ toggle theme</button>'
              '<div class="side-foot">'
-             '<a href="https://mooncakes.io/docs/Lfan-ke/moonmysql"><img alt="mooncakes" '
+             '<a href="https://mooncakes.io/docs/moonbitstack/moonmysql"><img alt="mooncakes" '
              'src="https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonmysql-0a7ea4"></a>'
              '</div></aside>']
 
@@ -223,8 +223,8 @@ def main():
             '<img alt="license" src="https://img.shields.io/badge/license-Apache--2.0-0a7ea4">'
             '<a href="https://github.com/moonbitstack/moonorm/tree/master/drivers/mysql"><img alt="GitHub" '
             'src="https://img.shields.io/badge/GitHub-source-24292f?logo=github"></a></div>'
-            '<div class="install"><span class="prompt">$</span><code>moon add Lfan-ke/moonmysql</code>'
-            '<button class="copy" data-copy="moon add Lfan-ke/moonmysql">copy</button></div>'
+            '<div class="install"><span class="prompt">$</span><code>moon add moonbitstack/moonmysql</code>'
+            '<button class="copy" data-copy="moon add moonbitstack/moonmysql">copy</button></div>'
             '<div class="sample"><div class="bar"><span class="d"></span>roundtrip.mbt</div>'
             '<pre>' + SAMPLE + '</pre></div></header>')
 
@@ -238,7 +238,7 @@ def main():
                         % (kind, kind, tint(sig), ('<p class="doc">%s</p>' % prose(doc)) if doc else ''))
         body.append('</section>')
     body.append('<footer>Generated from source <code>///</code> doc-comments · '
-                '<a href="https://mooncakes.io/docs/Lfan-ke/moonmysql">mooncakes</a> · '
+                '<a href="https://mooncakes.io/docs/moonbitstack/moonmysql">mooncakes</a> · '
                 '<a href="https://github.com/moonbitstack/moonorm/tree/master/drivers/mysql">GitHub</a> · Apache-2.0 © Leo Cheng</footer>')
     body.append('</main></div><script>' + JS + '</script></body></html>')
 

@@ -1,4 +1,4 @@
-name = "Lfan-ke/moonmysql"
+name = "moonbitstack/moonmysql"
 
 version = "0.4.0"
 
@@ -15,6 +15,6 @@ description = "Pure-MoonBit MySQL wire-protocol driver implementing @moondb.Driv
 preferred_target = "native"
 
 import {
-  "Lfan-ke/moondb@0.1.7",
+  "moonbitstack/moondb@0.1.8",
   "moonbitlang/async@0.20.3",
 }

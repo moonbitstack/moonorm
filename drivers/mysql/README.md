@@ -1,5 +1,7 @@
 # moonmysql
 
+> Moved on mooncakes from `Lfan-ke/moonmysql` to `moonbitstack/moonmysql`.
+
 A **pure-MoonBit MySQL / MariaDB wire-protocol driver** — no C, no bindings, like
 PyMySQL. It speaks the MySQL client/server protocol (version 10 handshake,
 `mysql_native_password` auth, the text `COM_QUERY` protocol) directly over a raw
@@ -15,7 +17,7 @@ the shared `mysql_native_password` path. CI runs the *same* integration suite
 against MySQL 8, MariaDB 11, and MariaDB 10.11.
 
 ```
-$ moon add Lfan-ke/moonmysql
+$ moon add moonbitstack/moonmysql
 ```
 
 Previously published as `Lfan-ke/moon-mysql`.
@@ -60,14 +62,14 @@ only the socket transport is native-bound.
 
 ```mermaid
 flowchart TD
-  subgraph root["Lfan-ke/moonmysql · pure codec · target: all backends"]
+  subgraph root["moonbitstack/moonmysql · pure codec · target: all backends"]
     sha1["sha1 — FIPS 180-4"]
     packet["packet — lenenc / fixed-int / string cursor"]
     handshake["handshake — parse + scramble + response"]
     response["response — OK/ERR/EOF + text-row decode"]
     binding["binding — ? placeholders → escaped literals"]
   end
-  subgraph client["Lfan-ke/moonmysql/client · native only"]
+  subgraph client["moonbitstack/moonmysql/client · native only"]
     conn["MysqlConn — async transport over @socket.Tcp"]
     driver["MysqlDriver — sync @moondb.Driver adapter"]
   end
