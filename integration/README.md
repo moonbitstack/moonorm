@@ -1,10 +1,12 @@
 # moonorm end-to-end integration
 
+> Moved on mooncakes from `Lfan-ke/moonorm-integration` to `moonbitstack/moonorm-integration`.
+
 This module isn't published. It exists so CI can prove the published ORM and the
 published SQLite driver work together against a real database, not a mock.
 
-It pins the released packages by version — `Lfan-ke/moonorm`, `Lfan-ke/moonsqlite`,
-`Lfan-ke/moondb` — opens a SQLite file, and runs one test that walks the whole stack:
+It pins the released packages by version — `moonbitstack/moonorm`, `moonbitstack/moonsqlite`,
+`moonbitstack/moondb` — opens a SQLite file, and runs one test that walks the whole stack:
 
 - versioned migrations up (create team, create hero, add an index), then down to zero
 - a `Session` doing CRUD through declared `Model`s
