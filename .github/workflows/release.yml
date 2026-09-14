@@ -1,0 +1,102 @@
+name: Release
+
+# A version tag publishes this module to mooncakes under the moonbitstack account. Publishing is
+# opt-in: the publish job runs only while the organization (or repository) variable
+# MOONCAKES_PUBLISH is 'true', so a tag with the switch off only runs the tests.
+#
+# moonorm holds five modules; the tag prefix names the one to publish (moonorm-v*, moondb-v*,
+# moonsqlite-v*, moonpostgres-v*, moonmysql-v*).
+on:
+  push:
+    tags: ["moonorm-v*", "moondb-v*", "moonsqlite-v*", "moonpostgres-v*", "moonmysql-v*"]
+  workflow_dispatch:
+    inputs:
+      module:
+        description: module to publish
+        required: true
+        type: choice
+        options: [moonorm, moondb, moonsqlite, moonpostgres, moonmysql]
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      dir: ${{ steps.pick.outputs.dir }}
+      target: ${{ steps.pick.outputs.target }}
+    steps:
+      - id: pick
+        env:
+          MODULE: ${{ inputs.module }}
+        run: |
+          name="${MODULE:-${GITHUB_REF_NAME%-v*}}"
+          case "$name" in
+            moonorm) dir=.; target=all ;;
+            moondb) dir=db; target=all ;;
+            moonsqlite) dir=drivers/sqlite; target=native ;;
+            moonpostgres) dir=drivers/postgres; target=all ;;
+            moonmysql) dir=drivers/mysql; target=all ;;
+            *) echo "::error::unknown module $name"; exit 1 ;;
+          esac
+          echo "dir=$dir" >> "$GITHUB_OUTPUT"
+          echo "target=$target" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: resolve
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ needs.resolve.outputs.dir }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: install moonbit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: test
+        run: |
+          moon update
+          moon check --target ${{ needs.resolve.outputs.target }} --deny-warn
+          moon test --target ${{ needs.resolve.outputs.target }}
+
+  publish:
+    needs: [resolve, test]
+    if: vars.MOONCAKES_PUBLISH == 'true'
+    runs-on: ubuntu-latest
+    environment: mooncakes
+    defaults:
+      run:
+        working-directory: ${{ needs.resolve.outputs.dir }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: install moonbit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: check tag and namespace
+        run: |
+          version="$(sed -n 's/^version = "\(.*\)"/\1/p' moon.mod)"
+          grep -q '^name = "moonbitstack/' moon.mod || { echo "::error::moon.mod is not under moonbitstack"; exit 1; }
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "${GITHUB_REF_NAME##*v}" != "$version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match moon.mod version $version"; exit 1
+          fi
+
+      - name: publish
+        env:
+          CREDENTIALS: ${{ secrets.MOONCAKES_CREDENTIALS }}
+        run: |
+          if [ -z "$CREDENTIALS" ]; then echo "::error::MOONCAKES_CREDENTIALS is not available"; exit 1; fi
+          trap 'rm -f ~/.moon/credentials.json' EXIT
+          printf '%s' "$CREDENTIALS" > ~/.moon/credentials.json
+          moon update
+          moon publish
