@@ -10,7 +10,7 @@
 
 </div>
 
-> Moved on mooncakes from `Lfan-ke/moonsqlite` to `moonbitstack/moonsqlite`.
+> Moved on mooncakes from `moonbitstack/moonsqlite` to `moonbitstack/moonsqlite`.
 
 Previously published as `Lfan-ke/moon-sqlite`.
 

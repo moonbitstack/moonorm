@@ -6,9 +6,11 @@
 
 [![Check and Test](https://github.com/moonbitstack/moonorm/actions/workflows/ci.yml/badge.svg)](https://github.com/moonbitstack/moonorm/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonorm-brightgreen)](https://mooncakes.io/docs/Lfan-ke/moonorm)
+[![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonorm-brightgreen)](https://mooncakes.io/docs/moonbitstack/moonorm)
 
 </div>
+
+> Moved on mooncakes from `Lfan-ke/moonorm` to `moonbitstack/moonorm`.
 
 `moonorm` is the MoonBit counterpart to SQLAlchemy: the heart of SQLAlchemy Core — a **parameterized, injection-safe query builder** — plus a model/session execution layer. Values are never spliced into the SQL the builder produces: every bound value becomes a `?` placeholder plus an entry in a params list. How far that reaches depends on the driver — SQLite and Postgres bind out-of-band, while the MySQL driver still renders parameters as escaped literals over the text protocol (see its README), so there the safety rests on the escaper matching the server's `sql_mode` rather than on the wire format.
 
@@ -16,9 +18,9 @@
 
 > **Imports.** Bound-value constructors (`Int`, `Text`, `Null`, …) are moondb's —
 > the `Value` type is re-exported by moonorm, but you construct values as `@moondb.Int`
-> / `@moondb.Text` (add `moon add Lfan-ke/moondb`). The SQLite driver's package name is
+> / `@moondb.Text` (add `moon add moonbitstack/moondb`). The SQLite driver's package name is
 > hyphenated, so import it under an alias in `moon.pkg.json`
-> (`{"path": "Lfan-ke/moonsqlite", "alias": "sqlite"}`) and reach it as `@sqlite`.
+> (`{"path": "moonbitstack/moonsqlite", "alias": "sqlite"}`) and reach it as `@sqlite`.
 
 ## Quickstart
 

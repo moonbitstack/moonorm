@@ -1,4 +1,4 @@
-name = "Lfan-ke/moonorm"
+name = "moonbitstack/moonorm"
 
 version = "0.8.1"
 
@@ -20,5 +20,5 @@ keywords = [
 description = "moonorm — an ORM / SQL toolkit for MoonBit (← SQLAlchemy / SQLModel): a parameterized, injection-safe query builder (select / insert / update / delete)."
 
 import {
-  "Lfan-ke/moondb@0.1.7",
+  "moonbitstack/moondb@0.1.8",
 }

@@ -7,5 +7,5 @@
 // backend (moonsqlite, moonpostgres, …) is a separate package the caller supplies.
 
 import {
-  "Lfan-ke/moondb",
+  "moonbitstack/moondb",
 }

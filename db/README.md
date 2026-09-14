@@ -14,7 +14,7 @@ The small, pure contract that sits between database *drivers* and query *layers*
 
 </div>
 
-> Moved on mooncakes from `Lfan-ke/moondb` to `moonbitstack/moondb`.
+> Moved on mooncakes from `moonbitstack/moondb` to `moonbitstack/moondb`.
 
 `moondb` defines **one thing**: the boundary every SQL database backend implements and every ORM / query builder is written against. It has **zero dependencies**, is **pure** (compiles on wasm, wasm-gc, js, and native alike), and ships a dependency-free reference driver so the whole stack above it can be tested without a database.
 

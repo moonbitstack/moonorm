@@ -1,6 +1,6 @@
 import {
-  "Lfan-ke/moonorm",
-  "Lfan-ke/moondb",
+  "moonbitstack/moonorm",
+  "moonbitstack/moondb",
 }
 
 pkgtype(kind: "executable")
