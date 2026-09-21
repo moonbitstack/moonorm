@@ -26,7 +26,7 @@ test "SHA-256 matches the NIST vectors" {
 test "SCRAM-SHA-256 reproduces the RFC 7677 example vectors" {
   let salt = b"\x5b\x6d\x99\x68\x9d\x12\x35\x8e\xec\xa0\x4b\x14\x12\x36\xfa\x81"
   // base64 self-check on the known salt.
-  assert_eq(base64_encode(salt), "W22ZaJ0SNY7soEsUEjb6gQ==")
+  assert_eq(@base64.encode(salt), "W22ZaJ0SNY7soEsUEjb6gQ==")
   let salted = pbkdf2_sha256(b"pencil", salt, 4096)
   assert_eq(
     hex(salted),
@@ -35,11 +35,11 @@ test "SCRAM-SHA-256 reproduces the RFC 7677 example vectors" {
   let auth = b"n=user,r=rOprNGfwEbeRWgbNEkqO,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096,c=biws,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0"
   // The client proof and the server signature the client sends and verifies.
   assert_eq(
-    base64_encode(scram_client_proof(salted, auth)),
+    @base64.encode(scram_client_proof(salted, auth)),
     "dHzbZapWIk4jUhN+Ute9ytag9zjfMHgsqmmiz7AndVQ=",
   )
   assert_eq(
-    base64_encode(scram_server_signature(salted, auth)),
+    @base64.encode(scram_server_signature(salted, auth)),
     "6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=",
   )
 }
@@ -53,12 +53,12 @@ test "scram_client_final produces the RFC 7677 client-final and server signature
     client_final, "c=biws,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,p=dHzbZapWIk4jUhN+Ute9ytag9zjfMHgsqmmiz7AndVQ=",
   )
   assert_eq(
-    base64_encode(server_sig),
+    @base64.encode(server_sig),
     "6rriTRBi23WpRR/wtup+mMhUZUn/dB5nLTJRsjl95G4=",
   )
   // base64 round-trips the known salt.
   assert_eq(
-    base64_encode(base64_decode("W22ZaJ0SNY7soEsUEjb6gQ==")),
+    @base64.encode(@base64.decode_lossy("W22ZaJ0SNY7soEsUEjb6gQ==")),
     "W22ZaJ0SNY7soEsUEjb6gQ==",
   )
 }

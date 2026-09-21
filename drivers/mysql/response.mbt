@@ -221,3 +221,9 @@ pub fn build_text_rows(
   }
   rows
 }
+
+///|
+pub extend ColumnDef with Eq::{not_equal, equal}
+
+///|
+pub extend OkPacket with Eq::{not_equal, equal}

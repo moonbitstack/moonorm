@@ -43,3 +43,6 @@ pub fn DbError::to_string(self : DbError) -> String {
 pub impl Show for DbError with fn output(self : DbError, logger : &Logger) -> Unit {
   logger.write_string(self.to_string())
 }
+
+///|
+pub extend DbError with Show::{output}

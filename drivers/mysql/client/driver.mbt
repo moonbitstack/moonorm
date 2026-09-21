@@ -132,3 +132,15 @@ pub impl @moondb.Driver for MysqlDriver with fn close(_self : MysqlDriver) -> Un
   // Reconnect-per-call keeps no socket open between calls; nothing to release.
 
 }
+
+///|
+pub extend MysqlDriver with @moondb.Driver::{
+  execute,
+  begin,
+  ping,
+  close,
+  query_stream,
+  commit,
+  query,
+  rollback,
+}

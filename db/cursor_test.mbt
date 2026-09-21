@@ -3,12 +3,12 @@
 
 ///|
 test "query_stream default cursor yields exactly what query returns" {
-  let drv = MockDriver::new()
+  let drv = @moondb.MockDriver::new()
   drv.execute("", [Int(1)]) |> ignore
   drv.execute("", [Int(2)]) |> ignore
   drv.execute("", [Int(3)]) |> ignore
   let materialised = drv.query("", [])
-  let streamed = drain(drv.query_stream("", []))
+  let streamed = @moondb.drain(drv.query_stream("", []))
   assert_eq(streamed.length(), 3)
   assert_eq(streamed.length(), materialised.length())
   let mut same = true
@@ -22,7 +22,7 @@ test "query_stream default cursor yields exactly what query returns" {
 
 ///|
 test "ArrayCursor advances in order then reports exhaustion" {
-  let cur = ArrayCursor::new([
+  let cur = @moondb.ArrayCursor::new([
     { columns: ["c0"], values: [Int(10)], },
     { columns: ["c0"], values: [Int(20)], },
   ])

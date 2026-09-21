@@ -75,3 +75,6 @@ pub fn drain(cursor : &Cursor) -> Array[Row] raise DbError {
   }
   out
 }
+
+///|
+pub extend ArrayCursor with Cursor::{close, next}

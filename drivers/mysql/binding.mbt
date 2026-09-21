@@ -184,3 +184,6 @@ pub fn bind_params(
   }
   out.to_bytes()
 }
+
+///|
+pub extend QuoteMode with Eq::{not_equal, equal}

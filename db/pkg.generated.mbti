@@ -13,6 +13,7 @@ pub(all) suberror DbError {
   TypeError(String)
   Closed
 }
+pub fn DbError::output(Self, &Logger) -> Unit
 pub fn DbError::to_string(Self) -> String
 pub impl Show for DbError
 
@@ -21,20 +22,26 @@ pub struct ArrayCursor {
   rows : Array[Row]
   mut pos : Int
 }
+pub fn ArrayCursor::close(Self) -> Unit
 pub fn ArrayCursor::new(Array[Row]) -> Self
+pub fn ArrayCursor::next(Self) -> Row? raise DbError
 pub impl Cursor for ArrayCursor
 
 pub struct AsyncArrayCursor {
   rows : Array[Row]
   mut pos : Int
 }
+pub async fn AsyncArrayCursor::close(Self) -> Unit
 pub fn AsyncArrayCursor::new(Array[Row]) -> Self
+pub async fn AsyncArrayCursor::next(Self) -> Row? raise DbError
 pub impl AsyncCursor for AsyncArrayCursor
 
 pub(all) struct ExecResult {
   rows_affected : Int64
   last_insert_id : Int64
 } derive(Eq)
+pub fn ExecResult::equal(Self, Self) -> Bool
+pub fn ExecResult::not_equal(Self, Self) -> Bool
 
 pub struct MockDriver {
   mut rows : Array[Row]
@@ -42,9 +49,17 @@ pub struct MockDriver {
   savepoints : Array[Int]
   mut closed : Bool
 }
+pub fn MockDriver::begin(Self) -> Unit raise DbError
+pub fn MockDriver::close(Self) -> Unit
+pub fn MockDriver::commit(Self) -> Unit raise DbError
+pub fn MockDriver::execute(Self, String, Array[Value]) -> ExecResult raise DbError
 pub fn MockDriver::in_transaction(Self) -> Bool
 pub fn MockDriver::is_closed(Self) -> Bool
 pub fn MockDriver::new() -> Self
+pub fn MockDriver::ping(Self) -> Bool
+pub fn MockDriver::query(Self, String, Array[Value]) -> Array[Row] raise DbError
+pub fn MockDriver::query_stream(Self, String, Array[Value]) -> &Cursor raise DbError
+pub fn MockDriver::rollback(Self) -> Unit raise DbError
 pub fn MockDriver::row_count(Self) -> Int
 pub impl Driver for MockDriver
 
@@ -107,8 +122,12 @@ pub(all) enum Value {
   Text(String)
   Blob(Bytes)
 } derive(Eq)
+pub fn Value::equal(Self, Self) -> Bool
 pub fn Value::is_null(Self) -> Bool
 pub fn Value::kind(Self) -> String
+pub fn Value::not_equal(Self, Self) -> Bool
+pub fn Value::output(Self, &Logger) -> Unit
+pub fn Value::to_string(Self) -> String
 pub impl Show for Value
 
 // Type aliases

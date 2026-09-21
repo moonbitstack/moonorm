@@ -17,17 +17,27 @@ fn hex(b : Bytes) -> String {
 
 ///|
 test "sha1: NIST/FIPS vectors" {
-  assert_eq(hex(sha1(b"")), "da39a3ee5e6b4b0d3255bfef95601890afd80709")
-  assert_eq(hex(sha1(b"abc")), "a9993e364706816aba3e25717850c26c9cd0d89d")
   assert_eq(
-    hex(sha1(b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq")),
+    hex(@moonmysql.sha1(b"")),
+    "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+  )
+  assert_eq(
+    hex(@moonmysql.sha1(b"abc")),
+    "a9993e364706816aba3e25717850c26c9cd0d89d",
+  )
+  assert_eq(
+    hex(
+      @moonmysql.sha1(
+        b"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+      ),
+    ),
     "84983e441c3bd26ebaae4aa1f95129e5e54670f1",
   )
   // The 1,000,000-'a' vector would be slow in CI; a 448-bit boundary case
   // exercises the same multi-block path.
   let millions_of_a = Bytes::make(1000, b'a')
   assert_eq(
-    hex(sha1(millions_of_a)),
+    hex(@moonmysql.sha1(millions_of_a)),
     "291e9a6c66994949b57ba5e650361e98fc36b1ba",
   )
 }

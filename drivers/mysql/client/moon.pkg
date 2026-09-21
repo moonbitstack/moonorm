@@ -5,8 +5,10 @@ import {
   "moonbitstack/moondb",
   "moonbitlang/async",
   "moonbitlang/async/socket",
-  "moonbitlang/async/io",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/env",
-  "moonbitlang/core/string",
 }
+
+import {
+  "moonbitlang/core/string",
+} for "test"

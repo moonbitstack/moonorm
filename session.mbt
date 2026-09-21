@@ -721,3 +721,9 @@ pub fn[S, T] Session::load_many(
   let (sql, params) = rel.query(source).build()
   rel.target.map_rows(self.driver.query(sql, params))
 }
+
+///|
+pub extend LostUpdate with Show::{to_string, output}
+
+///|
+pub extend IsolationLevel with Eq::{not_equal, equal}

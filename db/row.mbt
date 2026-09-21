@@ -219,3 +219,6 @@ pub(all) struct ExecResult {
   rows_affected : Int64
   last_insert_id : Int64
 } derive(Eq)
+
+///|
+pub extend ExecResult with Eq::{not_equal, equal}

@@ -71,3 +71,9 @@ pub impl Show for Value with fn output(self : Value, logger : &Logger) -> Unit {
     Blob(v) => logger.write_string("Blob(" + v.length().to_string() + " bytes)")
   }
 }
+
+///|
+pub extend Value with Eq::{not_equal, equal}
+
+///|
+pub extend Value with Show::{to_string, output}

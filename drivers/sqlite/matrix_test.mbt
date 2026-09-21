@@ -9,8 +9,8 @@
 // the vendored amalgamation, so a broken codec path turns it red.
 
 ///|
-fn open_matrix() -> SqliteDriver raise @moondb.DbError {
-  SqliteDriver::open(":memory:")
+fn open_matrix() -> @moonsqlite.SqliteDriver raise @moondb.DbError {
+  @moonsqlite.SqliteDriver::open(":memory:")
 }
 
 ///|

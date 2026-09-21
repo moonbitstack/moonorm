@@ -151,43 +151,6 @@ pub fn pbkdf2_sha256(password : Bytes, salt : Bytes, iterations : Int) -> Bytes 
 }
 
 ///|
-let b64_alphabet : String = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-
-///|
-/// Standard base64 encoding (RFC 4648) with `=` padding.
-pub fn base64_encode(data : Bytes) -> String {
-  let alpha = b64_alphabet.to_array()
-  let sb = StringBuilder()
-  let n = data.length()
-  let mut i = 0
-  while i + 3 <= n {
-    let x = (data[i].to_int() << 16) |
-      (data[i + 1].to_int() << 8) |
-      data[i + 2].to_int()
-    sb.write_char(alpha[(x >> 18) & 0x3f])
-    sb.write_char(alpha[(x >> 12) & 0x3f])
-    sb.write_char(alpha[(x >> 6) & 0x3f])
-    sb.write_char(alpha[x & 0x3f])
-    i = i + 3
-  }
-  let rem = n - i
-  if rem == 1 {
-    let x = data[i].to_int() << 16
-    sb.write_char(alpha[(x >> 18) & 0x3f])
-    sb.write_char(alpha[(x >> 12) & 0x3f])
-    sb.write_char('=')
-    sb.write_char('=')
-  } else if rem == 2 {
-    let x = (data[i].to_int() << 16) | (data[i + 1].to_int() << 8)
-    sb.write_char(alpha[(x >> 18) & 0x3f])
-    sb.write_char(alpha[(x >> 12) & 0x3f])
-    sb.write_char(alpha[(x >> 6) & 0x3f])
-    sb.write_char('=')
-  }
-  sb.to_string()
-}
-
-///|
 /// The SCRAM ClientProof for the AuthMessage: `ClientKey XOR HMAC(StoredKey,
 /// AuthMessage)`, where ClientKey = HMAC(SaltedPassword, "Client Key") and
 /// StoredKey = SHA256(ClientKey) (RFC 5802 §3).
@@ -208,46 +171,6 @@ pub fn scram_client_proof(salted : Bytes, auth_message : Bytes) -> Bytes {
 /// this to authenticate the server (RFC 5802 §3).
 pub fn scram_server_signature(salted : Bytes, auth_message : Bytes) -> Bytes {
   hmac_sha256(hmac_sha256(salted, b"Server Key"), auth_message)
-}
-
-///|
-fn b64_val(c : Int) -> Int {
-  if c >= 65 && c <= 90 {
-    c - 65
-  } else if c >= 97 && c <= 122 {
-    c - 97 + 26
-  } else if c >= 48 && c <= 57 {
-    c - 48 + 52
-  } else if c == 43 {
-    62
-  } else if c == 47 {
-    63
-  } else {
-    -1
-  }
-}
-
-///|
-/// Standard base64 decode (RFC 4648); `=` padding is ignored.
-pub fn base64_decode(s : String) -> Bytes {
-  let chars = s.to_array()
-  let out = Buffer()
-  let mut i = 0
-  while i + 4 <= chars.length() {
-    let c0 = b64_val(chars[i].to_int())
-    let c1 = b64_val(chars[i + 1].to_int())
-    let c2 = b64_val(chars[i + 2].to_int())
-    let c3 = b64_val(chars[i + 3].to_int())
-    out.write_byte(((c0 << 2) | (c1 >> 4)).to_byte())
-    if c2 >= 0 {
-      out.write_byte((((c1 & 0xf) << 4) | (c2 >> 2)).to_byte())
-    }
-    if c3 >= 0 {
-      out.write_byte((((c2 & 0x3) << 6) | c3).to_byte())
-    }
-    i = i + 4
-  }
-  out.to_bytes()
 }
 
 ///|
@@ -294,14 +217,14 @@ pub fn scram_client_final(
       "SCRAM: server nonce does not extend the client nonce",
     )
   }
-  let salted = pbkdf2_sha256(password, base64_decode(salt_b64), iters)
+  let salted = pbkdf2_sha256(password, @base64.decode_lossy(salt_b64), iters)
   let client_final_wo = "c=biws,r=" + nonce
   let auth = @utf8.encode(
     client_first_bare + "," + server_first + "," + client_final_wo,
   )
   let proof = scram_client_proof(salted, auth)
   (
-    client_final_wo + ",p=" + base64_encode(proof),
+    client_final_wo + ",p=" + @base64.encode(proof),
     scram_server_signature(salted, auth),
   )
 }

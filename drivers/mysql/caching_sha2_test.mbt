@@ -4,11 +4,11 @@
 ///|
 test "sha256 matches NIST vectors" {
   assert_eq(
-    hex(sha256(b"")),
+    hex(@moonmysql.sha256(b"")),
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   )
   assert_eq(
-    hex(sha256(b"abc")),
+    hex(@moonmysql.sha256(b"abc")),
     "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
   )
 }
@@ -22,10 +22,10 @@ test "caching_sha2 fast scramble matches the reference vector" {
   }
   let nonce = nb.unsafe_reinterpret_as_bytes()
   assert_eq(
-    hex(caching_sha2_scramble(b"pencil", nonce)),
+    hex(@moonmysql.caching_sha2_scramble(b"pencil", nonce)),
     "804b188f4565dae5617113370e156183c91cfef6dd4714585f8d465f2150b271",
   )
-  assert_eq(caching_sha2_scramble(b"", nonce).length(), 0)
+  assert_eq(@moonmysql.caching_sha2_scramble(b"", nonce).length(), 0)
 }
 
 ///|
@@ -43,7 +43,7 @@ let test_pubkey_pem : String =
 
 ///|
 test "parse_rsa_public_key recovers the modulus and exponent" {
-  let (n, e) = parse_rsa_public_key(test_pubkey_pem)
+  let (n, e) = @moonmysql.parse_rsa_public_key(test_pubkey_pem)
   assert_eq(e, 65537)
   // The modulus is 2048 bits, so exactly 256 octets.
   assert_eq(n.to_octets().length(), 256)
@@ -61,7 +61,7 @@ test "rsa-oaep full-auth token reproduces the reference ciphertext" {
   for i in 0..<20 {
     seed[i] = (100 + i).to_byte()
   }
-  let ct = caching_sha2_full_auth_token(
+  let ct = @moonmysql.caching_sha2_full_auth_token(
     b"pencil",
     nb.unsafe_reinterpret_as_bytes(),
     test_pubkey_pem,

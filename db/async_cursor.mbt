@@ -76,3 +76,6 @@ pub async fn drain_async(cursor : &AsyncCursor) -> Array[Row] raise DbError {
   }
   out
 }
+
+///|
+pub extend AsyncArrayCursor with AsyncCursor::{close, next}

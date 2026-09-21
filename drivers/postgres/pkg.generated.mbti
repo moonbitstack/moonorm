@@ -21,10 +21,6 @@ pub const OID_INT4 : Int = 23
 
 pub const OID_INT8 : Int = 20
 
-pub fn base64_decode(String) -> Bytes
-
-pub fn base64_encode(Bytes) -> String
-
 pub fn build_bind(Array[@moondb.Value]) -> Bytes
 
 pub fn build_describe_portal() -> Bytes
@@ -98,6 +94,7 @@ pub async fn PgConn::close(Self) -> Unit
 pub async fn PgConn::commit(Self) -> Unit raise @moondb.DbError
 pub async fn PgConn::connect(String, Int, String, String, String) -> Self raise @moondb.DbError
 pub async fn PgConn::execute(Self, String, Array[@moondb.Value]) -> @moondb.ExecResult raise @moondb.DbError
+pub async fn PgConn::ping(Self) -> Bool
 pub async fn PgConn::query(Self, String, Array[@moondb.Value]) -> Array[@moondb.Row] raise @moondb.DbError
 pub async fn PgConn::query_stream(Self, String, Array[@moondb.Value]) -> PgRowStream raise @moondb.DbError
 pub async fn PgConn::rollback(Self) -> Unit raise @moondb.DbError

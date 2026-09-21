@@ -6,8 +6,8 @@
 
 ///|
 /// Open an in-memory database or abort the test with SQLite's message.
-fn open_mem() -> SqliteDriver raise @moondb.DbError {
-  SqliteDriver::open(":memory:")
+fn open_mem() -> @moonsqlite.SqliteDriver raise @moondb.DbError {
+  @moonsqlite.SqliteDriver::open(":memory:")
 }
 
 ///|

@@ -101,6 +101,9 @@ pub(all) suberror MysqlError {
   ServerError(Int, String, String)
   UnsupportedError(String)
 } derive(Eq)
+pub fn MysqlError::equal(Self, Self) -> Bool
+pub fn MysqlError::not_equal(Self, Self) -> Bool
+pub fn MysqlError::output(Self, &Logger) -> Unit
 pub fn MysqlError::to_string(Self) -> String
 pub impl Show for MysqlError
 
@@ -111,6 +114,8 @@ pub(all) struct ColumnDef {
   charset : Int
   flags : Int
 } derive(Eq)
+pub fn ColumnDef::equal(Self, Self) -> Bool
+pub fn ColumnDef::not_equal(Self, Self) -> Bool
 
 pub struct Handshake {
   server_version : String
@@ -130,6 +135,8 @@ pub(all) struct OkPacket {
   status : Int
   warnings : Int
 } derive(Eq)
+pub fn OkPacket::equal(Self, Self) -> Bool
+pub fn OkPacket::not_equal(Self, Self) -> Bool
 
 pub struct PacketReader {
   data : Bytes
@@ -152,11 +159,18 @@ pub(all) enum QuoteMode {
   Backslash
   DoubleQuote
 } derive(Eq)
+pub fn QuoteMode::equal(Self, Self) -> Bool
+pub fn QuoteMode::not_equal(Self, Self) -> Bool
 
 pub(all) enum ServerKind {
   MySQL
   MariaDB
 } derive(Eq, @debug.Debug)
+pub fn ServerKind::equal(Self, Self) -> Bool
+pub fn ServerKind::not_equal(Self, Self) -> Bool
+pub fn ServerKind::output(Self, &Logger) -> Unit
+pub fn ServerKind::to_repr(Self) -> @debug.Repr
+pub fn ServerKind::to_string(Self) -> String
 pub impl Show for ServerKind
 
 // Type aliases

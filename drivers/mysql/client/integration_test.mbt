@@ -29,7 +29,7 @@ test "integration: real MySQL CREATE/INSERT/SELECT roundtrip" {
     Some(p) => @string.parse_int(p[:]) catch { _ => 3306 }
     None => 3306
   }
-  let db = MysqlDriver::new(
+  let db = @client.MysqlDriver::new(
     host~,
     port~,
     user=env_or("MYSQL_USER", "root"),
@@ -73,8 +73,8 @@ test "integration: real MySQL CREATE/INSERT/SELECT roundtrip" {
 }
 
 ///|
-fn mysql_driver() -> MysqlDriver {
-  MysqlDriver::new(
+fn mysql_driver() -> @client.MysqlDriver {
+  @client.MysqlDriver::new(
     host=env_or("MYSQL_HOST", "127.0.0.1"),
     port=match @env.get_env_var("MYSQL_PORT") {
       Some(p) => @string.parse_int(p[:]) catch { _ => 3306 }
@@ -152,7 +152,7 @@ test "integration: MySQL error surface — syntax and duplicate key" {
 }
 
 ///|
-/// Real transactions over the async MysqlConn (the sync Driver adapter is
+/// Real transactions over the async @client.MysqlConn (the sync Driver adapter is
 /// autocommit-only). A rolled-back INSERT must vanish; a committed one persists.
 async test "integration: MySQL transactions commit and roll back" {
   guard @env.get_env_var("MYSQL_TEST") is Some(_) else { return }
@@ -160,7 +160,7 @@ async test "integration: MySQL transactions commit and roll back" {
     Some(p) => @string.parse_int(p[:]) catch { _ => 3306 }
     None => 3306
   }
-  let conn = MysqlConn::connect(
+  let conn = @client.MysqlConn::connect(
     env_or("MYSQL_HOST", "127.0.0.1"),
     port,
     env_or("MYSQL_USER", "root"),
@@ -194,7 +194,7 @@ async test "integration: MySQL query_stream yields rows incrementally and matche
     Some(p) => @string.parse_int(p[:]) catch { _ => 3306 }
     None => 3306
   }
-  let conn = MysqlConn::connect(
+  let conn = @client.MysqlConn::connect(
     env_or("MYSQL_HOST", "127.0.0.1"),
     port,
     env_or("MYSQL_USER", "root"),

@@ -6,6 +6,7 @@
 supported_targets = "native"
 
 import {
+  "moonbitstack/moonbase/base64",
   "moonbitstack/moondb",
   "moonbitlang/async",
   "moonbitlang/async/socket",

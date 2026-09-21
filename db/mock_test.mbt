@@ -3,19 +3,19 @@
 
 ///|
 /// A query layer written against the *trait*, not a concrete driver — this is the
-/// shape moonorm's session takes. That it type-checks and runs against `MockDriver`
+/// shape moonorm's session takes. That it type-checks and runs against `@moondb.MockDriver`
 /// is the proof that `Driver` is a usable, dispatchable contract.
 fn[D : Driver] insert_then_read(
   db : D,
-  values : Array[Value],
-) -> Array[Row] raise DbError {
+  values : Array[@moondb.Value],
+) -> Array[@moondb.Row] raise @moondb.DbError {
   db.execute("INSERT INTO t VALUES (?)", values) |> ignore
   db.query("SELECT * FROM t", [])
 }
 
 ///|
 test "driver ping: default probe succeeds on a live connection, fails on a closed one" {
-  let db = MockDriver::new()
+  let db = @moondb.MockDriver::new()
   // The default ping runs `SELECT 1`; the mock answers, so a live connection pings.
   assert_eq(db.ping(), true)
   db.close()
@@ -26,7 +26,7 @@ test "driver ping: default probe succeeds on a live connection, fails on a close
 
 ///|
 test "mock driver stores on execute and echoes on query" {
-  let db = MockDriver::new()
+  let db = @moondb.MockDriver::new()
   let rows = insert_then_read(db, [Int(1), Text("a")])
   assert_eq(rows.length(), 1)
   assert_eq(rows[0].int(0), 1)
@@ -37,7 +37,7 @@ test "mock driver stores on execute and echoes on query" {
 
 ///|
 test "execute reports affected rows and a monotonic last_insert_id" {
-  let db = MockDriver::new()
+  let db = @moondb.MockDriver::new()
   let r1 = db.execute("INSERT", [Int(1)])
   let r2 = db.execute("INSERT", [Int(2)])
   assert_eq(r1.rows_affected, 1L)
@@ -48,7 +48,7 @@ test "execute reports affected rows and a monotonic last_insert_id" {
 
 ///|
 test "rollback restores the pre-begin snapshot, commit keeps changes" {
-  let db = MockDriver::new()
+  let db = @moondb.MockDriver::new()
   db.execute("INSERT", [Int(1)]) |> ignore
   db.begin()
   assert_eq(db.in_transaction(), true)
@@ -68,7 +68,7 @@ test "rollback restores the pre-begin snapshot, commit keeps changes" {
 
 ///|
 test "nested transactions snapshot independently" {
-  let db = MockDriver::new()
+  let db = @moondb.MockDriver::new()
   db.begin()
   db.execute("INSERT", [Int(1)]) |> ignore
   db.begin()
@@ -81,7 +81,7 @@ test "nested transactions snapshot independently" {
 }
 
 ///|
-fn raises_query_error(f : () -> Unit raise DbError) -> Bool {
+fn raises_query_error(f : () -> Unit raise @moondb.DbError) -> Bool {
   try {
     f()
     false
@@ -93,13 +93,13 @@ fn raises_query_error(f : () -> Unit raise DbError) -> Bool {
 
 ///|
 test "commit or rollback with no open transaction raises QueryError" {
-  let db = MockDriver::new()
+  let db = @moondb.MockDriver::new()
   assert_eq(raises_query_error(() => db.commit()), true)
   assert_eq(raises_query_error(() => db.rollback()), true)
 }
 
 ///|
-fn raises_closed(f : () -> Unit raise DbError) -> Bool {
+fn raises_closed(f : () -> Unit raise @moondb.DbError) -> Bool {
   try {
     f()
     false
@@ -111,7 +111,7 @@ fn raises_closed(f : () -> Unit raise DbError) -> Bool {
 
 ///|
 test "operations after close raise Closed, close is idempotent" {
-  let db = MockDriver::new()
+  let db = @moondb.MockDriver::new()
   db.close()
   assert_eq(db.is_closed(), true)
   db.close() // idempotent, does not raise

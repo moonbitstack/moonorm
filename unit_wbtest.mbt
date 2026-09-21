@@ -331,3 +331,15 @@ test "identity: a composite key round-trips through get_by" {
   assert_eq(rejected, "grants has a 2-column primary key, given 1")
   sess.close()
 }
+
+///|
+pub extend Squad with Debug::{to_repr}
+
+///|
+pub extend Squad with Eq::{not_equal, equal}
+
+///|
+pub extend Member with Debug::{to_repr}
+
+///|
+pub extend Member with Eq::{not_equal, equal}

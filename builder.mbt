@@ -1637,3 +1637,27 @@ pub fn Delete::build_for(
   }
   (sql, params)
 }
+
+///|
+pub extend Order with Eq::{not_equal, equal}
+
+///|
+pub extend Nulls with Eq::{not_equal, equal}
+
+///|
+pub extend Dialect with Eq::{not_equal, equal}
+
+///|
+pub extend Source with AsSource::{to_source}
+
+///|
+pub extend LockMode with Debug::{to_repr}
+
+///|
+pub extend LockMode with Eq::{not_equal, equal}
+
+///|
+pub extend LockClause with Debug::{to_repr}
+
+///|
+pub extend LockClause with Eq::{not_equal, equal}

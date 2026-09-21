@@ -49,6 +49,8 @@ pub fn update(String) -> Update
 pub(all) suberror LostUpdate {
   LostUpdate(String)
 }
+pub fn LostUpdate::output(Self, &Logger) -> Unit
+pub fn LostUpdate::to_string(Self) -> String
 pub impl Show for LostUpdate
 
 // Types and methods
@@ -75,6 +77,8 @@ pub(all) enum ColumnDiff {
   Removed(String)
   TypeChanged(name~ : String, from~ : ColumnType, to~ : ColumnType)
 } derive(Eq)
+pub fn ColumnDiff::equal(Self, Self) -> Bool
+pub fn ColumnDiff::not_equal(Self, Self) -> Bool
 
 pub(all) enum ColumnType {
   IntType
@@ -90,6 +94,8 @@ pub(all) enum ColumnType {
   UuidType
   JsonType
 } derive(Eq)
+pub fn ColumnType::equal(Self, Self) -> Bool
+pub fn ColumnType::not_equal(Self, Self) -> Bool
 pub fn ColumnType::sql_for(Self, Dialect) -> String
 
 type Cond
@@ -117,6 +123,8 @@ pub(all) enum Dialect {
   Postgres
   Mysql
 } derive(Eq)
+pub fn Dialect::equal(Self, Self) -> Bool
+pub fn Dialect::not_equal(Self, Self) -> Bool
 
 pub struct Field[T] {
   column : Column
@@ -149,7 +157,9 @@ pub(all) enum IsolationLevel {
   RepeatableRead
   Serializable
 } derive(Eq)
+pub fn IsolationLevel::equal(Self, Self) -> Bool
 pub fn IsolationLevel::keyword(Self) -> String
+pub fn IsolationLevel::not_equal(Self, Self) -> Bool
 
 type JoinClause
 
@@ -159,11 +169,17 @@ pub(all) struct LockClause {
   nowait : Bool
   skip_locked : Bool
 } derive(Eq, @debug.Debug)
+pub fn LockClause::equal(Self, Self) -> Bool
+pub fn LockClause::not_equal(Self, Self) -> Bool
+pub fn LockClause::to_repr(Self) -> @debug.Repr
 
 pub(all) enum LockMode {
   ForUpdate
   ForShare
 } derive(Eq, @debug.Debug)
+pub fn LockMode::equal(Self, Self) -> Bool
+pub fn LockMode::not_equal(Self, Self) -> Bool
+pub fn LockMode::to_repr(Self) -> @debug.Repr
 
 pub struct ManyToMany[S, T] {
   target : Model[T]
@@ -218,11 +234,15 @@ pub(all) enum Nulls {
   First
   Last
 } derive(Eq)
+pub fn Nulls::equal(Self, Self) -> Bool
+pub fn Nulls::not_equal(Self, Self) -> Bool
 
 pub(all) enum Order {
   Asc
   Desc
 } derive(Eq)
+pub fn Order::equal(Self, Self) -> Bool
+pub fn Order::not_equal(Self, Self) -> Bool
 
 type OrderTerm
 
@@ -376,6 +396,7 @@ pub(all) enum Source {
   Alias(Source, String)
   Lateral(Source)
 }
+pub fn Source::to_source(Self) -> Self
 pub impl AsSource for Source
 
 pub(all) struct Table {

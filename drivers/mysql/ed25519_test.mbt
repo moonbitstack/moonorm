@@ -4,7 +4,7 @@
 ///|
 test "sha512 matches the NIST 'abc' vector" {
   assert_eq(
-    hex(sha512(b"abc")),
+    hex(@moonmysql.sha512(b"abc")),
     "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f",
   )
 }
@@ -18,7 +18,7 @@ test "mariadb client_ed25519 signs the challenge to the reference vector" {
   for i in 0..<32 {
     scr[i] = i.to_byte()
   }
-  let sig = mariadb_ed25519_response(
+  let sig = @moonmysql.mariadb_ed25519_response(
     b"pencil",
     scr.unsafe_reinterpret_as_bytes(),
   )
@@ -29,7 +29,12 @@ test "mariadb client_ed25519 signs the challenge to the reference vector" {
   // ed25519 signs unconditionally: an empty password still produces a valid
   // 64-byte signature (SHA-512("") expansion), cross-verified by `cryptography`.
   assert_eq(
-    hex(mariadb_ed25519_response(b"", scr.unsafe_reinterpret_as_bytes())),
+    hex(
+      @moonmysql.mariadb_ed25519_response(
+        b"",
+        scr.unsafe_reinterpret_as_bytes(),
+      ),
+    ),
     "1e7e2c09c0c0e5f755a202872d95c85c4b14d23a888e9c40a0e9323e1ed28dd4aee4a8197c2d2ca26942bf6496d61c60c63661959ab57706eb0bfda05749ad0f",
   )
 }

@@ -373,3 +373,27 @@ test "begin_with: SET TRANSACTION lands after BEGIN on Postgres, before it on My
   Session::new(my).begin_with(opts, dialect=Mysql)
   assert_eq(my.log, ["SET TRANSACTION ISOLATION LEVEL SERIALIZABLE", "BEGIN"])
 }
+
+///|
+pub extend Author with Debug::{to_repr}
+
+///|
+pub extend Author with Eq::{not_equal, equal}
+
+///|
+pub extend Book with Debug::{to_repr}
+
+///|
+pub extend Book with Eq::{not_equal, equal}
+
+///|
+pub extend SpyDriver with @moondb.Driver::{
+  execute,
+  begin,
+  ping,
+  close,
+  query_stream,
+  commit,
+  query,
+  rollback,
+}

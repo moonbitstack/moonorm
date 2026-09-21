@@ -252,3 +252,18 @@ pub impl @moondb.Driver for SqliteDriver with fn close(self) {
     self.closed = true
   }
 }
+
+///|
+pub extend SqliteDriver with @moondb.Driver::{
+  execute,
+  begin,
+  ping,
+  close,
+  query_stream,
+  commit,
+  query,
+  rollback,
+}
+
+///|
+pub extend SqliteCursor with @moondb.Cursor::{close, next}

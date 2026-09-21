@@ -31,52 +31,6 @@ pub fn caching_sha2_scramble(password : Bytes, nonce : Bytes) -> Bytes {
 }
 
 ///|
-fn b64_val(c : Int) -> Int {
-  if c >= 65 && c <= 90 {
-    c - 65
-  } else if c >= 97 && c <= 122 {
-    c - 97 + 26
-  } else if c >= 48 && c <= 57 {
-    c - 48 + 52
-  } else if c == 43 {
-    62
-  } else if c == 47 {
-    63
-  } else {
-    -1
-  }
-}
-
-///|
-/// Decode base64 (RFC 4648), skipping any non-alphabet bytes (newlines in PEM).
-fn base64_decode(s : String) -> Bytes {
-  let vals = []
-  for c in s {
-    let v = b64_val(c.to_int())
-    if v >= 0 {
-      vals.push(v)
-    }
-  }
-  let out = Buffer()
-  let mut i = 0
-  while i + 2 <= vals.length() {
-    let c0 = vals[i]
-    let c1 = vals[i + 1]
-    out.write_byte(((c0 << 2) | (c1 >> 4)).to_byte())
-    if i + 3 <= vals.length() {
-      let c2 = vals[i + 2]
-      out.write_byte((((c1 & 0xf) << 4) | (c2 >> 2)).to_byte())
-      if i + 4 <= vals.length() {
-        let c3 = vals[i + 3]
-        out.write_byte((((c2 & 0x3) << 6) | c3).to_byte())
-      }
-    }
-    i = i + 4
-  }
-  out.to_bytes()
-}
-
-///|
 /// A DER cursor over a byte string, enough of X.690 to walk a SubjectPublicKeyInfo.
 priv struct DerReader {
   data : Bytes
@@ -142,7 +96,7 @@ pub fn parse_rsa_public_key(pem : String) -> (BigInt, BigInt) raise MysqlError {
       body.write_string(line.to_owned())
     }
   }
-  let der = base64_decode(body.to_string())
+  let der = @base64.decode_lossy(body.to_string())
   let r = DerReader::{ data: der, pos: 0, }
   r.expect(0x30) |> ignore // outer SEQUENCE
   let alg_len = r.expect(0x30) // AlgorithmIdentifier SEQUENCE

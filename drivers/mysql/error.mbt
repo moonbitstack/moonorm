@@ -35,3 +35,9 @@ pub fn MysqlError::to_string(self : MysqlError) -> String {
 pub impl Show for MysqlError with fn output(self : MysqlError, logger : &Logger) -> Unit {
   logger.write_string(self.to_string())
 }
+
+///|
+pub extend MysqlError with Eq::{not_equal, equal}
+
+///|
+pub extend MysqlError with Show::{output}

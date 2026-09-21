@@ -37,7 +37,15 @@ pub struct MysqlDriver {
   password : String
   database : String
 }
+pub fn MysqlDriver::begin(Self) -> Unit raise @moondb.DbError
+pub fn MysqlDriver::close(Self) -> Unit
+pub fn MysqlDriver::commit(Self) -> Unit raise @moondb.DbError
+pub fn MysqlDriver::execute(Self, String, Array[@moondb.Value]) -> @moondb.ExecResult raise @moondb.DbError
 pub fn MysqlDriver::new(user~ : String, password? : String, database? : String, host? : String, port? : Int) -> Self
+pub fn MysqlDriver::ping(Self) -> Bool
+pub fn MysqlDriver::query(Self, String, Array[@moondb.Value]) -> Array[@moondb.Row] raise @moondb.DbError
+pub fn MysqlDriver::query_stream(Self, String, Array[@moondb.Value]) -> &@moondb.Cursor raise @moondb.DbError
+pub fn MysqlDriver::rollback(Self) -> Unit raise @moondb.DbError
 pub impl @moondb.Driver for MysqlDriver
 
 pub struct MysqlRowStream {

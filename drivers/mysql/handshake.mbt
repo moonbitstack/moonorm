@@ -298,3 +298,12 @@ pub fn parse_auth_switch_request(
   }
   (plugin, salt)
 }
+
+///|
+pub extend ServerKind with Debug::{to_repr}
+
+///|
+pub extend ServerKind with Eq::{not_equal, equal}
+
+///|
+pub extend ServerKind with Show::{to_string, output}

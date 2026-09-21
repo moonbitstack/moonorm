@@ -224,3 +224,15 @@ test "session stream: raw and typed cursors yield the same records as the buffer
   assert_eq(got, [{ id: 1, name: "avengers", }, { id: 2, name: "x-men", }])
   sess.close()
 }
+
+///|
+pub extend Team with Debug::{to_repr}
+
+///|
+pub extend Team with Eq::{not_equal, equal}
+
+///|
+pub extend Hero with Debug::{to_repr}
+
+///|
+pub extend Hero with Eq::{not_equal, equal}

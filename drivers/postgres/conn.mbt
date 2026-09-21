@@ -159,7 +159,7 @@ async fn PgConn::run_sasl(
     Some(b) => b
     None => raise @moondb.ConnectError("no CSPRNG for the SCRAM client nonce")
   }
-  let client_first_bare = "n=,r=" + base64_encode(entropy)
+  let client_first_bare = "n=,r=" + @base64.encode(entropy)
   self.write_all(build_sasl_initial("SCRAM-SHA-256", "n,," + client_first_bare))
   let server_first = self.read_sasl_message(11)
   let (client_final, want_sig) = scram_client_final(
@@ -169,7 +169,7 @@ async fn PgConn::run_sasl(
   )
   self.write_all(build_sasl_response(client_final))
   let server_final = self.read_sasl_message(12)
-  guard server_final == "v=" + base64_encode(want_sig) else {
+  guard server_final == "v=" + @base64.encode(want_sig) else {
     raise @moondb.ConnectError("SCRAM server signature mismatch")
   }
 }
@@ -566,3 +566,6 @@ fn command_tag_rows(tag : String) -> Int64 {
     None => 0
   }
 }
+
+///|
+pub extend PgConn with @moondb.AsyncDriver::{ping}

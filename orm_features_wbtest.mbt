@@ -204,3 +204,15 @@ test "optimistic lock: a matched row returns the result, no raise" {
   assert_eq(drv.last_params[1] == Int(4), true) // new version
   assert_eq(drv.last_params[3] == Int(3), true) // expected version
 }
+
+///|
+pub extend FixedDriver with @moondb.Driver::{
+  execute,
+  begin,
+  ping,
+  close,
+  query_stream,
+  commit,
+  query,
+  rollback,
+}

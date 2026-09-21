@@ -118,3 +118,15 @@ pub impl Driver for MockDriver with fn rollback(self : MockDriver) -> Unit raise
 pub impl Driver for MockDriver with fn close(self : MockDriver) -> Unit {
   self.closed = true
 }
+
+///|
+pub extend MockDriver with Driver::{
+  execute,
+  begin,
+  ping,
+  close,
+  query_stream,
+  commit,
+  query,
+  rollback,
+}

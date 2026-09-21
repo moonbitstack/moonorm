@@ -435,3 +435,6 @@ pub fn reflect_table_for(
     }
   }
 }
+
+///|
+pub extend ColumnDiff with Eq::{not_equal, equal}

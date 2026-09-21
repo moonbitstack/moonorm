@@ -216,3 +216,15 @@ test "migrator: a non-identifier table name is refused before any SQL runs" {
   }
   assert_eq(refused, true)
 }
+
+///|
+pub extend TrackerDriver with @moondb.Driver::{
+  execute,
+  begin,
+  ping,
+  close,
+  query_stream,
+  commit,
+  query,
+  rollback,
+}

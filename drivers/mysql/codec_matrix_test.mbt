@@ -2,14 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // The codec completeness matrix, run on every backend (no server): every Value
-// variant rendered into a COM_QUERY through bind_params (booleans, 64-bit integers,
+// variant rendered into a COM_QUERY through @moonmysql.bind_params (booleans, 64-bit integers,
 // doubles, the full string-escape set, and blob hex), the placeholder scanner's
 // escape and quoting rules, the parameter-count guards in both directions, and the
 // text-row decoder across int / bigint / NULL / binary-blob columns.
 
 ///|
-fn q(sql : String, params : Array[@moondb.Value]) -> String raise MysqlError {
-  bytes_to_string(bind_params(sql, params))
+fn q(
+  sql : String,
+  params : Array[@moondb.Value],
+) -> String raise @moonmysql.MysqlError {
+  @moonmysql.bytes_to_string(@moonmysql.bind_params(sql, params))
 }
 
 ///|
@@ -60,7 +63,7 @@ test "bind_params: a ? inside a quoted span is data, not a placeholder" {
 ///|
 fn bind_error(sql : String, params : Array[@moondb.Value]) -> Bool {
   try {
-    bind_params(sql, params) |> ignore
+    @moonmysql.bind_params(sql, params) |> ignore
     false
   } catch {
     ProtocolError(_) => true
@@ -80,7 +83,7 @@ test "bind_params rejects a parameter-count mismatch in both directions" {
 
 ///|
 test "build_text_rows decodes int, bigint, NULL, and binary blob columns" {
-  let cols : Array[ColumnDef] = [
+  let cols : Array[@moonmysql.ColumnDef] = [
     { name: "i", column_type: 3, charset: 63, flags: 0, }, // LONG -> Int
     { name: "big", column_type: 8, charset: 63, flags: 0, }, // LONGLONG -> Int64
     { name: "t", column_type: 253, charset: 33, flags: 0, }, // VAR_STRING utf8 -> Text
@@ -88,12 +91,12 @@ test "build_text_rows decodes int, bigint, NULL, and binary blob columns" {
     { name: "n", column_type: 3, charset: 63, flags: 0, }, // NULL cell
   ]
   let buf = Buffer()
-  put_lenenc_bytes(buf, b"-2147483648")
-  put_lenenc_bytes(buf, b"-9223372036854775808")
-  put_lenenc_bytes(buf, string_to_utf8("héllo"))
-  put_lenenc_bytes(buf, b"\x00\xfe\xff")
+  @moonmysql.put_lenenc_bytes(buf, b"-2147483648")
+  @moonmysql.put_lenenc_bytes(buf, b"-9223372036854775808")
+  @moonmysql.put_lenenc_bytes(buf, string_to_utf8("héllo"))
+  @moonmysql.put_lenenc_bytes(buf, b"\x00\xfe\xff")
   buf.write_byte(b'\xFB') // NULL sentinel for column n
-  let rows = build_text_rows(cols, [buf.to_bytes()])
+  let rows = @moonmysql.build_text_rows(cols, [buf.to_bytes()])
   assert_eq(rows.length(), 1)
   assert_eq(rows[0].int_by("i"), -2147483648)
   assert_eq(rows[0].int64_by("big"), -9223372036854775807L - 1L)

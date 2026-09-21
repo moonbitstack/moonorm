@@ -11,15 +11,25 @@ import {
 
 // Types and methods
 type SqliteCursor
+pub fn SqliteCursor::close(Self) -> Unit
+pub fn SqliteCursor::next(Self) -> @moondb.Row? raise @moondb.DbError
 pub impl @moondb.Cursor for SqliteCursor
 
 pub struct SqliteDriver {
   handle : Int64
   mut closed : Bool
 }
+pub fn SqliteDriver::begin(Self) -> Unit raise @moondb.DbError
+pub fn SqliteDriver::close(Self) -> Unit
+pub fn SqliteDriver::commit(Self) -> Unit raise @moondb.DbError
 pub fn SqliteDriver::exec_script(Self, String) -> Unit raise @moondb.DbError
+pub fn SqliteDriver::execute(Self, String, Array[@moondb.Value]) -> @moondb.ExecResult raise @moondb.DbError
 pub fn SqliteDriver::is_closed(Self) -> Bool
 pub fn SqliteDriver::open(String) -> Self raise @moondb.DbError
+pub fn SqliteDriver::ping(Self) -> Bool
+pub fn SqliteDriver::query(Self, String, Array[@moondb.Value]) -> Array[@moondb.Row] raise @moondb.DbError
+pub fn SqliteDriver::query_stream(Self, String, Array[@moondb.Value]) -> &@moondb.Cursor raise @moondb.DbError
+pub fn SqliteDriver::rollback(Self) -> Unit raise @moondb.DbError
 pub impl @moondb.Driver for SqliteDriver
 
 // Type aliases

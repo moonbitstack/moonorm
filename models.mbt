@@ -707,3 +707,6 @@ pub fn[T] Model::create_table_sql_for(
   let tail = if dialect is Mysql { " ENGINE=InnoDB" } else { "" }
   head + self.table + " (" + join(defs, ", ") + ")" + tail
 }
+
+///|
+pub extend ColumnType with Eq::{not_equal, equal}
