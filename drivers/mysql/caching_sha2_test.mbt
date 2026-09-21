@@ -2,18 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 ///|
-test "sha256 matches NIST vectors" {
-  assert_eq(
-    hex(@moonmysql.sha256(b"")),
-    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-  )
-  assert_eq(
-    hex(@moonmysql.sha256(b"abc")),
-    "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-  )
-}
-
-///|
 test "caching_sha2 fast scramble matches the reference vector" {
   // nonce = 01 02 … 14 (20 bytes), password "pencil".
   let nb = FixedArray::make(20, b'\x00')

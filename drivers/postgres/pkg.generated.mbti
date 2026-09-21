@@ -53,19 +53,11 @@ pub fn decode_value(Int, Bool, String) -> @moondb.Value
 
 pub fn encode_param(@moondb.Value) -> Bytes?
 
-pub fn hex_lower(Bytes) -> String
-
-pub fn hmac_sha256(Bytes, Bytes) -> Bytes
-
-pub fn md5(Bytes) -> Bytes
-
 pub fn parse_double(String) -> Double?
 
 pub fn parse_int(String) -> Int?
 
 pub fn parse_int64(String) -> Int64?
-
-pub fn pbkdf2_sha256(Bytes, Bytes, Int) -> Bytes
 
 pub fn pg_md5_password(String, String, Bytes) -> String
 
@@ -74,8 +66,6 @@ pub fn scram_client_final(Bytes, String, String) -> (String, Bytes) raise @moond
 pub fn scram_client_proof(Bytes, Bytes) -> Bytes
 
 pub fn scram_server_signature(Bytes, Bytes) -> Bytes
-
-pub fn sha256(Bytes) -> Bytes
 
 pub fn translate_placeholders(String) -> String
 

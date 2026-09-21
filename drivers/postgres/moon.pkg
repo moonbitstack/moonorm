@@ -6,6 +6,12 @@
 supported_targets = "native"
 
 import {
+  "moonbitstack/mooncrypt/spec",
+  "moonbitstack/mooncrypt/hash/md5",
+  "moonbitstack/mooncrypt/hash/sha2",
+  "moonbitstack/mooncrypt/mac/hmac",
+  "moonbitstack/mooncrypt/kdf/pbkdf2",
+  "moonbitstack/moonbase/base16",
   "moonbitstack/moonbase/base64",
   "moonbitstack/moondb",
   "moonbitlang/async",

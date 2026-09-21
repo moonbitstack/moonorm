@@ -16,6 +16,7 @@ preferred_target = "native"
 
 import {
   "moonbitstack/moonbase@0.4.0",
+  "moonbitstack/mooncrypt@0.2.2",
   "moonbitstack/moondb@0.1.8",
   "moonbitlang/async@0.20.3",
 }

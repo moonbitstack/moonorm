@@ -13,11 +13,11 @@ fn hex(b : Bytes) -> String {
 ///|
 test "SHA-256 matches the NIST vectors" {
   assert_eq(
-    hex(sha256(b"")),
+    hex(@sha2.hash(b""[:])),
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   )
   assert_eq(
-    hex(sha256(b"abc")),
+    hex(@sha2.hash(b"abc"[:])),
     "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
   )
 }
@@ -27,7 +27,7 @@ test "SCRAM-SHA-256 reproduces the RFC 7677 example vectors" {
   let salt = b"\x5b\x6d\x99\x68\x9d\x12\x35\x8e\xec\xa0\x4b\x14\x12\x36\xfa\x81"
   // base64 self-check on the known salt.
   assert_eq(@base64.encode(salt), "W22ZaJ0SNY7soEsUEjb6gQ==")
-  let salted = pbkdf2_sha256(b"pencil", salt, 4096)
+  let salted = @pbkdf2.key(b"pencil"[:], salt[:], digest, rounds=4096, len=32)
   assert_eq(
     hex(salted),
     "c4a49510323ab4f952cac1fa99441939e78ea74d6be81ddf7096e87513dc615d",

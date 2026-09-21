@@ -89,12 +89,6 @@ pub fn put_uint_le(@buffer.Buffer, Int64, Int) -> Unit
 
 pub fn rsa_oaep_sha1_encrypt(Bytes, @bigint.BigInt, @bigint.BigInt, Bytes) -> Bytes raise MysqlError
 
-pub fn sha1(Bytes) -> Bytes
-
-pub fn sha256(Bytes) -> Bytes
-
-pub fn sha512(Bytes) -> Bytes
-
 // Errors
 pub(all) suberror MysqlError {
   ProtocolError(String)

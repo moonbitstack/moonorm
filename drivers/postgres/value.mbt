@@ -44,7 +44,8 @@ pub fn encode_param(v : Value) -> Bytes? {
     @moondb.Int64(n) => Some(@utf8.encode(n.to_string()))
     @moondb.Double(d) => Some(@utf8.encode(d.to_string()))
     @moondb.Text(s) => Some(@utf8.encode(s))
-    @moondb.Blob(b) => Some(@utf8.encode("\\x" + hex_lower(b)))
+    @moondb.Blob(b) =>
+      Some(@utf8.encode("\\x" + @base16.encode(b[:]).to_lower()))
   }
 }
 

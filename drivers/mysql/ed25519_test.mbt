@@ -2,14 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 ///|
-test "sha512 matches the NIST 'abc' vector" {
-  assert_eq(
-    hex(@moonmysql.sha512(b"abc")),
-    "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f",
-  )
-}
-
-///|
 test "mariadb client_ed25519 signs the challenge to the reference vector" {
   // password "pencil", 32-byte scramble 00..1f; the expected public key and
   // signature were produced by MariaDB's scheme (az = SHA512(password)) and
