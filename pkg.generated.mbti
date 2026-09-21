@@ -13,13 +13,13 @@ pub fn case_(Array[(String, String)], else_? : String) -> String
 
 pub fn cast(String, String) -> String
 
-pub fn column(String, ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String?, checks? : Array[String], references? : (String, String)?, on_delete? : String?, on_update? : String?) -> Column
+pub fn column(String, ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Column
 
 pub fn delete(String) -> Delete
 
 pub fn diff_schema(Array[Column], Array[Column]) -> Array[ColumnDiff]
 
-pub fn[T] field(String, ColumnType, (T) -> @moondb.Value, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String?, checks? : Array[String], references? : (String, String)?, on_delete? : String?, on_update? : String?) -> Field[T]
+pub fn[T] field(String, ColumnType, (T) -> @moondb.Value, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Field[T]
 
 pub fn func(String, Array[String]) -> String
 

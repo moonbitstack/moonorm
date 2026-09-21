@@ -94,7 +94,7 @@ fn member_model() -> Model[Member] {
     [
       column("id", IntType, primary_key=true),
       column("name", TextType, nullable=false),
-      column("squad_id", IntType, references=Some(("squads", "id"))),
+      column("squad_id", IntType, references=("squads", "id")),
     ],
     r => { id: r.int(0), name: r.text(1), squad_id: r.int(2), },
     m => {

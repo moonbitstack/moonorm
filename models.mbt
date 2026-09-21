@@ -93,11 +93,11 @@ pub fn column(
   autoincrement? : Bool = false,
   nullable? : Bool = true,
   unique? : Bool = false,
-  default? : String? = None,
+  default? : String,
   checks? : Array[String] = [],
-  references? : (String, String)? = None,
-  on_delete? : String? = None,
-  on_update? : String? = None,
+  references? : (String, String),
+  on_delete? : String,
+  on_update? : String,
 ) -> Column {
   {
     name,
@@ -189,11 +189,11 @@ pub fn[T] field(
   autoincrement? : Bool = false,
   nullable? : Bool = true,
   unique? : Bool = false,
-  default? : String? = None,
+  default? : String,
   checks? : Array[String] = [],
-  references? : (String, String)? = None,
-  on_delete? : String? = None,
-  on_update? : String? = None,
+  references? : (String, String),
+  on_delete? : String,
+  on_update? : String,
 ) -> Field[T] {
   {
     column: {

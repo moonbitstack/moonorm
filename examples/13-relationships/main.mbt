@@ -44,11 +44,7 @@ let hero_model : @moonorm.Model[Hero] = @moonorm.Model::new(
   [
     @moonorm.column("id", @moonorm.IntType, primary_key=true),
     @moonorm.column("name", @moonorm.TextType, nullable=false),
-    @moonorm.column(
-      "team_id",
-      @moonorm.IntType,
-      references=Some(("teams", "id")),
-    ),
+    @moonorm.column("team_id", @moonorm.IntType, references=("teams", "id")),
   ],
   r => { id: r.int(0), name: r.text(1), team_id: r.int(2), },
   h => {

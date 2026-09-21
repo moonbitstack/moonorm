@@ -29,19 +29,19 @@ let heroes : @moonorm.Model[Hero] = @moonorm.Model::new(
       nullable=false,
       unique=true,
     ),
-    @moonorm.column("power", @moonorm.IntType, default=Some("0"), checks=[
+    @moonorm.column("power", @moonorm.IntType, default="0", checks=[
       "power >= 0",
     ]),
     @moonorm.column(
       "team_id",
       @moonorm.IntType,
-      references=Some(("teams", "id")),
-      on_delete=Some("CASCADE"),
+      references=("teams", "id"),
+      on_delete="CASCADE",
     ),
     @moonorm.column(
       "created",
       @moonorm.DateTimeType,
-      default=Some("CURRENT_TIMESTAMP"),
+      default="CURRENT_TIMESTAMP",
     ),
   ],
   r => { id: r.int(0), name: r.text(1), team_id: r.int(3), },
@@ -87,8 +87,8 @@ fn main {
     "team_id",
     @moonorm.IntType,
     nullable=false,
-    references=Some(("teams", "id")),
-    on_update=Some("RESTRICT"),
+    references=("teams", "id"),
+    on_update="RESTRICT",
   )
   println("")
   println("-- one Column::ddl")

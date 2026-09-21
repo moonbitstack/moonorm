@@ -16,12 +16,12 @@ test "Column::ddl emits foreign-key referential actions" {
     column(
       "team_id",
       IntType,
-      references=Some(("team", "id")),
-      on_delete=Some("CASCADE"),
-      on_update=Some("RESTRICT"),
+      references=("team", "id"),
+      on_delete="CASCADE",
+      on_update="RESTRICT",
     ).ddl(),
     "team_id INTEGER REFERENCES team(id) ON DELETE CASCADE ON UPDATE RESTRICT",
   )
   // Actions only render when a reference is present.
-  assert_eq(column("x", IntType, on_delete=Some("CASCADE")).ddl(), "x INTEGER")
+  assert_eq(column("x", IntType, on_delete="CASCADE").ddl(), "x INTEGER")
 }

@@ -21,7 +21,7 @@ let categories : @moonorm.Model[Category] = @moonorm.Model::new(
     @moonorm.column(
       "parent_id",
       @moonorm.IntType,
-      references=Some(("categories", "id")),
+      references=("categories", "id"),
     ),
   ],
   r => { id: r.int(0), name: r.text(1), parent: r.int(2), },

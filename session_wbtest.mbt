@@ -41,7 +41,7 @@ fn hero_model() -> Model[Hero] {
     [
       column("id", IntType, primary_key=true),
       column("name", TextType, nullable=false),
-      column("team_id", IntType, references=Some(("teams", "id"))),
+      column("team_id", IntType, references=("teams", "id")),
     ],
     r => { id: r.int(0), name: r.text(1), team_id: r.int(2), },
     h => {

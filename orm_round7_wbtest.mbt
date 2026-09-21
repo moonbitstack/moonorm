@@ -49,7 +49,7 @@ fn book_model() -> Model[Book] {
         "author_id",
         IntType,
         b => Int(b.author_id),
-        references=Some(("authors", "id")),
+        references=("authors", "id"),
       ),
     ],
     r => { id: r.int(0), title: r.text(1), author_id: r.int(2), },
