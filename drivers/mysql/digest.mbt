@@ -16,9 +16,3 @@ fn sha1(msg : Bytes) -> Bytes {
 fn sha256(msg : Bytes) -> Bytes {
   @sha2.hash(msg[:])
 }
-
-///|
-/// SHA-512, which MariaDB's `client_ed25519` expands its secret through.
-fn sha512(msg : Bytes) -> Bytes {
-  @sha2.hash(msg[:], kind=Sha512)
-}

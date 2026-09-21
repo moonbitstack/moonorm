@@ -31,10 +31,11 @@ let test_pubkey_pem : String =
 
 ///|
 test "parse_rsa_public_key recovers the modulus and exponent" {
-  let (n, e) = @moonmysql.parse_rsa_public_key(test_pubkey_pem)
-  assert_eq(e, 65537)
+  let key = @moonmysql.parse_rsa_public_key(test_pubkey_pem)
+  assert_eq(key.exponent(), b"\x01\x00\x01")
   // The modulus is 2048 bits, so exactly 256 octets.
-  assert_eq(n.to_octets().length(), 256)
+  assert_eq(key.modulus().length(), 256)
+  assert_eq(key.size(), 256)
 }
 
 ///|

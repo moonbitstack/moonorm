@@ -7,7 +7,9 @@
 import {
   "moonbitstack/mooncrypt/hash/sha1",
   "moonbitstack/mooncrypt/hash/sha2",
-  "moonbitstack/moonbase/base64",
+  "moonbitstack/mooncrypt/sign/ed25519",
+  "moonbitstack/mooncrypt/rsa",
+  "moonbitstack/mooncred/x509",
   "moonbitstack/moondb",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/string",
