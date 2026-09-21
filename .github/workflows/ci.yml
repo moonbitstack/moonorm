@@ -239,14 +239,17 @@ jobs:
 
       - name: wait for mysql
         run: |
+          # `mysqladmin ping` answers from the temporary server the image runs
+          # while it initialises, and the real server restarts after that. So
+          # wait on the query itself: it is the first thing that is true only
+          # once the server is actually serving.
           for i in $(seq 1 60); do
-            if docker exec mysql8 mysqladmin ping -uroot -proot --silent 2>/dev/null; then
-              echo "mysql is up"; break
+            if docker exec mysql8 mysql -uroot -proot -e "SELECT VERSION();" 2>/dev/null; then
+              echo "mysql is up"; exit 0
             fi
             echo "waiting for mysql... ($i)"; sleep 2
           done
-          sleep 3
-          docker exec mysql8 mysql -uroot -proot -e "SELECT VERSION();"
+          echo "mysql never came up"; exit 1
 
       - name: moon check
         run: moon check --target all --deny-warn
@@ -303,14 +306,17 @@ jobs:
 
       - name: wait for mysql
         run: |
+          # `mysqladmin ping` answers from the temporary server the image runs
+          # while it initialises, and the real server restarts after that. So
+          # wait on the query itself: it is the first thing that is true only
+          # once the server is actually serving.
           for i in $(seq 1 60); do
-            if docker exec mysql8cs mysqladmin ping -uroot -proot --silent 2>/dev/null; then
-              echo "mysql is up"; break
+            if docker exec mysql8cs mysql -uroot -proot -e "SELECT VERSION(); SELECT plugin FROM mysql.user WHERE user='root' LIMIT 1;" 2>/dev/null; then
+              echo "mysql is up"; exit 0
             fi
             echo "waiting for mysql... ($i)"; sleep 2
           done
-          sleep 3
-          docker exec mysql8cs mysql -uroot -proot -e "SELECT VERSION(); SELECT plugin FROM mysql.user WHERE user='root' LIMIT 1;"
+          echo "mysql never came up"; exit 1
 
       - name: moon check
         run: moon check --target all --deny-warn
@@ -372,13 +378,16 @@ jobs:
 
       - name: wait for mariadb
         run: |
+          # `mariadb-admin ping` answers from the temporary server the image
+          # runs while it initialises, and the real server restarts after that.
+          # Wait on a query instead: it is true only once the server serves.
           for i in $(seq 1 60); do
-            if docker exec mariadb mariadb-admin ping -uroot -proot --silent 2>/dev/null; then
+            if docker exec mariadb mariadb -uroot -proot -e "SELECT 1;" >/dev/null 2>&1; then
               echo "mariadb is up"; break
             fi
             echo "waiting for mariadb... ($i)"; sleep 2
+            if [ "$i" = 60 ]; then echo "mariadb never came up"; exit 1; fi
           done
-          sleep 3
           # Proof this job talks to MariaDB (version string carries "MariaDB").
           docker exec mariadb mariadb -uroot -proot -e "SELECT VERSION();"
 
@@ -439,13 +448,16 @@ jobs:
 
       - name: wait for mariadb and create an ed25519 account
         run: |
+          # `mariadb-admin ping` answers from the temporary server the image
+          # runs while it initialises, and the real server restarts after that.
+          # Wait on a query instead: it is true only once the server serves.
           for i in $(seq 1 60); do
-            if docker exec mariadb mariadb-admin ping -uroot -proot --silent 2>/dev/null; then
+            if docker exec mariadb mariadb -uroot -proot -e "SELECT 1;" >/dev/null 2>&1; then
               echo "mariadb is up"; break
             fi
             echo "waiting for mariadb... ($i)"; sleep 2
+            if [ "$i" = 60 ]; then echo "mariadb never came up"; exit 1; fi
           done
-          sleep 3
           docker exec mariadb mariadb -uroot -proot -e "INSTALL SONAME 'auth_ed25519';" || true
           docker exec mariadb mariadb -uroot -proot -e "CREATE USER 'edtest'@'%' IDENTIFIED VIA ed25519 USING PASSWORD('edpass'); GRANT ALL PRIVILEGES ON *.* TO 'edtest'@'%'; FLUSH PRIVILEGES;"
           docker exec mariadb mariadb -uroot -proot -e "SELECT user, plugin FROM mysql.user WHERE user='edtest';"
