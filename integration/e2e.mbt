@@ -45,7 +45,7 @@ fn hero_model() -> @orm.Model[Hero] {
     [
       @orm.column("id", @orm.IntType, primary_key=true),
       @orm.column("name", @orm.TextType, nullable=false),
-      @orm.column("team_id", @orm.IntType, references=Some(("team", "id"))),
+      @orm.column("team_id", @orm.IntType, references=("team", "id")),
       @orm.column("version", @orm.IntType, nullable=false),
     ],
     r => {
