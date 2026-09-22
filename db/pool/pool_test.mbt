@@ -4,7 +4,7 @@
 // The pool exercised against the @moondb.MockDriver test double. `@moondb.MockDriver::new` is the
 // factory; a counter cell records how many real connections the pool opens, which
 // is what proves idle reuse (acquire after release must not open a second one) and
-// the max_size ceiling. Mutation check: making `acquire` always call `make` instead
+// the max_size ceiling. Mutation check: making `next` always call `make` instead
 // of reusing an idle connection turns the reuse and open-count assertions red.
 
 ///|
@@ -12,9 +12,9 @@
 /// The count lives in a one-cell array so the closure can mutate it.
 fn counting_pool(
   max_size? : Int = 10,
-) -> (@moondb.Pool[@moondb.MockDriver], Array[Int]) raise @moondb.DbError {
+) -> (@pool.Pool[@moondb.MockDriver], Array[Int]) raise @moondb.DbError {
   let opened = [0]
-  let pool = @moondb.Pool::new(
+  let pool = @pool.Pool::new(
     () => {
       opened[0] = opened[0] + 1
       @moondb.MockDriver::new()
@@ -137,7 +137,7 @@ test "pool: a connection released after close is closed, not pooled" {
 ///|
 test "pool: max_size must be positive" {
   let bad = try {
-    @moondb.Pool::new(() => @moondb.MockDriver::new(), max_size=0) |> ignore
+    @pool.Pool::new(() => @moondb.MockDriver::new(), max_size=0) |> ignore
     false
   } catch {
     QueryError(_) => true
@@ -152,13 +152,13 @@ test "pool: max_size must be positive" {
 // it. The @moondb.MockDriver's default ping runs `SELECT 1`, which fails once the
 // connection is closed — so closing a checked-out connection and releasing it
 // simulates a connection the backend dropped underneath the pool. Mutation check:
-// deleting the `self.pre_ping && not_alive(conn)` guard in `acquire` makes the pool
+// deleting the `self.pre_ping && not_alive(conn)` guard in `next` makes the pool
 // hand the dead connection straight back, turning the two assertions below red.
 
 ///|
 test "pool pre_ping: a dead idle connection is evicted and a fresh one opened" {
   let opened = [0]
-  let pool = @moondb.Pool::new(
+  let pool = @pool.Pool::new(
     () => {
       opened[0] = opened[0] + 1
       @moondb.MockDriver::new()
@@ -186,7 +186,7 @@ test "pool pre_ping: a dead idle connection is evicted and a fresh one opened" {
 ///|
 test "pool pre_ping: a healthy idle connection is reused, not reopened" {
   let opened = [0]
-  let pool = @moondb.Pool::new(
+  let pool = @pool.Pool::new(
     () => {
       opened[0] = opened[0] + 1
       @moondb.MockDriver::new()
@@ -207,14 +207,14 @@ test "pool pre_ping: a healthy idle connection is reused, not reopened" {
 //
 // With a fake clock, a connection is retired once its age crosses max_lifetime_ms,
 // counting from when it was first opened (not reset by intervening checkouts).
-// Mutation check: forcing `is_expired` to always return false makes `opened` stay
-// at 1 in the retirement step, turning that assertion red.
+// Mutation check: passing `life=@moonpool.forever` in `new` makes `opened` stay at
+// 1 in the retirement step, turning that assertion red.
 
 ///|
 test "pool max_lifetime: an aged connection is retired and replaced on acquire" {
   let now = [0L]
   let opened = [0]
-  let pool = @moondb.Pool::new(
+  let pool = @pool.Pool::new(
     () => {
       opened[0] = opened[0] + 1
       @moondb.MockDriver::new()
@@ -244,7 +244,7 @@ test "pool max_lifetime: an aged connection is retired and replaced on acquire" 
 test "pool max_lifetime: birth time survives repeated checkouts" {
   let now = [0L]
   let opened = [0]
-  let pool = @moondb.Pool::new(
+  let pool = @pool.Pool::new(
     () => {
       opened[0] = opened[0] + 1
       @moondb.MockDriver::new()
@@ -284,7 +284,7 @@ test "pool try_acquire: None when exhausted, Some when a slot is free" {
 
 ///|
 test "pool: an exhausted acquire reports the configured wait budget" {
-  let pool = @moondb.Pool::new(
+  let pool = @pool.Pool::new(
     () => @moondb.MockDriver::new(),
     max_size=1,
     acquire_timeout_ms=250L,
@@ -306,7 +306,7 @@ test "pool: an exhausted acquire reports the configured wait budget" {
 ///|
 test "pool: max_lifetime_ms must not be negative" {
   let bad = try {
-    @moondb.Pool::new(() => @moondb.MockDriver::new(), max_lifetime_ms=-1L)
+    @pool.Pool::new(() => @moondb.MockDriver::new(), max_lifetime_ms=-1L)
     |> ignore
     false
   } catch {
@@ -337,4 +337,35 @@ test "pool: in_use_count is what a @moondb.drain waits on after close_all" {
   pool.release(b)
   assert_eq(pool.in_use_count(), 0)
   assert_eq(pool.open_count(), 0)
+}
+
+///|
+/// A factory that fails must not cost the pool a slot: the room `make` was called
+/// to fill is given back, so the next acquire can try again.
+test "pool: a failed open gives its slot back" {
+  let fail = [true]
+  let pool = @pool.Pool::new(
+    () => {
+      if fail[0] {
+        raise QueryError("connection refused")
+      }
+      @moondb.MockDriver::new()
+    },
+    max_size=1,
+  )
+  let refused = try {
+    pool.acquire() |> ignore
+    false
+  } catch {
+    QueryError(m) => m == "connection refused"
+    _ => false
+  }
+  assert_eq(refused, true)
+  assert_eq(pool.open_count(), 0)
+  assert_eq(pool.in_use_count(), 0)
+  fail[0] = false
+  let a = pool.acquire()
+  assert_eq(pool.open_count(), 1)
+  pool.release(a)
+  pool.close_all()
 }

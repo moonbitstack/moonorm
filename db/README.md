@@ -14,9 +14,9 @@ The small, pure contract that sits between database *drivers* and query *layers*
 
 </div>
 
-> Moved on mooncakes from `moonbitstack/moondb` to `moonbitstack/moondb`.
+> Moved on mooncakes from `Lfan-ke/moondb` to `moonbitstack/moondb`.
 
-`moondb` defines **one thing**: the boundary every SQL database backend implements and every ORM / query builder is written against. It has **zero dependencies**, is **pure** (compiles on wasm, wasm-gc, js, and native alike), and ships a dependency-free reference driver so the whole stack above it can be tested without a database.
+`moondb` defines **one thing**: the boundary every SQL database backend implements and every ORM / query builder is written against. The interface package has **zero dependencies**, is **pure** (compiles on wasm, wasm-gc, js, and native alike), and ships a dependency-free reference driver so the whole stack above it can be tested without a database. The connection pool lives in its own package, `moonbitstack/moondb/pool`, so a driver that only implements the interface carries none of the pool's dependencies.
 
 It deliberately does *not* connect to a database, speak a wire protocol, or build SQL. Those belong on either side of the seam:
 
@@ -57,7 +57,7 @@ moon add moonbitstack/moondb
 | [`ExecResult`](#execresult) | outcome of a non-query: rows affected + last insert id | Go `sql.Result`, DB-API `rowcount`/`lastrowid` |
 | [`DbError`](#dberror) | the one error every operation raises | DB-API exception hierarchy (flattened) |
 | [`Driver`](#driver) | the trait a backend implements / a query layer targets (with a default `ping` health probe) | Go `driver.Conn`+`Execer`+`Queryer`+`Pinger` |
-| [`Pool`](#pool) | a fixed-ceiling connection pool over any `Driver` | Go `sql.DB` pool, SQLAlchemy `QueuePool` |
+| [`@pool.Pool`](#pool) | a fixed-ceiling connection pool over any `Driver`, in `moonbitstack/moondb/pool` | Go `sql.DB` pool, SQLAlchemy `QueuePool` |
 | [`AsyncDriver`](#asyncdriver) | the same contract for a backend reached over a socket, every method awaited | asyncpg / `asyncio` DB-API |
 | [`AsyncCursor`](#asyncdriver) | forward-only cursor whose `next` is awaited, for a wire driver's live rows | — |
 | [`MockDriver`](#mockdriver) | dependency-free in-memory reference driver, for tests | — |
@@ -114,7 +114,7 @@ pub impl @moondb.Driver for MyConn with execute(self, sql, params) {
 - **`DbError` is `pub(all)`.** A plain `pub suberror` can be *caught* from another package but not *constructed* — which would stop out-of-tree drivers from raising it. `pub(all)` opens the constructors.
 - **There are two driver traits, on purpose.** `Driver` is synchronous, which is right for a backend whose calls block in C (moonsqlite steps a prepared statement and returns). A backend reached over TCP cannot be written that way: MoonBit's only socket stack is async-only, and an `async fn` cannot be called from a synchronous one. A wire driver forced to conform to `Driver` can do nothing but raise from every method — and because `ping` is a *defaulted* method built on `query`, it swallows that raise into `false`, so a `Pool` with `pre_ping` judges every one of its connections permanently unhealthy. `AsyncDriver` is the seam for those backends: the same eight operations, each awaited. It is a peer of `Driver`, not a replacement — a synchronous backend keeps implementing `Driver` and never becomes async. Declaring async methods pulls in no async runtime, so moondb stays dependency-free and still compiles on every backend; only a driver that implements the trait, and a caller that runs it in an event loop, need one.
 
-- **The pool is synchronous.** `Pool[D]` reuses idle connections under a size ceiling, evicts a connection that fails its `pre_ping` probe or outlives `max_lifetime` (age measured by an injected `clock`, the way `database/sql` swaps `nowFunc` in tests), and offers a non-blocking `try_acquire`. Because moondb's base contract is sync and the pure backends have no threads, an exhausted `acquire` fails immediately rather than blocking — the `acquire_timeout` is the budget an async driver layers real waiting on top of. `ping` is a default `Driver` method (`SELECT 1`), so every driver gets a health probe for free.
+- **The pool is synchronous, and its counting is moonpool's.** `@pool.Pool[D]` reuses idle connections under a size ceiling, evicts a connection that fails its `pre_ping` probe or outlives `max_lifetime` (age measured by an injected `clock`, the way `database/sql` swaps `nowFunc` in tests), and offers a non-blocking `try_acquire`. Because moondb's base contract is sync and the pure backends have no threads, an exhausted `acquire` fails immediately rather than blocking — the `acquire_timeout` is the budget an async driver layers real waiting on top of. `ping` is a default `Driver` method (`SELECT 1`), so every driver gets a health probe for free. The bookkeeping underneath — how many are live, which are idle, when each was born — is [moonpool](https://github.com/moonbitstack/moonpool)'s `Pool`; this package adds only opening, closing and probing. It is a separate package because that dependency is the pool's alone: `import { "moonbitstack/moondb/pool" }` where a pool is wanted, and the interface stays dependency-free where it is not.
 
 ## Roadmap
 

@@ -38,22 +38,19 @@
 /// budget a driver running on an async runtime honours when it layers real waiting
 /// on top. Use [`try_acquire`] for the non-raising "give me one only if free" path.
 /// The reuse, ceiling, health, and lifecycle bookkeeping all live here.
+///
+/// The counting is moonpool's `Pool`: live, idle and lent, each lent connection's
+/// birth recognised on its way back so `max_lifetime` counts from creation. This
+/// type adds only what needs a driver — opening, closing, probing.
 pub struct Pool[D] {
-  make : () -> D raise DbError
-  // Idle connections available for reuse, each paired with the clock reading at
-  // which it was opened (its birth time) so max_lifetime can be enforced across
-  // an arbitrary number of checkouts.
-  idle : Array[(D, Int64)]
-  // Connections currently checked out, tracked only so `release` can restore the
-  // birth time it was handed out with (matched by reference identity).
-  checked_out : Array[(D, Int64)]
-  mut open_count : Int
-  max_size : Int
-  max_lifetime_ms : Int64
-  pre_ping : Bool
-  acquire_timeout_ms : Int64
-  clock : () -> Int64
-  mut closed : Bool
+  priv make : () -> D raise @moondb.DbError
+  priv books : @moonpool.Pool[D]
+  priv max_size : Int
+  priv max_lifetime_ms : Int64
+  priv pre_ping : Bool
+  priv acquire_timeout_ms : Int64
+  priv clock : () -> Int64
+  priv mut closed : Bool
 }
 
 ///|
@@ -75,13 +72,13 @@ pub struct Pool[D] {
 ///   so `max_lifetime` is testable and portable; it defaults to a constant `0`,
 ///   which disables age-based retirement.
 pub fn[D] Pool::new(
-  make : () -> D raise DbError,
+  make : () -> D raise @moondb.DbError,
   max_size? : Int = 10,
   max_lifetime_ms? : Int64 = 0,
   pre_ping? : Bool = false,
   acquire_timeout_ms? : Int64 = 0,
   clock? : () -> Int64 = fn() { 0L },
-) -> Pool[D] raise DbError {
+) -> Pool[D] raise @moondb.DbError {
   if max_size <= 0 {
     raise QueryError(
       "pool max_size must be positive, got " + max_size.to_string(),
@@ -90,11 +87,17 @@ pub fn[D] Pool::new(
   if max_lifetime_ms < 0L {
     raise QueryError("pool max_lifetime_ms must not be negative")
   }
+  // No cap on idle connections and no idle timeout: this pool keeps every
+  // connection it opened until it ages out, fails a probe, or the pool closes.
+  let limits = @moonpool.Limits::new(
+    size=max_size,
+    idle=0,
+    keep=@moonpool.forever,
+    life=@moondate.Span::new(millis=max_lifetime_ms),
+  )
   {
     make,
-    idle: [],
-    checked_out: [],
-    open_count: 0,
+    books: @moonpool.Pool::new(limits~),
     max_size,
     max_lifetime_ms,
     pre_ping,
@@ -107,7 +110,7 @@ pub fn[D] Pool::new(
 ///|
 /// How many connections are currently idle (checked in and reusable).
 pub fn[D] Pool::idle_count(self : Pool[D]) -> Int {
-  self.idle.length()
+  self.books.idle()
 }
 
 ///|
@@ -115,14 +118,14 @@ pub fn[D] Pool::idle_count(self : Pool[D]) -> Int {
 /// borrowed connections to come home polls this after `close_all`: the close empties
 /// the idle set, so what is left is exactly what is still in use.
 pub fn[D] Pool::in_use_count(self : Pool[D]) -> Int {
-  self.checked_out.length()
+  self.books.busy()
 }
 
 ///|
 /// How many connections the pool has open in total: those checked out plus those
 /// sitting idle. Never exceeds `max_size`.
 pub fn[D] Pool::open_count(self : Pool[D]) -> Int {
-  self.open_count
+  self.books.live()
 }
 
 ///|
@@ -156,10 +159,9 @@ pub fn[D] Pool::is_closed(self : Pool[D]) -> Bool {
 }
 
 ///|
-/// Whether an idle connection paired with birth time `born` has outlived
-/// `max_lifetime_ms`. Always `false` when no lifetime is configured.
-fn[D] Pool::is_expired(self : Pool[D], born : Int64) -> Bool {
-  self.max_lifetime_ms > 0L && (self.clock)() - born >= self.max_lifetime_ms
+/// The clock in the unit moonpool counts in.
+fn[D] Pool::now(self : Pool[D]) -> Int64 {
+  (self.clock)() * 1_000_000L
 }
 
 ///|
@@ -173,44 +175,25 @@ fn[D] Pool::is_expired(self : Pool[D], born : Int64) -> Bool {
 /// `QueryError` if the pool is exhausted (all `max_size` connections are checked
 /// out) or [`Closed`] if it has been closed. The caller must return the connection
 /// with [`release`] — or use [`with_conn`], which does so even on error.
-pub fn[D : Driver] Pool::acquire(self : Pool[D]) -> D raise DbError {
-  if self.closed {
-    raise Closed
-  }
-  // Reuse idle connections, evicting any that are stale (past max_lifetime) or
-  // that fail the pre-ping probe. Each eviction closes the connection and frees a
-  // slot, so the fresh-open path below can refill the pool.
-  for ;; {
-    match self.idle.pop() {
-      Some((conn, born)) =>
-        if self.is_expired(born) || (self.pre_ping && not_alive(conn)) {
-          conn.close()
-          self.open_count = self.open_count - 1
-          continue
-        } else {
-          self.checked_out.push((conn, born))
-          return conn
-        }
-      None => break
+pub fn[D : @moondb.Driver] Pool::acquire(
+  self : Pool[D],
+) -> D raise @moondb.DbError {
+  match self.next() {
+    Some(conn) => conn
+    None => {
+      let budget = if self.acquire_timeout_ms > 0L {
+        "; wait timed out after " + self.acquire_timeout_ms.to_string() + "ms"
+      } else {
+        ""
+      }
+      raise QueryError(
+        "connection pool exhausted (max_size=" +
+        self.max_size.to_string() +
+        ")" +
+        budget,
+      )
     }
   }
-  if self.open_count >= self.max_size {
-    let budget = if self.acquire_timeout_ms > 0L {
-      "; wait timed out after " + self.acquire_timeout_ms.to_string() + "ms"
-    } else {
-      ""
-    }
-    raise QueryError(
-      "connection pool exhausted (max_size=" +
-      self.max_size.to_string() +
-      ")" +
-      budget,
-    )
-  }
-  let conn = (self.make)()
-  self.open_count = self.open_count + 1
-  self.checked_out.push((conn, (self.clock)()))
-  conn
 }
 
 ///|
@@ -221,31 +204,43 @@ pub fn[D : Driver] Pool::acquire(self : Pool[D]) -> D raise DbError {
 /// retry. Health and lifetime eviction apply exactly as in `acquire`; a genuine
 /// failure while opening a fresh connection (the `make` factory raising) still
 /// propagates.
-pub fn[D : Driver] Pool::try_acquire(self : Pool[D]) -> D? raise DbError {
+pub fn[D : @moondb.Driver] Pool::try_acquire(
+  self : Pool[D],
+) -> D? raise @moondb.DbError {
+  self.next()
+}
+
+///|
+/// A healthy connection, idle or new, or `None` when every one is lent out.
+///
+/// An idle connection past `max_lifetime_ms`, or one that fails the probe when
+/// `pre_ping` is on, is closed and forgotten, and the next is tried; each one closed
+/// frees the room a fresh one is then opened in.
+fn[D : @moondb.Driver] Pool::next(self : Pool[D]) -> D? raise @moondb.DbError {
   if self.closed {
     raise Closed
   }
   for ;; {
-    match self.idle.pop() {
-      Some((conn, born)) =>
-        if self.is_expired(born) || (self.pre_ping && not_alive(conn)) {
+    match self.books.take(self.now()) {
+      Ready(conn) =>
+        if self.pre_ping && not_alive(conn) {
           conn.close()
-          self.open_count = self.open_count - 1
-          continue
+          self.books.drop(conn)
         } else {
-          self.checked_out.push((conn, born))
           return Some(conn)
         }
-      None => break
+      Stale(conn) => conn.close()
+      Make => {
+        // A factory that fails must give the room back, or one bad connect
+        // would shrink the pool for good.
+        errdefer self.books.unmade()
+        let conn = (self.make)()
+        self.books.made(conn, self.now())
+        return Some(conn)
+      }
+      Wait => return None
     }
   }
-  if self.open_count >= self.max_size {
-    return None
-  }
-  let conn = (self.make)()
-  self.open_count = self.open_count + 1
-  self.checked_out.push((conn, (self.clock)()))
-  Some(conn)
 }
 
 ///|
@@ -254,33 +249,23 @@ pub fn[D : Driver] Pool::try_acquire(self : Pool[D]) -> D? raise DbError {
 /// from creation rather than resetting on every checkout. A connection released
 /// back into a closed pool is closed immediately rather than pooled, so no handle
 /// outlives `close_all`.
-pub fn[D : Driver] Pool::release(self : Pool[D], conn : D) -> Unit {
-  // Recover the birth time this connection was handed out with (matched by
-  // reference identity). A connection the pool never issued keeps a fresh stamp.
-  let mut born = (self.clock)()
-  for i = 0; i < self.checked_out.length(); i = i + 1 {
-    if physical_equal(self.checked_out[i].0, conn) {
-      born = self.checked_out[i].1
-      self.checked_out.remove(i) |> ignore
-      break
-    }
-  }
+pub fn[D : @moondb.Driver] Pool::release(self : Pool[D], conn : D) -> Unit {
   if self.closed {
+    self.books.drop(conn)
     conn.close()
-    self.open_count = self.open_count - 1
     return
   }
-  self.idle.push((conn, born))
+  let _ = self.books.give(conn, self.now())
 }
 
 ///|
 /// Run `f` with a pooled connection, returning it afterwards whether `f` returns
 /// or raises. This is the leak-proof way to use the pool: the `release` happens
 /// on every path, so a raising query never strands a connection checked out.
-pub fn[D : Driver, R] Pool::with_conn(
+pub fn[D : @moondb.Driver, R] Pool::with_conn(
   self : Pool[D],
-  f : (D) -> R raise DbError,
-) -> R raise DbError {
+  f : (D) -> R raise @moondb.DbError,
+) -> R raise @moondb.DbError {
   let conn = self.acquire()
   defer self.release(conn)
   f(conn)
@@ -294,18 +279,16 @@ pub fn[D : Driver, R] Pool::with_conn(
 /// This is the graceful half of a shutdown: nothing in flight is cut off. To wait
 /// for the rest, poll [`in_use_count`] until it reaches zero — this pool is
 /// synchronous, so the waiting belongs to whatever async layer owns it.
-pub fn[D : Driver] Pool::close_all(self : Pool[D]) -> Unit {
-  for entry in self.idle {
-    entry.0.close()
+pub fn[D : @moondb.Driver] Pool::close_all(self : Pool[D]) -> Unit {
+  for conn in self.books.close() {
+    conn.close()
   }
-  self.open_count = self.open_count - self.idle.length()
-  self.idle.clear()
   self.closed = true
 }
 
 ///|
 /// Whether a connection fails its [`Driver::ping`] health probe. Factored out so
 /// the eviction test can target exactly this predicate.
-fn[D : Driver] not_alive(conn : D) -> Bool {
+fn[D : @moondb.Driver] not_alive(conn : D) -> Bool {
   !conn.ping()
 }

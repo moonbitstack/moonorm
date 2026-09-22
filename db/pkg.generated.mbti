@@ -63,33 +63,6 @@ pub fn MockDriver::rollback(Self) -> Unit raise DbError
 pub fn MockDriver::row_count(Self) -> Int
 pub impl Driver for MockDriver
 
-pub struct Pool[D] {
-  make : () -> D raise DbError
-  idle : Array[(D, Int64)]
-  checked_out : Array[(D, Int64)]
-  mut open_count : Int
-  max_size : Int
-  max_lifetime_ms : Int64
-  pre_ping : Bool
-  acquire_timeout_ms : Int64
-  clock : () -> Int64
-  mut closed : Bool
-}
-pub fn[D : Driver] Pool::acquire(Self[D]) -> D raise DbError
-pub fn[D] Pool::acquire_timeout_ms(Self[D]) -> Int64
-pub fn[D : Driver] Pool::close_all(Self[D]) -> Unit
-pub fn[D] Pool::idle_count(Self[D]) -> Int
-pub fn[D] Pool::in_use_count(Self[D]) -> Int
-pub fn[D] Pool::is_closed(Self[D]) -> Bool
-pub fn[D] Pool::max_lifetime_ms(Self[D]) -> Int64
-pub fn[D] Pool::max_size(Self[D]) -> Int
-pub fn[D] Pool::new(() -> D raise DbError, max_size? : Int, max_lifetime_ms? : Int64, pre_ping? : Bool, acquire_timeout_ms? : Int64, clock? : () -> Int64) -> Self[D] raise DbError
-pub fn[D] Pool::open_count(Self[D]) -> Int
-pub fn[D] Pool::pre_ping(Self[D]) -> Bool
-pub fn[D : Driver] Pool::release(Self[D], D) -> Unit
-pub fn[D : Driver] Pool::try_acquire(Self[D]) -> D? raise DbError
-pub fn[D : Driver, R] Pool::with_conn(Self[D], (D) -> R raise DbError) -> R raise DbError
-
 pub(all) struct Row {
   columns : Array[String]
   values : Array[Value]

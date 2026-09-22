@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moondb/pool"
+
+import {
+  "moonbitstack/moondb",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Pool[D] {
+  // private fields
+}
+pub fn[D : @moondb.Driver] Pool::acquire(Self[D]) -> D raise @moondb.DbError
+pub fn[D] Pool::acquire_timeout_ms(Self[D]) -> Int64
+pub fn[D : @moondb.Driver] Pool::close_all(Self[D]) -> Unit
+pub fn[D] Pool::idle_count(Self[D]) -> Int
+pub fn[D] Pool::in_use_count(Self[D]) -> Int
+pub fn[D] Pool::is_closed(Self[D]) -> Bool
+pub fn[D] Pool::max_lifetime_ms(Self[D]) -> Int64
+pub fn[D] Pool::max_size(Self[D]) -> Int
+pub fn[D] Pool::new(() -> D raise @moondb.DbError, max_size? : Int, max_lifetime_ms? : Int64, pre_ping? : Bool, acquire_timeout_ms? : Int64, clock? : () -> Int64) -> Self[D] raise @moondb.DbError
+pub fn[D] Pool::open_count(Self[D]) -> Int
+pub fn[D] Pool::pre_ping(Self[D]) -> Bool
+pub fn[D : @moondb.Driver] Pool::release(Self[D], D) -> Unit
+pub fn[D : @moondb.Driver] Pool::try_acquire(Self[D]) -> D? raise @moondb.DbError
+pub fn[D : @moondb.Driver, R] Pool::with_conn(Self[D], (D) -> R raise @moondb.DbError) -> R raise @moondb.DbError
+
+// Type aliases
+
+// Traits
