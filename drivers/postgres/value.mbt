@@ -203,29 +203,9 @@ pub fn parse_double(s : String) -> Double? {
 /// Decode PostgreSQL `bytea` hex text (`\xDEADBEEF`) back to raw bytes. A value
 /// not in hex form (legacy escape format) rides back as its UTF-8 bytes.
 pub fn decode_bytea(s : String) -> Bytes {
-  if s.length() >= 2 && s[0] == '\\' && s[1] == 'x' {
-    let hexn = (s.length() - 2) / 2
-    let buf = Buffer()
-    for i in 0..<hexn {
-      let hi = hex_digit(s[2 + i * 2].to_int())
-      let lo = hex_digit(s[2 + i * 2 + 1].to_int())
-      buf.write_byte(((hi << 4) | lo).to_byte())
-    }
-    buf.to_bytes()
+  if s.has_prefix("\\x") {
+    @base16.decode_lossy(s[2:])
   } else {
     @utf8.encode(s)
-  }
-}
-
-///|
-fn hex_digit(c : Int) -> Int {
-  if c >= 48 && c <= 57 {
-    c - 48
-  } else if c >= 97 && c <= 102 {
-    c - 97 + 10
-  } else if c >= 65 && c <= 70 {
-    c - 65 + 10
-  } else {
-    0
   }
 }
