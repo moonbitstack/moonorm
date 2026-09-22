@@ -1,6 +1,6 @@
 name = "moonbitstack/moonorm"
 
-version = "0.9.0"
+version = "0.10.0"
 
 readme = "README.md"
 
@@ -20,5 +20,5 @@ keywords = [
 description = "moonorm — an ORM / SQL toolkit for MoonBit (← SQLAlchemy / SQLModel): a parameterized, injection-safe query builder (select / insert / update / delete)."
 
 import {
-  "moonbitstack/moondb@0.1.8",
+  "moonbitstack/moondb@0.2.0",
 }

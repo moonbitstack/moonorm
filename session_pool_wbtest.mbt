@@ -3,7 +3,7 @@
 ///|
 test "session with_pool reuses one pooled connection across units of work" {
   let created = [0]
-  let pool : @moondb.Pool[@moondb.MockDriver] = @moondb.Pool::new(() => {
+  let pool : @pool.Pool[@moondb.MockDriver] = @pool.Pool::new(() => {
     created[0] = created[0] + 1
     @moondb.MockDriver::new()
   })

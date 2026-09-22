@@ -1,5 +1,5 @@
 ///|
-/// The connection pool (`@moondb.Pool`, SQLAlchemy's `QueuePool` / Go's `database/sql`):
+/// The connection pool (`@pool.Pool`, SQLAlchemy's `QueuePool` / Go's `database/sql`):
 /// `acquire` / `release` check a connection out and back, reusing idle ones;
 /// `try_acquire` returns `None` instead of raising when the pool is exhausted;
 /// `with_conn` runs a closure with a borrowed connection and returns it even on error;
@@ -11,7 +11,7 @@
 #coverage.skip
 fn main {
   try {
-    let pool : @moondb.Pool[@moondb.MockDriver] = @moondb.Pool::new(
+    let pool : @pool.Pool[@moondb.MockDriver] = @pool.Pool::new(
       () => @moondb.MockDriver::new(),
       max_size=2,
       pre_ping=true,

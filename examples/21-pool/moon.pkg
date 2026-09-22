@@ -1,6 +1,7 @@
 import {
   "moonbitstack/moonorm",
   "moonbitstack/moondb",
+  "moonbitstack/moondb/pool",
 }
 
 pkgtype(kind: "executable")

@@ -38,7 +38,7 @@ connection pool.
 | 18 | [`streaming`](18-streaming/) | Bounded-memory reads: `stream_as` (typed `RowStream`), `stream` (raw cursor), and `query_stream` | `stream_as`, `RowStream`, `stream`, `query_stream` |
 | 19 | [`migrations`](19-migrations/) | A `Migrator` applying and rolling back `Migration`s (idempotent `up`, `down_to`), with `current_version` / `applied_versions` | `Migrator`, `Migration`, `up`, `down_to` |
 | 20 | [`reflection-diff`](20-reflection-diff/) | Reflecting columns from SQLite / PostgreSQL / MySQL metadata rows, `diff_schema`, and `index_ddl` | `reflect_columns`, `reflect_table`, `diff_schema`, `index_ddl` |
-| 21 | [`pool`](21-pool/) | The connection pool — `acquire` / `release` / `try_acquire` / `with_conn` — and `Session::with_pool` | `@moondb.Pool`, `with_conn`, `Session::with_pool` |
+| 21 | [`pool`](21-pool/) | The connection pool — `acquire` / `release` / `try_acquire` / `with_conn` — and `Session::with_pool` | `@pool.Pool`, `with_conn`, `Session::with_pool` |
 
 Values never enter the SQL string: every bound value becomes a `?` placeholder and one
 entry in the params list, in text order — so a bulk insert, an upsert, a subquery, or an

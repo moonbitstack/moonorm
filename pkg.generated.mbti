@@ -4,6 +4,7 @@ package "moonbitstack/moonorm"
 import {
   "moonbitlang/core/debug",
   "moonbitstack/moondb",
+  "moonbitstack/moondb/pool",
 }
 
 // Values
@@ -388,7 +389,7 @@ pub fn Session::savepoint_depth(Self) -> Int
 pub fn Session::stream(Self, Select) -> &@moondb.Cursor raise @moondb.DbError
 pub fn[T] Session::stream_as(Self, Model[T], Select) -> RowStream[T] raise @moondb.DbError
 pub fn[T] Session::update_record(Self, Model[T], T) -> Unit raise @moondb.DbError
-pub fn[D : @moondb.Driver, T] Session::with_pool(@moondb.Pool[D], (Self) -> T raise) -> T raise
+pub fn[D : @moondb.Driver, T] Session::with_pool(@pool.Pool[D], (Self) -> T raise) -> T raise
 
 pub(all) enum Source {
   Tbl(String)

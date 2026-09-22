@@ -40,7 +40,7 @@ SECTIONS = [
      "The @moondb contract every backend implements - execute, query, ping, close, "
      "and the transaction verbs. moonorm reaches nothing past this seam, which is "
      "what lets one Session drive SQLite, Postgres, MySQL or MockDriver."),
-    ("pool", "db/pool.mbt", "Connection pool",
+    ("pool", "db/pool/pool.mbt", "Connection pool",
      "A pool over any Driver: max_size ceiling, max_lifetime retirement, pre_ping "
      "health probing, and an acquire budget. close_all is the graceful half of a "
      "shutdown - nothing in flight is cut off, and in_use_count is what a drain "
