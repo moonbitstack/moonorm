@@ -2,9 +2,9 @@
 package "moonbitstack/moonmysql"
 
 import {
-  "moonbitlang/core/bigint",
   "moonbitlang/core/buffer",
   "moonbitlang/core/debug",
+  "moonbitstack/mooncrypt/rsa",
   "moonbitstack/moondb",
 }
 
@@ -38,8 +38,6 @@ pub let client_transactions : Int
 pub fn concat_bytes(Bytes, Bytes) -> Bytes
 
 pub fn decode_text_value(Bytes?, ColumnDef) -> @moondb.Value raise MysqlError
-
-pub fn ed25519_sign(Bytes, Bytes) -> Bytes
 
 pub fn is_auth_switch_request(Bytes) -> Bool
 
@@ -75,7 +73,7 @@ pub fn parse_handshake(Bytes) -> Handshake raise MysqlError
 
 pub fn parse_ok(Bytes) -> OkPacket raise MysqlError
 
-pub fn parse_rsa_public_key(String) -> (@bigint.BigInt, @bigint.BigInt) raise MysqlError
+pub fn parse_rsa_public_key(String) -> @rsa.PublicKey raise MysqlError
 
 pub fn parse_server_version(String) -> (ServerKind, String)
 
@@ -86,8 +84,6 @@ pub fn put_lenenc_uint(@buffer.Buffer, Int64) -> Unit
 pub fn put_string_nul(@buffer.Buffer, Bytes) -> Unit
 
 pub fn put_uint_le(@buffer.Buffer, Int64, Int) -> Unit
-
-pub fn rsa_oaep_sha1_encrypt(Bytes, @bigint.BigInt, @bigint.BigInt, Bytes) -> Bytes raise MysqlError
 
 // Errors
 pub(all) suberror MysqlError {

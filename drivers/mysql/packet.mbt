@@ -71,12 +71,12 @@ pub fn PacketReader::uint_le(
   n : Int,
 ) -> Int64 raise MysqlError {
   self.need(n)
-  let mut v = 0L
-  for i in 0..<n {
-    v = v | (self.data[self.pos + i].to_int().to_int64() << (i * 8))
+  guard @fixed.read_uint(self.data[:], at=self.pos, size=n, order=Little)
+    is Some(v) else {
+    raise ProtocolError("int<" + n.to_string() + "> is not a width")
   }
   self.pos += n
-  v
+  v.reinterpret_as_int64()
 }
 
 ///|
@@ -106,20 +106,19 @@ pub fn PacketReader::skip(
 /// NULL sentinel and `0xFF` are rejected here — NULL only has meaning inside a
 /// row, which [`lenenc_bytes`] handles.
 pub fn PacketReader::lenenc_uint(self : PacketReader) -> Int64 raise MysqlError {
-  let first = self.u8()
-  if first < 0xFB {
-    first.to_int64()
-  } else if first == 0xFC {
-    self.uint_le(2)
-  } else if first == 0xFD {
-    self.uint_le(3)
-  } else if first == 0xFE {
-    self.uint_le(8)
-  } else {
-    raise ProtocolError(
-      "invalid length-encoded integer prefix " + first.to_string(),
-    )
+  let (v, used) = @lenenc.decode(self.data[:], at=self.pos) catch {
+    @lenenc.Reserved(got~) =>
+      raise ProtocolError(
+        "invalid length-encoded integer prefix " + got.to_string(),
+      )
+    @lenenc.Truncated(_) =>
+      raise ProtocolError(
+        "short packet: an incomplete length-encoded integer at offset " +
+        self.pos.to_string(),
+      )
   }
+  self.pos += used
+  v.reinterpret_as_int64()
 }
 
 ///|
@@ -166,9 +165,7 @@ pub fn PacketReader::rest(self : PacketReader) -> Bytes {
 ///|
 /// Append an `n`-byte little-endian unsigned integer.
 pub fn put_uint_le(buf : Buffer, v : Int64, n : Int) -> Unit {
-  for i in 0..<n {
-    buf.write_byte(((v >> (i * 8)) & 0xFFL).to_int().to_byte())
-  }
+  @fixed.write_uint(buf, v.reinterpret_as_uint64(), size=n, order=Little)
 }
 
 ///|

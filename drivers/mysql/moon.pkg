@@ -10,6 +10,8 @@ import {
   "moonbitstack/mooncrypt/sign/ed25519",
   "moonbitstack/mooncrypt/rsa",
   "moonbitstack/mooncred/x509",
+  "moonbitstack/moonvar/lenenc",
+  "moonbitstack/moonvar/fixed",
   "moonbitstack/moondb",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/string",
