@@ -1,4 +1,4 @@
-name = "moonbitstack/moonorm-integration"
+name = "moonbitstack/moone2e"
 
 version = "0.1.0"
 

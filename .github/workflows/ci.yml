@@ -111,7 +111,7 @@ jobs:
   # a real SQLite file. It resolves its dependencies from mooncakes, so it runs
   # after those versions are published. Native-only (moonsqlite links C).
   integration:
-    name: moonorm-integration (native, real SQLite, published deps)
+    name: moone2e (native, real SQLite, published deps)
     runs-on: ubuntu-latest
     defaults:
       run:
