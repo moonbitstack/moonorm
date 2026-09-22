@@ -70,10 +70,9 @@ async fn PgConn::read_message(self : PgConn) -> (Int, Bytes) raise DbError {
     raise @moondb.ConnectError("connection closed mid-message")
   }
   let tag = head[0].to_int()
-  let len = (head[1].to_int() << 24) |
-    (head[2].to_int() << 16) |
-    (head[3].to_int() << 8) |
-    head[4].to_int()
+  guard @fixed.read_i32(head[:], at=1) is Some(len) else {
+    raise @moondb.QueryError("protocol: truncated message header")
+  }
   let body_len = len - 4
   if body_len < 0 {
     raise @moondb.QueryError("protocol: negative message length")

@@ -13,6 +13,7 @@ import {
   "moonbitstack/mooncrypt/kdf/pbkdf2",
   "moonbitstack/moonbase/base16",
   "moonbitstack/moonbase/base64",
+  "moonbitstack/moonvar/fixed",
   "moonbitstack/moondb",
   "moonbitlang/async",
   "moonbitlang/async/socket",

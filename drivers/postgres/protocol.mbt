@@ -26,16 +26,12 @@ fn MsgWriter::byte(self : MsgWriter, b : Byte) -> Unit {
 
 ///|
 fn MsgWriter::i16(self : MsgWriter, v : Int) -> Unit {
-  self.buf.write_byte((v >> 8).to_byte())
-  self.buf.write_byte(v.to_byte())
+  @fixed.write_i16(self.buf, v)
 }
 
 ///|
 fn MsgWriter::i32(self : MsgWriter, v : Int) -> Unit {
-  self.buf.write_byte((v >> 24).to_byte())
-  self.buf.write_byte((v >> 16).to_byte())
-  self.buf.write_byte((v >> 8).to_byte())
-  self.buf.write_byte(v.to_byte())
+  @fixed.write_i32(self.buf, v)
 }
 
 ///|

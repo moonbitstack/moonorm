@@ -41,24 +41,21 @@ fn ByteReader::u8(self : ByteReader) -> Int raise DbError {
 /// Read a big-endian signed 16-bit integer (network byte order, as every
 /// multi-byte field in the PostgreSQL wire protocol is encoded).
 fn ByteReader::i16(self : ByteReader) -> Int raise DbError {
-  let hi = self.u8()
-  let lo = self.u8()
-  let v = (hi << 8) | lo
-  if v >= 0x8000 {
-    v - 0x10000
-  } else {
-    v
+  guard @fixed.read_i16(self.data[:], at=self.pos) is Some(v) else {
+    raise QueryError("protocol: read past end of message")
   }
+  self.pos += 2
+  v
 }
 
 ///|
 /// Read a big-endian signed 32-bit integer.
 fn ByteReader::i32(self : ByteReader) -> Int raise DbError {
-  let b0 = self.u8()
-  let b1 = self.u8()
-  let b2 = self.u8()
-  let b3 = self.u8()
-  (b0 << 24) | (b1 << 16) | (b2 << 8) | b3
+  guard @fixed.read_i32(self.data[:], at=self.pos) is Some(v) else {
+    raise QueryError("protocol: read past end of message")
+  }
+  self.pos += 4
+  v
 }
 
 ///|
