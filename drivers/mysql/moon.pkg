@@ -12,6 +12,7 @@ import {
   "moonbitstack/mooncred/x509",
   "moonbitstack/moonvar/lenenc",
   "moonbitstack/moonvar/fixed",
+  "moonbitstack/moonbase/base16",
   "moonbitstack/moondb",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/string",

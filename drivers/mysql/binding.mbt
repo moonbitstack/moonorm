@@ -22,14 +22,8 @@ fn render_value(v : @moondb.Value, mode : QuoteMode) -> Bytes {
     }
     Blob(bytes) => {
       let buf = Buffer()
-      buf.write_byte(b'x')
-      buf.write_byte(b'\'')
-      let digits = "0123456789abcdef"
-      for i in 0..<bytes.length() {
-        let c = bytes[i].to_int()
-        buf.write_byte(digits[c >> 4].to_int().to_byte())
-        buf.write_byte(digits[c & 0xF].to_int().to_byte())
-      }
+      buf.write_bytes(b"x'")
+      buf.write_bytes(@base16.encode_bytes(bytes))
       buf.write_byte(b'\'')
       buf.to_bytes()
     }

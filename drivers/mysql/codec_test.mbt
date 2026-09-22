@@ -62,7 +62,7 @@ test "scramble: matches the reference mysql_native_password vector" {
   }
   let salt = sb.to_bytes()
   let scr = @moonmysql.native_password_scramble(b"secret", salt)
-  assert_eq(hex(scr), "b32bb3a583e1340c0a1108d58b1be49781ad8c2f")
+  assert_eq(@base16.encode(scr), "b32bb3a583e1340c0a1108d58b1be49781ad8c2f")
   // An empty password yields an empty response.
   assert_eq(@moonmysql.native_password_scramble(b"", salt).length(), 0)
 }
@@ -92,7 +92,7 @@ test "handshake: parse a protocol-10 initial packet" {
   assert_eq(hs.salt.length(), 20)
   assert_eq((hs.capability & @moonmysql.client_plugin_auth) != 0, true)
   // salt = auth1(8) ++ first 12 bytes of auth2 (trailing NUL dropped)
-  assert_eq(hex(hs.salt), "1122334455667788aabbccddeeff001122334455")
+  assert_eq(@base16.encode(hs.salt), "1122334455667788aabbccddeeff001122334455")
 }
 
 ///|
@@ -143,7 +143,7 @@ test "handshake: parse a MariaDB packet (ext caps read, salt + plugin intact)" {
   assert_eq(hs.salt.length(), 20)
   // Reading the 4 extended-cap bytes keeps the offsets identical to MySQL, so the
   // salt is still auth1(8) ++ first 12 bytes of auth2.
-  assert_eq(hex(hs.salt), "1122334455667788aabbccddeeff001122334455")
+  assert_eq(@base16.encode(hs.salt), "1122334455667788aabbccddeeff001122334455")
 }
 
 ///|

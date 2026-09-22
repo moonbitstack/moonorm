@@ -15,13 +15,13 @@ test "mariadb client_ed25519 signs the challenge to the reference vector" {
     scr.unsafe_reinterpret_as_bytes(),
   )
   assert_eq(
-    hex(sig),
+    @base16.encode(sig),
     "439294572414f2d0088571388ae40a7c5268c182c6e19b96c9cf70a66bf8eee1866f1609b34cf21b96d5bda0c47a4937ed8be656a2c2c95c597373fca1eeaf0b",
   )
   // ed25519 signs unconditionally: an empty password still produces a valid
   // 64-byte signature (SHA-512("") expansion), cross-verified by `cryptography`.
   assert_eq(
-    hex(
+    @base16.encode(
       @moonmysql.mariadb_ed25519_response(
         b"",
         scr.unsafe_reinterpret_as_bytes(),

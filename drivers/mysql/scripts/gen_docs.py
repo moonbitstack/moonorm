@@ -6,12 +6,16 @@ import re, html, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 PKGS = [
-    ("sha1", "sha1.mbt",
-     "Self-contained SHA-1 (FIPS 180-4) — the primitive behind the mysql_native_password scramble."),
+    ("error", "error.mbt",
+     "The driver's one error type, for the protocol failures the server and the wire can produce."),
     ("packet", "packet.mbt",
      "The MySQL packet codec: length-encoded and fixed-width little-endian integers, NUL- and lenenc-strings, over an in-memory cursor."),
     ("handshake", "handshake.mbt",
      "Protocol-10 handshake parsing, capability flags, the mysql_native_password scramble, and the HandshakeResponse41 builder."),
+    ("caching_sha2", "caching_sha2.mbt",
+     "MySQL 8's default authentication: the fast-auth scramble, and the full-auth token RSA-OAEP encrypted to the server's public key."),
+    ("ed25519", "ed25519.mbt",
+     "MariaDB's client_ed25519 authentication response; the signature itself is mooncrypt's."),
     ("response", "response.mbt",
      "OK / ERR / EOF classification, column-definition parsing, and the text-protocol result-set decoder into @moondb rows."),
     ("binding", "binding.mbt",
