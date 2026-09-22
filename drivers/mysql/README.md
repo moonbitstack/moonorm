@@ -1,6 +1,6 @@
 # moonmysql
 
-> Moved on mooncakes from `moonbitstack/moonmysql` to `moonbitstack/moonmysql`.
+> Moved on mooncakes from `Lfan-ke/moonmysql` to `moonbitstack/moonmysql`.
 
 A **pure-MoonBit MySQL / MariaDB wire-protocol driver** — no C, no bindings, like
 PyMySQL. It speaks the MySQL client/server protocol (version 10 handshake,
