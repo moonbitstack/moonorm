@@ -11,8 +11,8 @@
 /// A pool of in-memory SQLite connections.
 fn mem_pool(
   max_size? : Int = 4,
-) -> @moondb.Pool[@sqlite.SqliteDriver] raise @moondb.DbError {
-  @moondb.Pool::new(() => @sqlite.SqliteDriver::open(":memory:"), max_size~)
+) -> @pool.Pool[@sqlite.SqliteDriver] raise @moondb.DbError {
+  @pool.Pool::new(() => @sqlite.SqliteDriver::open(":memory:"), max_size~)
 }
 
 ///|
@@ -54,7 +54,7 @@ test "pool over real SQLite: max_size caps concurrent checkouts" {
 ///|
 test "pool over real SQLite: pre_ping evicts a connection closed underneath it" {
   let opened = [0]
-  let pool = @moondb.Pool::new(
+  let pool = @pool.Pool::new(
     () => {
       opened[0] = opened[0] + 1
       @sqlite.SqliteDriver::open(":memory:")
