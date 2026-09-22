@@ -9,10 +9,7 @@ const OID_TEXT : Int = 25
 ///|
 /// Read the big-endian Int32 at offset `off` of `b` (test helper).
 fn be_i32(b : Bytes, off : Int) -> Int {
-  (b[off].to_int() << 24) |
-  (b[off + 1].to_int() << 16) |
-  (b[off + 2].to_int() << 8) |
-  b[off + 3].to_int()
+  @fixed.read_i32(b[:], at=off).unwrap()
 }
 
 ///|
