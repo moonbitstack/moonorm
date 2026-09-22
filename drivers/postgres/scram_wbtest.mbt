@@ -1,23 +1,11 @@
 ///|
-fn hex(b : Bytes) -> String {
-  let d = "0123456789abcdef".to_array()
-  let sb = StringBuilder()
-  for i = 0; i < b.length(); i = i + 1 {
-    let v = b[i].to_int()
-    sb.write_char(d[(v >> 4) & 0xf])
-    sb.write_char(d[v & 0xf])
-  }
-  sb.to_string()
-}
-
-///|
 test "SHA-256 matches the NIST vectors" {
   assert_eq(
-    hex(@sha2.hash(b""[:])),
+    @base16.encode(@sha2.hash(b""[:])),
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   )
   assert_eq(
-    hex(@sha2.hash(b"abc"[:])),
+    @base16.encode(@sha2.hash(b"abc"[:])),
     "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
   )
 }
@@ -29,7 +17,7 @@ test "SCRAM-SHA-256 reproduces the RFC 7677 example vectors" {
   assert_eq(@base64.encode(salt), "W22ZaJ0SNY7soEsUEjb6gQ==")
   let salted = @pbkdf2.key(b"pencil"[:], salt[:], digest, rounds=4096, len=32)
   assert_eq(
-    hex(salted),
+    @base16.encode(salted),
     "c4a49510323ab4f952cac1fa99441939e78ea74d6be81ddf7096e87513dc615d",
   )
   let auth = b"n=user,r=rOprNGfwEbeRWgbNEkqO,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0,s=W22ZaJ0SNY7soEsUEjb6gQ==,i=4096,c=biws,r=rOprNGfwEbeRWgbNEkqO%hvYDpWUa2RaTCAfuxFIlj)hNlF$k0"
