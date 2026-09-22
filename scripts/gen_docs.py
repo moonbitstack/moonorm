@@ -66,8 +66,7 @@ SECTIONS = [
      "$n placeholders, and the type mapping to @moondb.Value."),
     ("mysql", ("drivers/mysql/handshake.mbt", "drivers/mysql/packet.mbt", "drivers/mysql/response.mbt",
                "drivers/mysql/binding.mbt", "drivers/mysql/error.mbt", "drivers/mysql/caching_sha2.mbt",
-               "drivers/mysql/ed25519.mbt", "drivers/mysql/sha1.mbt", "drivers/mysql/sha256.mbt",
-               "drivers/mysql/sha512.mbt"),
+               "drivers/mysql/ed25519.mbt", "drivers/mysql/digest.mbt"),
      "MySQL and MariaDB driver",
      "The MySQL wire protocol in MoonBit: the handshake and every authentication "
      "plugin a modern server offers — native password, caching_sha2 including the "

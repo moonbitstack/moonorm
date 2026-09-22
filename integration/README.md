@@ -1,6 +1,7 @@
 # moonorm end-to-end integration
 
-> Moved on mooncakes from `Lfan-ke/moonorm-integration` to `moonbitstack/moonorm-integration`.
+> The module is named `moonbitstack/moone2e`. It is not published, so it has no
+> mooncakes entry; the name follows the family rule of `moon` plus a short root.
 
 This module isn't published. It exists so CI can prove the published ORM and the
 published SQLite driver work together against a real database, not a mock.
