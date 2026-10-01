@@ -3,7 +3,8 @@
 // integers), the handshake parser, the mysql_native_password scramble, and the
 // text-protocol value decoder. No sockets and no async live here, so every byte
 // of the wire format is unit-tested on *all* backends. The socket transport and
-// the @moondb.Driver implementation live in the native-only `client` package.
+// the @moondb.Driver implementation live in `client`, which supports native and
+// wasm hosts with TCP socket bindings.
 import {
   "moonbitstack/mooncrypt/hash/sha1",
   "moonbitstack/mooncrypt/hash/sha2",

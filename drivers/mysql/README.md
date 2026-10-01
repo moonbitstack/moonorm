@@ -57,8 +57,9 @@ async fn run() -> Unit raise {
 
 ## Architecture
 
-The library is split so the entire wire format is testable off any backend, and
-only the socket transport is native-bound.
+The library is split so the entire wire format is testable off any backend. The
+socket transport supports native and wasm; wasm runtime use requires a host with
+TCP socket bindings, such as moonrun, and does not include browser wasm.
 
 ```mermaid
 flowchart TD
@@ -69,7 +70,7 @@ flowchart TD
     response["response — OK/ERR/EOF + text-row decode"]
     binding["binding — ? placeholders → escaped literals"]
   end
-  subgraph client["moonbitstack/moonmysql/client · native only"]
+  subgraph client["moonbitstack/moonmysql/client · native + wasm"]
     conn["MysqlConn — async transport over @socket.Tcp"]
     driver["MysqlDriver — sync @moondb.Driver adapter"]
   end
@@ -84,7 +85,7 @@ flowchart TD
 ```
 
 ```
-%% root (pure, all backends)          client (native)
+%% root (pure, all backends)          client (native + wasm host)
 %%   sha1 ─┐                            MysqlConn ── async socket transport
 %%   packet┼─ handshake ─┐                 │
 %%         └─ response ──┼──────────────►  │
@@ -95,8 +96,9 @@ Every packet field type — the 3-byte length + sequence-id framing, length-enco
 and fixed-width little-endian integers, NUL- and length-encoded strings — is
 parsed through an in-memory cursor in the pure half, so the codec is unit-tested
 on wasm, wasm-gc, js, and native. The `client` package adds the async socket
-transport and the driver, and is native-only because `moonbitlang/async/socket`
-has no JS/wasm backend.
+transport and the driver. It compiles on native and wasm; wasm execution requires
+host-provided TCP socket bindings (verified with moonrun), so browser wasm is not
+a supported runtime.
 
 ## The async wall
 
