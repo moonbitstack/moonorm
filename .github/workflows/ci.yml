@@ -203,12 +203,12 @@ jobs:
         run: |
           moon fmt && git diff --exit-code
 
-  # The MySQL driver's integration test runs against a real MySQL 8, pinned to
-  # mysql_native_password so this round's SHA1-scramble handshake authenticates.
-  # GitHub service containers cannot append server flags, so we run the container
-  # directly and health-gate it.
+  # The MySQL driver's integration test runs against a real MySQL 8 on native and
+  # wasm, pinned to mysql_native_password so this round's SHA1-scramble handshake
+  # authenticates. GitHub service containers cannot append server flags, so we run
+  # the container directly and health-gate it.
   mysql:
-    name: moonmysql (native, live MySQL 8)
+    name: moonmysql (native + wasm, live MySQL 8)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -257,7 +257,7 @@ jobs:
       - name: moon build
         run: moon build --target all
 
-      - name: moon test (pure codec on all backends + native round trip to MySQL 8)
+      - name: moon test (codec on all backends + live MySQL on native and wasm)
         env:
           MYSQL_TEST: "1"
           MYSQL_HOST: "127.0.0.1"
