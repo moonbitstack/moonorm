@@ -144,10 +144,10 @@ jobs:
         run: |
           moon fmt && git diff --exit-code
 
-  # The PostgreSQL driver's real round trip runs against a live postgres:16.
-  # Service containers are Linux-only, so this job is ubuntu-only.
+  # The PostgreSQL driver's real round trip runs on native and wasm against a
+  # live postgres:16. Service containers are Linux-only, so this job is ubuntu-only.
   postgres:
-    name: moonpostgres (native, live PostgreSQL)
+    name: moonpostgres (native + wasm, live PostgreSQL)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -184,12 +184,12 @@ jobs:
           moon update
 
       - name: moon check
-        run: moon check --target native --deny-warn
+        run: moon check --target all --deny-warn
 
       - name: moon build
-        run: moon build --target native
+        run: moon build --target all
 
-      - name: moon test (native, against live PostgreSQL)
+      - name: moon test (native and wasm, against live PostgreSQL)
         env:
           MOON_PG_TEST: "1"
           PGHOST: 127.0.0.1
@@ -197,7 +197,7 @@ jobs:
           PGUSER: postgres
           PGPASSWORD: postgres
           PGDATABASE: test
-        run: moon test --target native
+        run: moon test --target all
 
       - name: lint (fmt is clean)
         run: |
