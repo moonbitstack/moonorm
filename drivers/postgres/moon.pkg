@@ -1,9 +1,9 @@
 // moonpostgres: a pure-MoonBit PostgreSQL wire-protocol driver (v3), no C.
-// The connection layer rides moonbitlang/async sockets, so the package is
-// native-only (the async runtime has no JS/wasm backend). PgConn implements
+// The connection layer rides moonbitlang/async sockets, so the package supports
+// native and wasm hosts with TCP socket bindings. PgConn implements
 // @moondb.AsyncDriver — the async half of the moondb seam, which exists because
 // a socket-backed driver cannot satisfy the synchronous @moondb.Driver at all.
-supported_targets = "native"
+supported_targets = "+native+wasm"
 
 import {
   "moonbitstack/mooncrypt/spec",

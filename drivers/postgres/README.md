@@ -10,7 +10,8 @@ moon add moonbitstack/moonpostgres
 
 Previously published as `Lfan-ke/moon-postgres`.
 
-Native-only: the connection layer rides `moonbitlang/async` sockets, which have no JS/wasm backend.
+Supports native and wasm hosts with TCP socket bindings, such as moonrun. Browser
+wasm is not supported because it cannot open raw TCP sockets.
 
 ## Quickstart
 
