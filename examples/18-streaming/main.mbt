@@ -8,9 +8,9 @@
 ///
 ///     moon run examples/18-streaming
 struct Hero {
-  id : Int
+  id : Int32
   name : String
-  power : Int
+  power : Int32
 }
 
 ///|

@@ -1,12 +1,12 @@
 ///|
 priv struct MTag {
-  id : Int
+  id : Int32
   name : String
 }
 
 ///|
 priv struct MPost {
-  id : Int
+  id : Int32
 }
 
 ///|

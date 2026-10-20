@@ -22,7 +22,7 @@ pub(all) enum ColumnType {
   // SQLModel's everyday field types beyond the storage affinities. `VarcharType(n)`
   // carries a length; the rest declare a type SQLite tolerates and that a dialect
   // renders natively (see `ColumnType::sql`). UUID/JSON store as TEXT on SQLite.
-  VarcharType(Int)
+  VarcharType(Int32)
   NumericType
   DateTimeType
   DateType
@@ -89,12 +89,12 @@ pub(all) struct Column {
 pub fn column(
   name : String,
   col_type : ColumnType,
-  primary_key? : Bool = false,
-  autoincrement? : Bool = false,
-  nullable? : Bool = true,
-  unique? : Bool = false,
+  primary_key~ : Bool = false,
+  autoincrement~ : Bool = false,
+  nullable~ : Bool = true,
+  unique~ : Bool = false,
   default? : String,
-  checks? : Array[String] = [],
+  checks~ : Array[String] = [],
   references? : (String, String),
   on_delete? : String,
   on_update? : String,
@@ -120,7 +120,7 @@ pub fn column(
 /// that keyword; a non-nullable column emits `NOT NULL`; a `references` target
 /// emits a `REFERENCES table(column)` clause. Column and table names are trusted
 /// identifiers declared in code, never bound values.
-pub fn Column::ddl(self : Column, inline_pk? : Bool = true) -> String {
+pub fn Column::ddl(self : Column, inline_pk~ : Bool = true) -> String {
   let mut s = self.name + " " + self.col_type.sql()
   if self.primary_key && inline_pk {
     s = s + " PRIMARY KEY"
@@ -185,12 +185,12 @@ pub fn[T] field(
   name : String,
   col_type : ColumnType,
   encode : (T) -> Value,
-  primary_key? : Bool = false,
-  autoincrement? : Bool = false,
-  nullable? : Bool = true,
-  unique? : Bool = false,
+  primary_key~ : Bool = false,
+  autoincrement~ : Bool = false,
+  nullable~ : Bool = true,
+  unique~ : Bool = false,
   default? : String,
-  checks? : Array[String] = [],
+  checks~ : Array[String] = [],
   references? : (String, String),
   on_delete? : String,
   on_update? : String,
@@ -240,7 +240,7 @@ pub struct Model[T] {
   // models in one container and get them back typed; the type-indexed store is the
   // only place the type is still known. The outer key is the session's serial, so
   // two sessions never hand out the same instance, and closing one drops its slot.
-  ident : Map[Int, Map[String, T]]
+  ident : Map[Int32, Map[String, T]]
 }
 
 ///|
@@ -394,7 +394,7 @@ pub fn[T] Model::table_descriptor(self : Model[T]) -> Table {
 /// This is the explicit counterpart of SQLAlchemy's `metadata.create_all()`.
 pub fn[T] Model::create_table_sql(
   self : Model[T],
-  if_not_exists? : Bool = false,
+  if_not_exists~ : Bool = false,
 ) -> String {
   let head = if if_not_exists {
     "CREATE TABLE IF NOT EXISTS "
@@ -639,7 +639,7 @@ pub fn ColumnType::sql_for(self : ColumnType, dialect : Dialect) -> String {
 pub fn Column::ddl_for(
   self : Column,
   dialect : Dialect,
-  inline_pk? : Bool = true,
+  inline_pk~ : Bool = true,
 ) -> String {
   let mut s = if self.primary_key && inline_pk && self.autoincrement {
     match dialect {
@@ -688,7 +688,7 @@ pub fn Column::ddl_for(
 pub fn[T] Model::create_table_sql_for(
   self : Model[T],
   dialect : Dialect,
-  if_not_exists? : Bool = false,
+  if_not_exists~ : Bool = false,
 ) -> String {
   let head = if if_not_exists {
     "CREATE TABLE IF NOT EXISTS "

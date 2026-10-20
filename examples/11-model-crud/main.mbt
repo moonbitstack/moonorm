@@ -7,9 +7,9 @@
 ///
 ///     moon run examples/11-model-crud
 struct Hero {
-  id : Int
+  id : Int32
   name : String
-  power : Int
+  power : Int32
 }
 
 ///|

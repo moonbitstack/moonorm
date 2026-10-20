@@ -63,15 +63,15 @@ impl @moondb.Driver for Tap with fn close(self : Tap) -> Unit {
 /// leaning on `physical_equal`, whose result the compiler does not promise to keep
 /// stable across backends.
 struct Squad {
-  id : Int
+  id : Int32
   mut name : String
 } derive(Eq, Debug)
 
 ///|
 struct Member {
-  id : Int
+  id : Int32
   name : String
-  squad_id : Int
+  squad_id : Int32
 } derive(Eq, Debug)
 
 ///|
@@ -307,7 +307,7 @@ test "identity: a composite key round-trips through get_by" {
       column("role", TextType, primary_key=true),
     ],
     r => (r.int(0), r.text(1)),
-    (g : (Int, String)) => [("user_id", Int(g.0)), ("role", Text(g.1))],
+    (g : (Int32, String)) => [("user_id", Int(g.0)), ("role", Text(g.1))],
   )
   tap.inner.execute("seed", [Int(7), Text("admin")]) |> ignore
   let a = match sess.get_by(grants, [Int(7), Text("admin")]) {

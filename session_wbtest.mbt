@@ -10,15 +10,15 @@
 
 ///|
 struct Team {
-  id : Int
+  id : Int32
   name : String
 } derive(Eq, Debug)
 
 ///|
 struct Hero {
-  id : Int
+  id : Int32
   name : String
-  team_id : Int
+  team_id : Int32
 } derive(Eq, Debug)
 
 ///|

@@ -8,9 +8,9 @@
 ///
 ///     moon run examples/12-declarative-fields
 struct Hero {
-  id : Int
+  id : Int32
   name : String
-  power : Int
+  power : Int32
 }
 
 ///|

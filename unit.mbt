@@ -285,7 +285,7 @@ fn plan(work : Array[Work]) -> Array[Work] {
 
 ///|
 /// Whether nothing still queued has to be written before `w`, which sits at `at`.
-fn ready(w : Work, left : Array[Work], at : Int) -> Bool {
+fn ready(w : Work, left : Array[Work], at : Int32) -> Bool {
   for i = 0; i < left.length(); i = i + 1 {
     if i == at {
       continue
@@ -341,19 +341,19 @@ pub fn Session::flush(self : Session) -> Unit raise @moondb.DbError {
 
 ///|
 /// How many records are queued for insertion — SQLAlchemy's `Session.new`.
-pub fn Session::pending_count(self : Session) -> Int {
+pub fn Session::pending_count(self : Session) -> Int32 {
   self.pending.length()
 }
 
 ///|
 /// How many records are queued for update — SQLAlchemy's `Session.dirty`.
-pub fn Session::dirty_count(self : Session) -> Int {
+pub fn Session::dirty_count(self : Session) -> Int32 {
   self.dirty.length()
 }
 
 ///|
 /// How many records are queued for deletion — SQLAlchemy's `Session.deleted`.
-pub fn Session::deleted_count(self : Session) -> Int {
+pub fn Session::deleted_count(self : Session) -> Int32 {
   self.deleted.length()
 }
 

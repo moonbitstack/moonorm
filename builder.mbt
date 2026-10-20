@@ -181,7 +181,7 @@ pub fn cast(expr : String, ty : String) -> String {
 /// `WHEN … THEN …`, and a non-empty `else_` the trailing `ELSE`. Identifier-level
 /// like `func`. With no branches there is nothing to test, so it folds to `else_`
 /// (or `NULL`), which is what an all-branchless `CASE` would evaluate to anyway.
-pub fn case_(whens : Array[(String, String)], else_? : String = "") -> String {
+pub fn case_(whens : Array[(String, String)], else_~ : String = "") -> String {
   if whens.length() == 0 {
     return if else_ == "" { "NULL" } else { else_ }
   }
@@ -405,8 +405,8 @@ pub struct Select {
   set_ops : Array[(String, Select)]
   distinct_on_ : Array[String]
   mut distinct_ : Bool
-  mut limit_ : Int?
-  mut offset_ : Int?
+  mut limit_ : Int32?
+  mut offset_ : Int32?
   // Row-locking clause (SQLAlchemy `.with_for_update()`); `None` = no locking.
   mut lock_ : LockClause?
 }
@@ -483,10 +483,10 @@ fn Select::dup(self : Select) -> Select {
 /// row locks, ignores it).
 pub fn Select::for_update(
   self : Select,
-  read? : Bool = false,
-  of? : Array[String] = [],
-  nowait? : Bool = false,
-  skip_locked? : Bool = false,
+  read~ : Bool = false,
+  of~ : Array[String] = [],
+  nowait~ : Bool = false,
+  skip_locked~ : Bool = false,
 ) -> Select {
   let s = self.dup()
   s.lock_ = Some({
@@ -601,9 +601,9 @@ pub fn Select::count(self : Select) -> Select {
 pub fn Select::window(
   self : Select,
   expr : String,
-  partition_by? : Array[String] = [],
-  order_by? : Array[(String, Order)] = [],
-  as_? : String = "",
+  partition_by~ : Array[String] = [],
+  order_by~ : Array[(String, Order)] = [],
+  as_~ : String = "",
 ) -> Select {
   let inner : Array[String] = []
   if partition_by.length() > 0 {
@@ -775,7 +775,7 @@ pub fn Select::with_recursive(
   name : String,
   anchor : Select,
   step : Select,
-  all? : Bool = false,
+  all~ : Bool = false,
 ) -> Select {
   let sub = if all { anchor.union_all(step) } else { anchor.union(step) }
   let s = self.dup()
@@ -858,7 +858,7 @@ pub fn Select::order_by(
   self : Select,
   col : String,
   ord : Order,
-  nulls? : Nulls = Auto,
+  nulls~ : Nulls = Auto,
 ) -> Select {
   let s = self.dup()
   s.orders.push({ col, ord, nulls, })
@@ -867,7 +867,7 @@ pub fn Select::order_by(
 
 ///|
 /// Cap how many rows come back.
-pub fn Select::limit(self : Select, n : Int) -> Select {
+pub fn Select::limit(self : Select, n : Int32) -> Select {
   let s = self.dup()
   s.limit_ = Some(n)
   s
@@ -875,7 +875,7 @@ pub fn Select::limit(self : Select, n : Int) -> Select {
 
 ///|
 /// Skip the first `n` rows. Paired with `limit` this is a page.
-pub fn Select::offset(self : Select, n : Int) -> Select {
+pub fn Select::offset(self : Select, n : Int32) -> Select {
   let s = self.dup()
   s.offset_ = Some(n)
   s
@@ -899,7 +899,7 @@ fn derived(sql : String) -> String {
 /// precedence; SQLite instead groups every operator left to right, so a chain that
 /// mixes the two levels means different things on different servers unless the
 /// grouping is made explicit.
-fn set_prec(op : String) -> Int {
+fn set_prec(op : String) -> Int32 {
   if op == "INTERSECT" {
     2
   } else {
@@ -1421,7 +1421,7 @@ pub fn Update::set_expr(
   self : Update,
   col : String,
   expr : String,
-  vals? : Array[Value] = [],
+  vals~ : Array[Value] = [],
 ) -> Update {
   let u = self.dup()
   u.sets.push((col, Expr(expr, vals)))

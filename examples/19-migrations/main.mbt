@@ -15,12 +15,12 @@
 /// — the version INSERT/DELETE and the two version SELECTs — and treats every other
 /// statement (the migrations' own DDL) as an applied no-op it need not model.
 struct SchemaLog {
-  applied : Array[(Int, String)]
+  applied : Array[(Int32, String)]
   mut closed : Bool
 }
 
 ///|
-fn version_of(v : @moondb.Value) -> Int {
+fn version_of(v : @moondb.Value) -> Int32 {
   match v {
     Int(n) => n
     Int64(n) => n.to_int()
@@ -69,7 +69,7 @@ impl @moondb.Driver for SchemaLog with fn query(
     raise @moondb.Closed
   }
   let out : Array[@moondb.Row] = []
-  let row = fn(version : Int) -> @moondb.Row {
+  let row = fn(version : Int32) -> @moondb.Row {
     { columns: ["version"], values: [@moondb.Int(version)], }
   }
   if sql.has_prefix("SELECT version FROM schema_migrations WHERE version") {

@@ -17,11 +17,11 @@ pub struct Session {
   // depth the way SQLAlchemy's `begin_nested()` does (the caller never spells a
   // savepoint name). `sp_seq` only ever increases, giving each savepoint a name
   // unique within the session even after earlier ones are released.
-  mut sp_depth : Int
-  mut sp_seq : Int
+  mut sp_depth : Int32
+  mut sp_seq : Int32
   // Names this session's slot in the identity map of every model it touches (see
   // `Model::ident`).
-  id : Int
+  id : Int32
   pending : Array[Work]
   dirty : Array[Work]
   deleted : Array[Work]
@@ -33,7 +33,7 @@ pub struct Session {
 ///|
 /// Session serials. Identity maps live in the models rather than the session, so a
 /// session needs a name no other live session shares.
-let session_seq : Ref[Int] = Ref(0)
+let session_seq : Ref[Int32] = Ref(0)
 
 ///|
 /// Wrap a connected driver in a session.
@@ -53,7 +53,7 @@ pub fn Session::new(driver : &@moondb.Driver) -> Session {
 
 ///|
 /// How many nested savepoints opened via `begin_nested` are currently active.
-pub fn Session::savepoint_depth(self : Session) -> Int {
+pub fn Session::savepoint_depth(self : Session) -> Int32 {
   self.sp_depth
 }
 
@@ -215,7 +215,7 @@ pub impl Show for LostUpdate with fn output(self : LostUpdate, logger : &Logger)
 pub fn Session::modify_versioned(
   self : Session,
   stmt : Update,
-  what? : String = "row",
+  what~ : String = "row",
 ) -> @moondb.ExecResult raise {
   let (sql, params) = stmt.build()
   let res = self.driver.execute(sql, params)
@@ -332,7 +332,7 @@ pub fn Session::release(
 pub struct Savepoint {
   sess : Session
   name : String
-  depth : Int
+  depth : Int32
   mut finished : Bool
 }
 
@@ -345,7 +345,7 @@ pub fn Savepoint::name(self : Savepoint) -> String {
 ///|
 /// This savepoint's nesting depth (1 for the outermost `begin_nested`, 2 for one
 /// opened inside it, and so on).
-pub fn Savepoint::depth(self : Savepoint) -> Int {
+pub fn Savepoint::depth(self : Savepoint) -> Int32 {
   self.depth
 }
 
@@ -499,7 +499,7 @@ fn tx_opts_before_begin(dialect : Dialect) -> Bool {
 pub fn Session::begin_with(
   self : Session,
   opts : TxOptions,
-  dialect? : Dialect = Postgres,
+  dialect~ : Dialect = Postgres,
 ) -> Unit raise @moondb.DbError {
   let stmts = opts.to_sql(dialect)
   if tx_opts_before_begin(dialect) {
@@ -521,7 +521,7 @@ pub fn Session::begin_with(
 pub fn[T] Session::create_table(
   self : Session,
   model : Model[T],
-  if_not_exists? : Bool = false,
+  if_not_exists~ : Bool = false,
 ) -> @moondb.ExecResult raise @moondb.DbError {
   self.driver.execute(model.create_table_sql(if_not_exists~), [])
 }

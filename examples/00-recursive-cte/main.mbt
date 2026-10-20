@@ -7,9 +7,9 @@
 ///
 ///     moon run examples/00-recursive-cte
 struct Category {
-  id : Int
+  id : Int32
   name : String
-  parent : Int
+  parent : Int32
 }
 
 ///|

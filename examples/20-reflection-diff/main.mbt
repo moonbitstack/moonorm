@@ -84,11 +84,11 @@ impl @moondb.Driver for Pragma with fn close(_self : Pragma) -> Unit {
 ///|
 /// A `PRAGMA table_info` row: cid, name, type, notnull, dflt_value, pk.
 fn pragma_row(
-  cid : Int,
+  cid : Int32,
   name : String,
   ty : String,
-  notnull : Int,
-  pk : Int,
+  notnull : Int32,
+  pk : Int32,
 ) -> @moondb.Row {
   {
     columns: ["cid", "name", "type", "notnull", "dflt_value", "pk"],

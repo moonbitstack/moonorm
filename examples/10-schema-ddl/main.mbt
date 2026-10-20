@@ -8,9 +8,9 @@
 ///
 ///     moon run examples/10-schema-ddl
 struct Hero {
-  id : Int
+  id : Int32
   name : String
-  team_id : Int
+  team_id : Int32
 }
 
 ///|

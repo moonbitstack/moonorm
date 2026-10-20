@@ -166,7 +166,7 @@ pub impl @moondb.Driver for FixedDriver with fn close(_self) -> Unit {
 
 ///|
 /// The versioned UPDATE a caller writes: bump the version, guard on the one it read.
-fn versioned_update(current : Int) -> Update {
+fn versioned_update(current : Int32) -> Update {
   update("account")
   .set("balance", Int(50))
   .set("version", Int(current + 1))

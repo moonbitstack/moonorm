@@ -1,7 +1,7 @@
 ///|
 priv struct MLink {
-  a : Int
-  b : Int
+  a : Int32
+  b : Int32
 }
 
 ///|

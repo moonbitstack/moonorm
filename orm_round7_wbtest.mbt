@@ -13,15 +13,15 @@
 /// An author has many books; a book belongs to one author. Fresh domain names so
 /// these coexist with the Team/Hero models the other whitebox tests declare.
 struct Author {
-  id : Int
+  id : Int32
   name : String
 } derive(Eq, Debug)
 
 ///|
 struct Book {
-  id : Int
+  id : Int32
   title : String
-  author_id : Int
+  author_id : Int32
 } derive(Eq, Debug)
 
 ///|
@@ -64,7 +64,7 @@ fn book_model() -> Model[Book] {
 struct SpyDriver {
   log : Array[String]
   rows : Array[@moondb.Row]
-  mut queries : Int
+  mut queries : Int32
 }
 
 ///|
@@ -107,7 +107,7 @@ pub impl @moondb.Driver for SpyDriver with fn close(_self) -> Unit {
 ///|
 /// One result row with named columns, so `Row::by_name` (which the batch loader uses
 /// to bucket children) resolves the foreign-key column.
-fn book_row(id : Int, title : String, author_id : Int) -> @moondb.Row {
+fn book_row(id : Int32, title : String, author_id : Int32) -> @moondb.Row {
   {
     columns: ["id", "title", "author_id"],
     values: [Int(id), Text(title), Int(author_id)],
@@ -115,7 +115,7 @@ fn book_row(id : Int, title : String, author_id : Int) -> @moondb.Row {
 }
 
 ///|
-fn author_row(id : Int, name : String) -> @moondb.Row {
+fn author_row(id : Int32, name : String) -> @moondb.Row {
   { columns: ["id", "name"], values: [Int(id), Text(name)], }
 }
 

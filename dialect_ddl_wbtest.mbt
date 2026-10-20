@@ -1,6 +1,6 @@
 ///|
 priv struct MU {
-  id : Int
+  id : Int32
 }
 
 ///|

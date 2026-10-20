@@ -14,7 +14,7 @@
 /// A driver that models only the migrations bookkeeping table plus a log of the
 /// migration bodies it ran, by interpreting the specific SQL the Migrator emits.
 struct TrackerDriver {
-  mut versions : Array[Int] // the schema_migrations rows (version column)
+  mut versions : Array[Int32] // the schema_migrations rows (version column)
   ran : Array[String] // migration up/down bodies, in execution order
 }
 
@@ -40,7 +40,7 @@ pub impl @moondb.Driver for TrackerDriver with fn execute(self, sql, params) {
     self.versions.push(params[0]._as_int())
   } else if starts_with(sql, "DELETE FROM") && sql.contains("WHERE version") {
     let v = params[0]._as_int()
-    let kept : Array[Int] = []
+    let kept : Array[Int32] = []
     for existing in self.versions {
       if existing != v {
         kept.push(existing)
@@ -65,7 +65,7 @@ pub impl @moondb.Driver for TrackerDriver with fn query(self, sql, params) {
     }
   } else {
     // list ascending
-    let sorted : Array[Int] = []
+    let sorted : Array[Int32] = []
     for v in self.versions {
       sorted.push(v)
     }
@@ -101,7 +101,7 @@ pub impl @moondb.Driver for TrackerDriver with fn close(_self) -> Unit {
 ///|
 /// Read a Value expected to be an Int (the version column). A wrong shape is a bug
 /// in the test's own driver double, so it aborts rather than masking it.
-fn Value::_as_int(self : Value) -> Int {
+fn Value::_as_int(self : Value) -> Int32 {
   match self {
     Int(v) => v
     _ => abort("tracker driver: expected an Int version, got \{self}")

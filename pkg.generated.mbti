@@ -87,7 +87,7 @@ pub(all) enum ColumnType {
   RealType
   BlobType
   BoolType
-  VarcharType(Int)
+  VarcharType(Int32)
   NumericType
   DateTimeType
   DateType
@@ -193,7 +193,7 @@ pub struct ManyToMany[S, T] {
 pub fn[S, T] ManyToMany::query(Self[S, T], S) -> Select
 
 pub(all) struct Migration {
-  version : Int
+  version : Int32
   name : String
   up : Array[String]
   down : Array[String]
@@ -202,19 +202,19 @@ pub(all) struct Migration {
 pub struct Migrator {
   table : String
 }
-pub fn Migrator::applied_versions(Self, Session) -> Array[Int] raise @moondb.DbError
-pub fn Migrator::current_version(Self, Session) -> Int raise @moondb.DbError
-pub fn Migrator::down_to(Self, Session, Array[Migration], Int) -> Int raise @moondb.DbError
+pub fn Migrator::applied_versions(Self, Session) -> Array[Int32] raise @moondb.DbError
+pub fn Migrator::current_version(Self, Session) -> Int32 raise @moondb.DbError
+pub fn Migrator::down_to(Self, Session, Array[Migration], Int32) -> Int32 raise @moondb.DbError
 pub fn Migrator::ensure_table(Self, Session) -> Unit raise @moondb.DbError
 pub fn Migrator::new(table? : String) -> Self raise @moondb.DbError
-pub fn Migrator::up(Self, Session, Array[Migration]) -> Int raise @moondb.DbError
+pub fn Migrator::up(Self, Session, Array[Migration]) -> Int32 raise @moondb.DbError
 
 pub struct Model[T] {
   table : String
   columns : Array[Column]
   from_row : (@moondb.Row) -> T raise @moondb.DbError
   to_columns : (T) -> Array[(String, @moondb.Value)]
-  ident : Map[Int, Map[String, T]]
+  ident : Map[Int32, Map[String, T]]
 }
 pub fn[T] Model::column_names(Self[T]) -> Array[String]
 pub fn[T] Model::create_table_sql(Self[T], if_not_exists? : Bool) -> String
@@ -277,11 +277,11 @@ pub fn[T] RowStream::next(Self[T]) -> T? raise @moondb.DbError
 pub struct Savepoint {
   sess : Session
   name : String
-  depth : Int
+  depth : Int32
   mut finished : Bool
 }
 pub fn Savepoint::commit(Self) -> Unit raise @moondb.DbError
-pub fn Savepoint::depth(Self) -> Int
+pub fn Savepoint::depth(Self) -> Int32
 pub fn Savepoint::name(Self) -> String
 pub fn Savepoint::release(Self) -> Unit raise @moondb.DbError
 pub fn Savepoint::rollback(Self) -> Unit raise @moondb.DbError
@@ -298,8 +298,8 @@ pub struct Select {
   set_ops : Array[(String, Select)]
   distinct_on_ : Array[String]
   mut distinct_ : Bool
-  mut limit_ : Int?
-  mut offset_ : Int?
+  mut limit_ : Int32?
+  mut offset_ : Int32?
   mut lock_ : LockClause?
 }
 pub fn Select::build(Self) -> (String, Array[@moondb.Value])
@@ -319,8 +319,8 @@ pub fn[S : AsSource] Select::join(Self, S, String) -> Self
 pub fn[S : AsSource] Select::join_using(Self, S, Array[String]) -> Self
 pub fn Select::label(Self, String, String) -> Self
 pub fn[S : AsSource] Select::left_join(Self, S, String) -> Self
-pub fn Select::limit(Self, Int) -> Self
-pub fn Select::offset(Self, Int) -> Self
+pub fn Select::limit(Self, Int32) -> Self
+pub fn Select::offset(Self, Int32) -> Self
 pub fn Select::order_by(Self, String, Order, nulls? : Nulls) -> Self
 pub fn Select::raw(Self, String) -> Self
 pub fn[S : AsSource] Select::right_join(Self, S, String) -> Self
@@ -340,9 +340,9 @@ pub fn Select::with_recursive(Self, String, Self, Self, all? : Bool) -> Self
 
 pub struct Session {
   driver : &@moondb.Driver
-  mut sp_depth : Int
-  mut sp_seq : Int
-  id : Int
+  mut sp_depth : Int32
+  mut sp_seq : Int32
+  id : Int32
   pending : Array[Work]
   dirty : Array[Work]
   deleted : Array[Work]
@@ -358,8 +358,8 @@ pub fn Session::close(Self) -> Unit
 pub fn Session::commit(Self) -> Unit raise @moondb.DbError
 pub fn[T] Session::create_table(Self, Model[T], if_not_exists? : Bool) -> @moondb.ExecResult raise @moondb.DbError
 pub fn[T] Session::delete_record(Self, Model[T], T) -> Unit raise @moondb.DbError
-pub fn Session::deleted_count(Self) -> Int
-pub fn Session::dirty_count(Self) -> Int
+pub fn Session::deleted_count(Self) -> Int32
+pub fn Session::dirty_count(Self) -> Int32
 pub fn Session::execute(Self, String, Array[@moondb.Value]) -> @moondb.ExecResult raise @moondb.DbError
 pub fn[T] Session::expunge(Self, Model[T], T) -> Unit
 pub fn Session::expunge_all(Self) -> Unit
@@ -377,7 +377,7 @@ pub fn[S, T] Session::load_one_batch(Self, Array[S], Relation[S, T]) -> Array[T?
 pub fn Session::modify(Self, Update) -> @moondb.ExecResult raise @moondb.DbError
 pub fn Session::modify_versioned(Self, Update, what? : String) -> @moondb.ExecResult raise
 pub fn Session::new(&@moondb.Driver) -> Self
-pub fn Session::pending_count(Self) -> Int
+pub fn Session::pending_count(Self) -> Int32
 pub fn Session::query(Self, String, Array[@moondb.Value]) -> Array[@moondb.Row] raise @moondb.DbError
 pub fn Session::query_stream(Self, String, Array[@moondb.Value]) -> &@moondb.Cursor raise @moondb.DbError
 pub fn Session::release(Self, String) -> @moondb.ExecResult raise @moondb.DbError
@@ -385,7 +385,7 @@ pub fn Session::remove(Self, Delete) -> @moondb.ExecResult raise @moondb.DbError
 pub fn Session::rollback(Self) -> Unit raise @moondb.DbError
 pub fn Session::rollback_to(Self, String) -> @moondb.ExecResult raise @moondb.DbError
 pub fn Session::savepoint(Self, String) -> @moondb.ExecResult raise @moondb.DbError
-pub fn Session::savepoint_depth(Self) -> Int
+pub fn Session::savepoint_depth(Self) -> Int32
 pub fn Session::stream(Self, Select) -> &@moondb.Cursor raise @moondb.DbError
 pub fn[T] Session::stream_as(Self, Model[T], Select) -> RowStream[T] raise @moondb.DbError
 pub fn[T] Session::update_record(Self, Model[T], T) -> Unit raise @moondb.DbError

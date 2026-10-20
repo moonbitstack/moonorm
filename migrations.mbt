@@ -14,7 +14,7 @@
 /// runs through `Session::execute`, so a backend that prepares one statement per
 /// call (SQLite) still applies a multi-statement migration.
 pub(all) struct Migration {
-  version : Int
+  version : Int32
   name : String
   up : Array[String]
   down : Array[String]
@@ -33,7 +33,7 @@ pub struct Migrator {
 /// The name must be a bare SQL identifier — it is interpolated as an identifier,
 /// never bound — so a non-identifier is refused up front.
 pub fn Migrator::new(
-  table? : String = "schema_migrations",
+  table~ : String = "schema_migrations",
 ) -> Migrator raise @moondb.DbError {
   if !is_ident(table) {
     raise @moondb.QueryError("invalid migrations table name: " + table)
@@ -62,13 +62,13 @@ pub fn Migrator::ensure_table(
 pub fn Migrator::applied_versions(
   self : Migrator,
   sess : Session,
-) -> Array[Int] raise @moondb.DbError {
+) -> Array[Int32] raise @moondb.DbError {
   self.ensure_table(sess)
   let rows = sess.query(
     "SELECT version FROM " + self.table + " ORDER BY version ASC",
     [],
   )
-  let out : Array[Int] = []
+  let out : Array[Int32] = []
   for r in rows {
     out.push(r.int(0))
   }
@@ -80,7 +80,7 @@ pub fn Migrator::applied_versions(
 pub fn Migrator::current_version(
   self : Migrator,
   sess : Session,
-) -> Int raise @moondb.DbError {
+) -> Int32 raise @moondb.DbError {
   let vs = self.applied_versions(sess)
   if vs.length() == 0 {
     0
@@ -94,7 +94,7 @@ pub fn Migrator::current_version(
 fn Migrator::is_applied(
   self : Migrator,
   sess : Session,
-  version : Int,
+  version : Int32,
 ) -> Bool raise @moondb.DbError {
   let rows = sess.query(
     "SELECT version FROM " + self.table + " WHERE version = ?",
@@ -112,7 +112,7 @@ pub fn Migrator::up(
   self : Migrator,
   sess : Session,
   migrations : Array[Migration],
-) -> Int raise @moondb.DbError {
+) -> Int32 raise @moondb.DbError {
   self.ensure_table(sess)
   let ordered = sort_by_version(migrations, ascending=true)
   let mut applied = 0
@@ -142,8 +142,8 @@ pub fn Migrator::down_to(
   self : Migrator,
   sess : Session,
   migrations : Array[Migration],
-  target : Int,
-) -> Int raise @moondb.DbError {
+  target : Int32,
+) -> Int32 raise @moondb.DbError {
   self.ensure_table(sess)
   let ordered = sort_by_version(migrations, ascending=false)
   let mut rolled = 0
@@ -312,7 +312,7 @@ pub fn index_ddl(
   name : String,
   table : String,
   columns : Array[String],
-  unique? : Bool = false,
+  unique~ : Bool = false,
 ) -> String {
   let kw = if unique { "CREATE UNIQUE INDEX " } else { "CREATE INDEX " }
   kw + name + " ON " + table + " (" + join(columns, ", ") + ")"

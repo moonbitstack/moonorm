@@ -10,20 +10,20 @@
 ///
 ///     moon run examples/13-relationships
 struct Team {
-  id : Int
+  id : Int32
   name : String
 }
 
 ///|
 struct Hero {
-  id : Int
+  id : Int32
   name : String
-  team_id : Int
+  team_id : Int32
 }
 
 ///|
 struct Tag {
-  id : Int
+  id : Int32
   label : String
 }
 
@@ -132,7 +132,7 @@ impl @moondb.Driver for Rows with fn close(_self : Rows) -> Unit {
 }
 
 ///|
-fn hero_row(id : Int, name : String, team_id : Int) -> @moondb.Row {
+fn hero_row(id : Int32, name : String, team_id : Int32) -> @moondb.Row {
   {
     columns: ["id", "name", "team_id"],
     values: [@moondb.Int(id), @moondb.Text(name), @moondb.Int(team_id)],
@@ -140,12 +140,12 @@ fn hero_row(id : Int, name : String, team_id : Int) -> @moondb.Row {
 }
 
 ///|
-fn team_row(id : Int, name : String) -> @moondb.Row {
+fn team_row(id : Int32, name : String) -> @moondb.Row {
   { columns: ["id", "name"], values: [@moondb.Int(id), @moondb.Text(name)], }
 }
 
 ///|
-fn tag_row(id : Int, label : String) -> @moondb.Row {
+fn tag_row(id : Int32, label : String) -> @moondb.Row {
   { columns: ["id", "label"], values: [@moondb.Int(id), @moondb.Text(label)], }
 }
 
