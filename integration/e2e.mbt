@@ -10,16 +10,16 @@
 
 ///|
 priv struct Team {
-  id : Int
+  id : Int32
   name : String
 }
 
 ///|
 priv struct Hero {
-  id : Int
+  id : Int32
   name : String
-  team_id : Int
-  version : Int
+  team_id : Int32
+  version : Int32
 }
 
 ///|

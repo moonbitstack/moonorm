@@ -13,7 +13,7 @@
 /// frames a large payload is split into.
 pub struct MysqlConn {
   tcp : @socket.Tcp
-  mut seq : Int
+  mut seq : Int32
   mut closed : Bool
   mut server_kind : @moonmysql.ServerKind
   // Set while a `MysqlRowStream` is outstanding — the wire is a per-connection
@@ -62,7 +62,7 @@ async fn MysqlConn::read_packet(self : MysqlConn) -> Bytes {
 /// its size on the way out, so an 8 MB value crosses the boundary.
 async fn MysqlConn::write_packet(
   self : MysqlConn,
-  seq : Int,
+  seq : Int32,
   payload : Bytes,
 ) -> Unit {
   let limit = 0xFFFFFF
@@ -91,7 +91,7 @@ async fn MysqlConn::write_packet(
 /// One wire packet, whose payload is already known to fit the three-byte length.
 async fn MysqlConn::write_one_packet(
   self : MysqlConn,
-  seq : Int,
+  seq : Int32,
   payload : Bytes,
 ) -> Unit {
   let buf = Buffer()
@@ -116,7 +116,7 @@ async fn MysqlConn::write_one_packet(
 /// [`@moonmysql.MysqlError::UnsupportedError`].
 pub async fn MysqlConn::connect(
   host : String,
-  port : Int,
+  port : Int32,
   user : String,
   password : String,
   database : String,

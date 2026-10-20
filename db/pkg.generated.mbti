@@ -20,7 +20,7 @@ pub impl Show for DbError
 // Types and methods
 pub struct ArrayCursor {
   rows : Array[Row]
-  mut pos : Int
+  mut pos : Int32
 }
 pub fn ArrayCursor::close(Self) -> Unit
 pub fn ArrayCursor::new(Array[Row]) -> Self
@@ -29,7 +29,7 @@ pub impl Cursor for ArrayCursor
 
 pub struct AsyncArrayCursor {
   rows : Array[Row]
-  mut pos : Int
+  mut pos : Int32
 }
 pub async fn AsyncArrayCursor::close(Self) -> Unit
 pub fn AsyncArrayCursor::new(Array[Row]) -> Self
@@ -46,7 +46,7 @@ pub fn ExecResult::not_equal(Self, Self) -> Bool
 pub struct MockDriver {
   mut rows : Array[Row]
   mut next_id : Int64
-  savepoints : Array[Int]
+  savepoints : Array[Int32]
   mut closed : Bool
 }
 pub fn MockDriver::begin(Self) -> Unit raise DbError
@@ -60,36 +60,36 @@ pub fn MockDriver::ping(Self) -> Bool
 pub fn MockDriver::query(Self, String, Array[Value]) -> Array[Row] raise DbError
 pub fn MockDriver::query_stream(Self, String, Array[Value]) -> &Cursor raise DbError
 pub fn MockDriver::rollback(Self) -> Unit raise DbError
-pub fn MockDriver::row_count(Self) -> Int
+pub fn MockDriver::row_count(Self) -> Int32
 pub impl Driver for MockDriver
 
 pub(all) struct Row {
   columns : Array[String]
   values : Array[Value]
 }
-pub fn Row::blob(Self, Int) -> Bytes raise DbError
+pub fn Row::blob(Self, Int32) -> Bytes raise DbError
 pub fn Row::blob_by(Self, String) -> Bytes raise DbError
-pub fn Row::bool(Self, Int) -> Bool raise DbError
+pub fn Row::bool(Self, Int32) -> Bool raise DbError
 pub fn Row::bool_by(Self, String) -> Bool raise DbError
 pub fn Row::by_name(Self, String) -> Value?
-pub fn Row::double(Self, Int) -> Double raise DbError
+pub fn Row::double(Self, Int32) -> Double raise DbError
 pub fn Row::double_by(Self, String) -> Double raise DbError
-pub fn Row::get(Self, Int) -> Value raise DbError
-pub fn Row::index_of(Self, String) -> Int raise DbError
-pub fn Row::int(Self, Int) -> Int raise DbError
-pub fn Row::int64(Self, Int) -> Int64 raise DbError
+pub fn Row::get(Self, Int32) -> Value raise DbError
+pub fn Row::index_of(Self, String) -> Int32 raise DbError
+pub fn Row::int(Self, Int32) -> Int32 raise DbError
+pub fn Row::int64(Self, Int32) -> Int64 raise DbError
 pub fn Row::int64_by(Self, String) -> Int64 raise DbError
-pub fn Row::int_by(Self, String) -> Int raise DbError
-pub fn Row::is_null(Self, Int) -> Bool raise DbError
+pub fn Row::int_by(Self, String) -> Int32 raise DbError
+pub fn Row::is_null(Self, Int32) -> Bool raise DbError
 pub fn Row::is_null_by(Self, String) -> Bool raise DbError
-pub fn Row::text(Self, Int) -> String raise DbError
+pub fn Row::text(Self, Int32) -> String raise DbError
 pub fn Row::text_by(Self, String) -> String raise DbError
-pub fn Row::width(Self) -> Int
+pub fn Row::width(Self) -> Int32
 
 pub(all) enum Value {
   Null
   Bool(Bool)
-  Int(Int)
+  Int(Int32)
   Int64(Int64)
   Double(Double)
   Text(String)

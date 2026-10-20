@@ -22,7 +22,7 @@ pub fn translate_placeholders(sql : String) -> String {
 /// The single scan both `translate_placeholders` and `count_placeholders` use:
 /// rewrite each `?` outside a quoted span or comment to `$n`, and report how many
 /// were rewritten.
-fn scan_placeholders(sql : String) -> (String, Int) {
+fn scan_placeholders(sql : String) -> (String, Int32) {
   let sb = StringBuilder()
   let n = sql.length()
   let mut i = 0
@@ -146,7 +146,7 @@ fn scan_placeholders(sql : String) -> (String, Int) {
 /// The number of `?` placeholders [`translate_placeholders`] would consume — the
 /// count of parameters a statement expects. Shares the same scanner discipline
 /// so `??` escapes and quoted/comment spans do not count.
-pub fn count_placeholders(sql : String) -> Int {
+pub fn count_placeholders(sql : String) -> Int32 {
   // Counted during the scan, not by looking for `$n` in the output: an output `$9`
   // may have been copied through from a string literal or a comment, which made
   // this report a parameter count no statement ever had.
@@ -177,7 +177,7 @@ fn is_dollar_tag_char(c : UInt16, first : Bool) -> Bool {
 ///|
 /// Index of the `$` that closes a dollar-quote tag beginning at `start`, or `-1`
 /// if the run from `start` is not a valid opening tag.
-fn dollar_tag_end(sql : String, start : Int) -> Int {
+fn dollar_tag_end(sql : String, start : Int32) -> Int32 {
   let n = sql.length()
   let mut i = start + 1
   while i < n {
@@ -195,7 +195,7 @@ fn dollar_tag_end(sql : String, start : Int) -> Int {
 
 ///|
 /// First index ≥ `from` at which `needle` occurs in `hay`, or `-1`.
-fn find_substring(hay : String, needle : String, from : Int) -> Int {
+fn find_substring(hay : String, needle : String, from : Int32) -> Int32 {
   let hn = hay.length()
   let nn = needle.length()
   if nn == 0 {

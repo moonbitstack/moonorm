@@ -7,19 +7,19 @@ import {
 }
 
 // Values
-pub const OID_BOOL : Int = 16
+pub const OID_BOOL : Int32 = 16
 
-pub const OID_BYTEA : Int = 17
+pub const OID_BYTEA : Int32 = 17
 
-pub const OID_FLOAT4 : Int = 700
+pub const OID_FLOAT4 : Int32 = 700
 
-pub const OID_FLOAT8 : Int = 701
+pub const OID_FLOAT8 : Int32 = 701
 
-pub const OID_INT2 : Int = 21
+pub const OID_INT2 : Int32 = 21
 
-pub const OID_INT4 : Int = 23
+pub const OID_INT4 : Int32 = 23
 
-pub const OID_INT8 : Int = 20
+pub const OID_INT8 : Int32 = 20
 
 pub fn build_bind(Array[@moondb.Value]) -> Bytes
 
@@ -45,17 +45,17 @@ pub fn build_terminate() -> Bytes
 
 pub fn concat_bytes(Bytes, Bytes) -> Bytes
 
-pub fn count_placeholders(String) -> Int
+pub fn count_placeholders(String) -> Int32
 
 pub fn decode_bytea(String) -> Bytes
 
-pub fn decode_value(Int, Bool, String) -> @moondb.Value
+pub fn decode_value(Int32, Bool, String) -> @moondb.Value
 
 pub fn encode_param(@moondb.Value) -> Bytes?
 
 pub fn parse_double(String) -> Double?
 
-pub fn parse_int(String) -> Int?
+pub fn parse_int(String) -> Int32?
 
 pub fn parse_int64(String) -> Int64?
 
@@ -82,7 +82,7 @@ pub struct PgConn {
 pub async fn PgConn::begin(Self) -> Unit raise @moondb.DbError
 pub async fn PgConn::close(Self) -> Unit
 pub async fn PgConn::commit(Self) -> Unit raise @moondb.DbError
-pub async fn PgConn::connect(String, Int, String, String, String) -> Self raise @moondb.DbError
+pub async fn PgConn::connect(String, Int32, String, String, String) -> Self raise @moondb.DbError
 pub async fn PgConn::execute(Self, String, Array[@moondb.Value]) -> @moondb.ExecResult raise @moondb.DbError
 pub async fn PgConn::ping(Self) -> Bool
 pub async fn PgConn::query(Self, String, Array[@moondb.Value]) -> Array[@moondb.Row] raise @moondb.DbError
@@ -92,18 +92,18 @@ pub impl @moondb.AsyncDriver for PgConn
 
 pub struct PgDriver {
   host : String
-  port : Int
+  port : Int32
   user : String
   password : String
   database : String
 }
 pub async fn PgDriver::connect(Self) -> PgConn raise @moondb.DbError
-pub fn PgDriver::new(host~ : String, port? : Int, user~ : String, password? : String, database~ : String) -> Self
+pub fn PgDriver::new(host~ : String, port? : Int32, user~ : String, password? : String, database~ : String) -> Self
 
 pub struct PgRowStream {
   conn : PgConn
   mut col_names : Array[String]
-  mut col_oids : Array[Int]
+  mut col_oids : Array[Int32]
   mut done : Bool
 }
 pub async fn PgRowStream::close(Self) -> Unit raise @moondb.DbError

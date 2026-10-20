@@ -103,7 +103,7 @@ fn escape_into(buf : Buffer, bytes : Bytes, mode : QuoteMode) -> Unit {
 pub fn bind_params(
   sql : String,
   params : Array[@moondb.Value],
-  mode? : QuoteMode = Backslash,
+  mode~ : QuoteMode = Backslash,
 ) -> Bytes raise MysqlError {
   let src = string_to_bytes(sql)
   let n = src.length()

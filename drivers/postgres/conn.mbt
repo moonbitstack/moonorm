@@ -32,7 +32,7 @@ pub struct PgConn {
 /// unsupported auth method.
 pub async fn PgConn::connect(
   host : String,
-  port : Int,
+  port : Int32,
   user : String,
   password : String,
   database : String,
@@ -62,7 +62,7 @@ async fn PgConn::write_all(self : PgConn, bytes : Bytes) -> Unit raise DbError {
 ///|
 /// Read one framed backend message: 1-byte tag, Int32 self-inclusive length,
 /// then the payload. Returns the tag as an `Int` and the payload bytes.
-async fn PgConn::read_message(self : PgConn) -> (Int, Bytes) raise DbError {
+async fn PgConn::read_message(self : PgConn) -> (Int32, Bytes) raise DbError {
   let head = (self.tcp : &@io.Reader).read_exactly(5) catch {
     e => raise @moondb.ConnectError("read header: \{e}")
   }
@@ -179,7 +179,7 @@ async fn PgConn::run_sasl(
 /// text — the server-first or server-final SCRAM message.
 async fn PgConn::read_sasl_message(
   self : PgConn,
-  want : Int,
+  want : Int32,
 ) -> String raise DbError {
   let (tag, payload) = self.read_message()
   if tag == 69 {
@@ -209,7 +209,7 @@ priv struct QueryOutcome {
 async fn PgConn::read_results(self : PgConn) -> QueryOutcome raise DbError {
   let rows : Array[Row] = []
   let mut col_names : Array[String] = []
-  let mut col_oids : Array[Int] = []
+  let mut col_oids : Array[Int32] = []
   let mut command_tag = ""
   for ;; {
     let (tag, payload) = self.read_message()
@@ -264,11 +264,11 @@ async fn PgConn::read_results(self : PgConn) -> QueryOutcome raise DbError {
 /// code) are read to advance the cursor.
 fn parse_row_description(
   payload : Bytes,
-) -> (Array[String], Array[Int]) raise DbError {
+) -> (Array[String], Array[Int32]) raise DbError {
   let r = ByteReader::new(payload)
   let count = r.i16()
   let names : Array[String] = []
-  let oids : Array[Int] = []
+  let oids : Array[Int32] = []
   for _i in 0..<count {
     names.push(r.cstring())
     r.i32() |> ignore // table OID
@@ -288,7 +288,7 @@ fn parse_row_description(
 fn parse_data_row(
   payload : Bytes,
   col_names : Array[String],
-  col_oids : Array[Int],
+  col_oids : Array[Int32],
 ) -> Row raise DbError {
   let r = ByteReader::new(payload)
   let count = r.i16()
@@ -400,7 +400,7 @@ async fn PgConn::run_statement(
 pub struct PgRowStream {
   conn : PgConn
   mut col_names : Array[String]
-  mut col_oids : Array[Int]
+  mut col_oids : Array[Int32]
   mut done : Bool
 }
 

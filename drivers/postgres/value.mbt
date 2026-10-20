@@ -6,25 +6,25 @@
 // round (README roadmap). PostgreSQL type OIDs are stable, well-known integers.
 
 ///|
-pub const OID_BOOL : Int = 16
+pub const OID_BOOL : Int32 = 16
 
 ///|
-pub const OID_BYTEA : Int = 17
+pub const OID_BYTEA : Int32 = 17
 
 ///|
-pub const OID_INT8 : Int = 20
+pub const OID_INT8 : Int32 = 20
 
 ///|
-pub const OID_INT2 : Int = 21
+pub const OID_INT2 : Int32 = 21
 
 ///|
-pub const OID_INT4 : Int = 23
+pub const OID_INT4 : Int32 = 23
 
 ///|
-pub const OID_FLOAT4 : Int = 700
+pub const OID_FLOAT4 : Int32 = 700
 
 ///|
-pub const OID_FLOAT8 : Int = 701
+pub const OID_FLOAT8 : Int32 = 701
 
 ///|
 /// Encode a bound parameter to its text-format bytes, or `None` for SQL `NULL`
@@ -56,7 +56,7 @@ pub fn encode_param(v : Value) -> Bytes? {
 /// to their typed cases; everything else — including `numeric`, dates, and
 /// unknown OIDs — rides back as `Text`, exactly the dialect-neutral contract
 /// moondb documents (temporal/`numeric` typing is a roadmap item).
-pub fn decode_value(oid : Int, is_null : Bool, raw : String) -> Value {
+pub fn decode_value(oid : Int32, is_null : Bool, raw : String) -> Value {
   if is_null {
     return @moondb.Null
   }
@@ -88,7 +88,7 @@ pub fn decode_value(oid : Int, is_null : Bool, raw : String) -> Value {
 /// Parse a base-10 `Int`, or `None` if `s` is not a well-formed integer. Used to
 /// decode `int2`/`int4` result text; a parse failure falls back to `Text` so a
 /// surprising server rendering never silently becomes a wrong number.
-pub fn parse_int(s : String) -> Int? {
+pub fn parse_int(s : String) -> Int32? {
   match parse_int64(s) {
     Some(v) => Some(v.to_int())
     None => None

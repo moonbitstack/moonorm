@@ -25,12 +25,12 @@ fn MsgWriter::byte(self : MsgWriter, b : Byte) -> Unit {
 }
 
 ///|
-fn MsgWriter::i16(self : MsgWriter, v : Int) -> Unit {
+fn MsgWriter::i16(self : MsgWriter, v : Int32) -> Unit {
   @fixed.write_i16(self.buf, v)
 }
 
 ///|
-fn MsgWriter::i32(self : MsgWriter, v : Int) -> Unit {
+fn MsgWriter::i32(self : MsgWriter, v : Int32) -> Unit {
   @fixed.write_i32(self.buf, v)
 }
 

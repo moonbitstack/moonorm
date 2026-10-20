@@ -7,25 +7,25 @@
 // classic EOF packets the text-protocol decoder keys off.
 
 ///|
-pub let client_long_password : Int = 0x00000001
+pub let client_long_password : Int32 = 0x00000001
 
 ///|
-pub let client_long_flag : Int = 0x00000004
+pub let client_long_flag : Int32 = 0x00000004
 
 ///|
-pub let client_connect_with_db : Int = 0x00000008
+pub let client_connect_with_db : Int32 = 0x00000008
 
 ///|
-pub let client_protocol_41 : Int = 0x00000200
+pub let client_protocol_41 : Int32 = 0x00000200
 
 ///|
-pub let client_transactions : Int = 0x00002000
+pub let client_transactions : Int32 = 0x00002000
 
 ///|
-pub let client_secure_connection : Int = 0x00008000
+pub let client_secure_connection : Int32 = 0x00008000
 
 ///|
-pub let client_plugin_auth : Int = 0x00080000
+pub let client_plugin_auth : Int32 = 0x00080000
 
 // MariaDB's extended server capabilities occupy the 4 bytes MySQL leaves reserved
 // in HandshakeV10 — a distinct 32-bit space from the MySQL flags above. We read
@@ -34,19 +34,19 @@ pub let client_plugin_auth : Int = 0x00080000
 // named here for the record and future use.
 
 ///|
-pub let mariadb_client_progress : Int = 0x00000001
+pub let mariadb_client_progress : Int32 = 0x00000001
 
 ///|
-pub let mariadb_client_com_multi : Int = 0x00000002
+pub let mariadb_client_com_multi : Int32 = 0x00000002
 
 ///|
-pub let mariadb_client_stmt_bulk_operations : Int = 0x00000004
+pub let mariadb_client_stmt_bulk_operations : Int32 = 0x00000004
 
 ///|
-pub let mariadb_client_extended_metadata : Int = 0x00000008
+pub let mariadb_client_extended_metadata : Int32 = 0x00000008
 
 ///|
-pub let mariadb_client_cache_metadata : Int = 0x00000010
+pub let mariadb_client_cache_metadata : Int32 = 0x00000010
 
 ///|
 /// Which server dialect answered the handshake. Both speak the MySQL wire
@@ -122,12 +122,12 @@ pub fn native_password_scramble(password : Bytes, salt : Bytes) -> Bytes {
 pub struct Handshake {
   server_version : String
   server_kind : ServerKind
-  connection_id : Int
+  connection_id : Int32
   salt : Bytes
-  capability : Int
-  mariadb_capability : Int
-  charset : Int
-  status : Int
+  capability : Int32
+  mariadb_capability : Int32
+  charset : Int32
+  status : Int32
   auth_plugin : String
 }
 

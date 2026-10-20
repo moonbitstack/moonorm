@@ -45,7 +45,7 @@
 pub struct Pool[D] {
   priv make : () -> D raise @moondb.DbError
   priv books : @moonpool.Pool[D]
-  priv max_size : Int
+  priv max_size : Int32
   priv max_lifetime_ms : Int64
   priv pre_ping : Bool
   priv acquire_timeout_ms : Int64
@@ -73,11 +73,11 @@ pub struct Pool[D] {
 ///   which disables age-based retirement.
 pub fn[D] Pool::new(
   make : () -> D raise @moondb.DbError,
-  max_size? : Int = 10,
-  max_lifetime_ms? : Int64 = 0,
-  pre_ping? : Bool = false,
-  acquire_timeout_ms? : Int64 = 0,
-  clock? : () -> Int64 = fn() { 0L },
+  max_size~ : Int32 = 10,
+  max_lifetime_ms~ : Int64 = 0,
+  pre_ping~ : Bool = false,
+  acquire_timeout_ms~ : Int64 = 0,
+  clock~ : () -> Int64 = fn() { 0L },
 ) -> Pool[D] raise @moondb.DbError {
   if max_size <= 0 {
     raise QueryError(
@@ -109,7 +109,7 @@ pub fn[D] Pool::new(
 
 ///|
 /// How many connections are currently idle (checked in and reusable).
-pub fn[D] Pool::idle_count(self : Pool[D]) -> Int {
+pub fn[D] Pool::idle_count(self : Pool[D]) -> Int32 {
   self.books.idle()
 }
 
@@ -117,20 +117,20 @@ pub fn[D] Pool::idle_count(self : Pool[D]) -> Int {
 /// How many connections are checked out right now. A shutdown that wants to wait for
 /// borrowed connections to come home polls this after `close_all`: the close empties
 /// the idle set, so what is left is exactly what is still in use.
-pub fn[D] Pool::in_use_count(self : Pool[D]) -> Int {
+pub fn[D] Pool::in_use_count(self : Pool[D]) -> Int32 {
   self.books.busy()
 }
 
 ///|
 /// How many connections the pool has open in total: those checked out plus those
 /// sitting idle. Never exceeds `max_size`.
-pub fn[D] Pool::open_count(self : Pool[D]) -> Int {
+pub fn[D] Pool::open_count(self : Pool[D]) -> Int32 {
   self.books.live()
 }
 
 ///|
 /// The pool's ceiling on simultaneously open connections.
-pub fn[D] Pool::max_size(self : Pool[D]) -> Int {
+pub fn[D] Pool::max_size(self : Pool[D]) -> Int32 {
   self.max_size
 }
 

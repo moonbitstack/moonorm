@@ -11,7 +11,7 @@
 /// works elsewhere.
 pub struct PgDriver {
   host : String
-  port : Int
+  port : Int32
   user : String
   password : String
   database : String
@@ -22,9 +22,9 @@ pub struct PgDriver {
 /// the connection is opened by [`connect`](PgDriver::connect) inside an event loop.
 pub fn PgDriver::new(
   host~ : String,
-  port? : Int = 5432,
+  port~ : Int32 = 5432,
   user~ : String,
-  password? : String = "",
+  password~ : String = "",
   database~ : String,
 ) -> PgDriver {
   { host, port, user, password, database, }

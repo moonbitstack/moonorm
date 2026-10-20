@@ -18,14 +18,14 @@ pub(all) struct Row {
 
 ///|
 /// The number of columns in the row.
-pub fn Row::width(self : Row) -> Int {
+pub fn Row::width(self : Row) -> Int32 {
   self.values.length()
 }
 
 ///|
 /// The raw [`Value`] at column `idx` (0-based, projection order). Raises
 /// `QueryError` if `idx` is out of range.
-pub fn Row::get(self : Row, idx : Int) -> Value raise DbError {
+pub fn Row::get(self : Row, idx : Int32) -> Value raise DbError {
   if idx < 0 || idx >= self.values.length() {
     raise QueryError(
       "column index " +
@@ -54,7 +54,7 @@ pub fn Row::by_name(self : Row, name : String) -> Value? {
 /// Resolve a column `name` to its index, raising `QueryError` if absent. The
 /// positional accessors are the primitives; the `_by`-name accessors resolve
 /// through this.
-pub fn Row::index_of(self : Row, name : String) -> Int raise DbError {
+pub fn Row::index_of(self : Row, name : String) -> Int32 raise DbError {
   for i in 0..<self.columns.length() {
     if self.columns[i] == name {
       return i
@@ -67,7 +67,7 @@ pub fn Row::index_of(self : Row, name : String) -> Int raise DbError {
 /// Whether column `idx` is SQL `NULL`. Raises `QueryError` if `idx` is out of
 /// range. Call this before a typed accessor when a column is nullable, since the
 /// typed accessors treat `NULL` as a type mismatch.
-pub fn Row::is_null(self : Row, idx : Int) -> Bool raise DbError {
+pub fn Row::is_null(self : Row, idx : Int32) -> Bool raise DbError {
   self.get(idx).is_null()
 }
 
@@ -88,7 +88,7 @@ pub fn Row::is_null_by(self : Row, name : String) -> Bool raise DbError {
 
 ///|
 /// Read column `idx` as a `Bool`. Raises `TypeError` unless the cell is `Bool`.
-pub fn Row::bool(self : Row, idx : Int) -> Bool raise DbError {
+pub fn Row::bool(self : Row, idx : Int32) -> Bool raise DbError {
   match self.get(idx) {
     Bool(v) => v
     other =>
@@ -101,7 +101,7 @@ pub fn Row::bool(self : Row, idx : Int) -> Bool raise DbError {
 ///|
 /// Read column `idx` as an `Int`, narrowing an `Int64` to its low 32 bits. Raises
 /// `TypeError` unless the cell is `Int` or `Int64`.
-pub fn Row::int(self : Row, idx : Int) -> Int raise DbError {
+pub fn Row::int(self : Row, idx : Int32) -> Int32 raise DbError {
   match self.get(idx) {
     Int(v) => v
     Int64(v) => v.to_int()
@@ -115,7 +115,7 @@ pub fn Row::int(self : Row, idx : Int) -> Int raise DbError {
 ///|
 /// Read column `idx` as an `Int64`, widening an `Int`. Raises `TypeError` unless
 /// the cell is `Int` or `Int64`.
-pub fn Row::int64(self : Row, idx : Int) -> Int64 raise DbError {
+pub fn Row::int64(self : Row, idx : Int32) -> Int64 raise DbError {
   match self.get(idx) {
     Int64(v) => v
     Int(v) => v.to_int64()
@@ -129,7 +129,7 @@ pub fn Row::int64(self : Row, idx : Int) -> Int64 raise DbError {
 ///|
 /// Read column `idx` as a `Double`, widening an integer. Raises `TypeError` unless
 /// the cell is `Double`, `Int`, or `Int64`.
-pub fn Row::double(self : Row, idx : Int) -> Double raise DbError {
+pub fn Row::double(self : Row, idx : Int32) -> Double raise DbError {
   match self.get(idx) {
     Double(v) => v
     Int(v) => v.to_double()
@@ -143,7 +143,7 @@ pub fn Row::double(self : Row, idx : Int) -> Double raise DbError {
 
 ///|
 /// Read column `idx` as text. Raises `TypeError` unless the cell is `Text`.
-pub fn Row::text(self : Row, idx : Int) -> String raise DbError {
+pub fn Row::text(self : Row, idx : Int32) -> String raise DbError {
   match self.get(idx) {
     Text(v) => v
     other =>
@@ -156,7 +156,7 @@ pub fn Row::text(self : Row, idx : Int) -> String raise DbError {
 ///|
 /// Read column `idx` as an opaque blob. Raises `TypeError` unless the cell is
 /// `Blob`.
-pub fn Row::blob(self : Row, idx : Int) -> Bytes raise DbError {
+pub fn Row::blob(self : Row, idx : Int32) -> Bytes raise DbError {
   match self.get(idx) {
     Blob(v) => v
     other =>
@@ -179,7 +179,7 @@ pub fn Row::bool_by(self : Row, name : String) -> Bool raise DbError {
 
 ///|
 /// Read the column named `name` as an `Int`.
-pub fn Row::int_by(self : Row, name : String) -> Int raise DbError {
+pub fn Row::int_by(self : Row, name : String) -> Int32 raise DbError {
   self.int(self.index_of(name))
 }
 

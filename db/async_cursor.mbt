@@ -37,7 +37,7 @@ pub(open) trait AsyncCursor {
 /// would break existing callers.
 pub struct AsyncArrayCursor {
   rows : Array[Row]
-  mut pos : Int
+  mut pos : Int32
 }
 
 ///|

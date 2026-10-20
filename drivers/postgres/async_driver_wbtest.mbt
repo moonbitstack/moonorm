@@ -69,7 +69,7 @@ impl @moondb.AsyncDriver for FakeDriver with fn close(self : FakeDriver) -> Unit
 }
 
 ///|
-fn row(id : Int, name : String) -> Row {
+fn row(id : Int32, name : String) -> Row {
   { columns: ["id", "name"], values: [@moondb.Int(id), @moondb.Text(name)], }
 }
 

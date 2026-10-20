@@ -25,7 +25,7 @@
 /// is a language constraint, not a shortcut, and it is documented in the README.
 pub struct MysqlDriver {
   host : String
-  port : Int
+  port : Int32
   user : String
   password : String
   database : String
@@ -36,10 +36,10 @@ pub struct MysqlDriver {
 /// and `database` may be empty.
 pub fn MysqlDriver::new(
   user~ : String,
-  password? : String = "",
-  database? : String = "",
-  host? : String = "127.0.0.1",
-  port? : Int = 3306,
+  password~ : String = "",
+  database~ : String = "",
+  host~ : String = "127.0.0.1",
+  port~ : Int32 = 3306,
 ) -> MysqlDriver {
   { host, port, user, password, database, }
 }

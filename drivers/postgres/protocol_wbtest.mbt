@@ -4,18 +4,18 @@
 ///|
 /// A text-type OID used by the framing tests. The driver decodes any
 /// non-numeric OID to `Text`.
-const OID_TEXT : Int = 25
+const OID_TEXT : Int32 = 25
 
 ///|
 /// Read the big-endian Int32 at offset `off` of `b` (test helper).
-fn be_i32(b : Bytes, off : Int) -> Int {
+fn be_i32(b : Bytes, off : Int32) -> Int32 {
   @fixed.read_i32(b[:], at=off).unwrap()
 }
 
 ///|
 /// Build a RowDescription ('T') payload with the given `(name, type OID)`
 /// columns, exactly as the backend frames it.
-fn make_row_description(cols : Array[(String, Int)]) -> Bytes {
+fn make_row_description(cols : Array[(String, Int32)]) -> Bytes {
   let w = MsgWriter::new()
   w.i16(cols.length())
   for c in cols {

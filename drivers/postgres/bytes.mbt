@@ -19,7 +19,7 @@ pub fn concat_bytes(a : Bytes, b : Bytes) -> Bytes {
 /// truncated or malformed backend message surfaces as a protocol error.
 priv struct ByteReader {
   data : Bytes
-  mut pos : Int
+  mut pos : Int32
 }
 
 ///|
@@ -28,7 +28,7 @@ fn ByteReader::new(data : Bytes) -> ByteReader {
 }
 
 ///|
-fn ByteReader::u8(self : ByteReader) -> Int raise DbError {
+fn ByteReader::u8(self : ByteReader) -> Int32 raise DbError {
   guard self.pos < self.data.length() else {
     raise QueryError("protocol: read past end of message")
   }
@@ -40,7 +40,7 @@ fn ByteReader::u8(self : ByteReader) -> Int raise DbError {
 ///|
 /// Read a big-endian signed 16-bit integer (network byte order, as every
 /// multi-byte field in the PostgreSQL wire protocol is encoded).
-fn ByteReader::i16(self : ByteReader) -> Int raise DbError {
+fn ByteReader::i16(self : ByteReader) -> Int32 raise DbError {
   guard @fixed.read_i16(self.data[:], at=self.pos) is Some(v) else {
     raise QueryError("protocol: read past end of message")
   }
@@ -50,7 +50,7 @@ fn ByteReader::i16(self : ByteReader) -> Int raise DbError {
 
 ///|
 /// Read a big-endian signed 32-bit integer.
-fn ByteReader::i32(self : ByteReader) -> Int raise DbError {
+fn ByteReader::i32(self : ByteReader) -> Int32 raise DbError {
   guard @fixed.read_i32(self.data[:], at=self.pos) is Some(v) else {
     raise QueryError("protocol: read past end of message")
   }
@@ -60,7 +60,7 @@ fn ByteReader::i32(self : ByteReader) -> Int raise DbError {
 
 ///|
 /// Read exactly `n` raw bytes.
-fn ByteReader::take(self : ByteReader, n : Int) -> Bytes raise DbError {
+fn ByteReader::take(self : ByteReader, n : Int32) -> Bytes raise DbError {
   // `n` is a length the server sent, so it can be anything. Comparing `pos + n`
   // overflows for a large one and the guard passes, after which the slice runs
   // backwards and aborts the process rather than raising — subtract instead.

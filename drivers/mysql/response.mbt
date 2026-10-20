@@ -5,32 +5,32 @@
 // decoder maps onto @moondb.Value this round.
 
 ///|
-const MYSQL_TYPE_TINY : Int = 1
+const MYSQL_TYPE_TINY : Int32 = 1
 
 ///|
-const MYSQL_TYPE_SHORT : Int = 2
+const MYSQL_TYPE_SHORT : Int32 = 2
 
 ///|
-const MYSQL_TYPE_LONG : Int = 3
+const MYSQL_TYPE_LONG : Int32 = 3
 
 ///|
-const MYSQL_TYPE_FLOAT : Int = 4
+const MYSQL_TYPE_FLOAT : Int32 = 4
 
 ///|
-const MYSQL_TYPE_DOUBLE : Int = 5
+const MYSQL_TYPE_DOUBLE : Int32 = 5
 
 ///|
-const MYSQL_TYPE_LONGLONG : Int = 8
+const MYSQL_TYPE_LONGLONG : Int32 = 8
 
 ///|
-const MYSQL_TYPE_INT24 : Int = 9
+const MYSQL_TYPE_INT24 : Int32 = 9
 
 ///|
-const MYSQL_TYPE_YEAR : Int = 13
+const MYSQL_TYPE_YEAR : Int32 = 13
 
 ///|
 /// The `binary` collation id: a column carrying it is raw bytes, not text.
-const COLLATION_BINARY : Int = 63
+const COLLATION_BINARY : Int32 = 63
 
 ///|
 /// An OK packet: a statement that returned no result set (INSERT/UPDATE/DELETE/DDL)
@@ -38,8 +38,8 @@ const COLLATION_BINARY : Int = 63
 pub(all) struct OkPacket {
   affected_rows : Int64
   last_insert_id : Int64
-  status : Int
-  warnings : Int
+  status : Int32
+  warnings : Int32
 } derive(Eq)
 
 ///|
@@ -48,9 +48,9 @@ pub(all) struct OkPacket {
 /// and the column flags.
 pub(all) struct ColumnDef {
   name : String
-  column_type : Int
-  charset : Int
-  flags : Int
+  column_type : Int32
+  charset : Int32
+  flags : Int32
 } derive(Eq)
 
 ///|
@@ -76,7 +76,7 @@ pub fn is_ok_packet(payload : Bytes) -> Bool {
 ///|
 /// Decode an ERR-packet body positioned right after the `0xFF` marker into
 /// `(code, sqlstate, message)`.
-fn parse_err_body(r : PacketReader) -> (Int, String, String) raise MysqlError {
+fn parse_err_body(r : PacketReader) -> (Int32, String, String) raise MysqlError {
   let code = r.uint_le(2).to_int()
   let mut state = ""
   if r.peek() == 0x23 { // '#': the SQLSTATE marker in protocol 41
@@ -139,7 +139,7 @@ pub fn parse_column_def(payload : Bytes) -> ColumnDef raise MysqlError {
 }
 
 ///|
-fn parse_int_cell(raw : Bytes) -> Int raise MysqlError {
+fn parse_int_cell(raw : Bytes) -> Int32 raise MysqlError {
   let s = bytes_to_string(raw)
   @string.parse_int(s[:]) catch {
     e =>

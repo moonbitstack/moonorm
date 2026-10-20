@@ -24,7 +24,7 @@
 pub(all) enum Value {
   Null
   Bool(Bool)
-  Int(Int)
+  Int(Int32)
   Int64(Int64)
   Double(Double)
   Text(String)

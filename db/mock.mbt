@@ -17,7 +17,7 @@
 pub struct MockDriver {
   mut rows : Array[Row]
   mut next_id : Int64
-  savepoints : Array[Int]
+  savepoints : Array[Int32]
   mut closed : Bool
 }
 
@@ -30,7 +30,7 @@ pub fn MockDriver::new() -> MockDriver {
 ///|
 /// How many rows the store currently holds. A test-facing helper, not part of the
 /// [`Driver`] contract.
-pub fn MockDriver::row_count(self : MockDriver) -> Int {
+pub fn MockDriver::row_count(self : MockDriver) -> Int32 {
   self.rows.length()
 }
 

@@ -10,7 +10,7 @@
 ///|
 /// A pool of in-memory SQLite connections.
 fn mem_pool(
-  max_size? : Int = 4,
+  max_size~ : Int32 = 4,
 ) -> @pool.Pool[@sqlite.SqliteDriver] raise @moondb.DbError {
   @pool.Pool::new(() => @sqlite.SqliteDriver::open(":memory:"), max_size~)
 }

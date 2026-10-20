@@ -10,7 +10,7 @@
 /// it here, which is what lets the whole codec be tested off any backend.
 pub struct PacketReader {
   data : Bytes
-  mut pos : Int
+  mut pos : Int32
 }
 
 ///|
@@ -21,7 +21,7 @@ pub fn PacketReader::new(data : Bytes) -> PacketReader {
 
 ///|
 /// Bytes not yet consumed.
-pub fn PacketReader::remaining(self : PacketReader) -> Int {
+pub fn PacketReader::remaining(self : PacketReader) -> Int32 {
   self.data.length() - self.pos
 }
 
@@ -33,7 +33,7 @@ pub fn PacketReader::at_end(self : PacketReader) -> Bool {
 
 ///|
 /// Peek the next byte without advancing; `-1` at end of payload.
-pub fn PacketReader::peek(self : PacketReader) -> Int {
+pub fn PacketReader::peek(self : PacketReader) -> Int32 {
   if self.pos >= self.data.length() {
     -1
   } else {
@@ -42,7 +42,7 @@ pub fn PacketReader::peek(self : PacketReader) -> Int {
 }
 
 ///|
-fn PacketReader::need(self : PacketReader, n : Int) -> Unit raise MysqlError {
+fn PacketReader::need(self : PacketReader, n : Int32) -> Unit raise MysqlError {
   if self.pos + n > self.data.length() {
     raise ProtocolError(
       "short packet: need " +
@@ -57,7 +57,7 @@ fn PacketReader::need(self : PacketReader, n : Int) -> Unit raise MysqlError {
 
 ///|
 /// Read one byte as an `Int` in `0..=255`.
-pub fn PacketReader::u8(self : PacketReader) -> Int raise MysqlError {
+pub fn PacketReader::u8(self : PacketReader) -> Int32 raise MysqlError {
   self.need(1)
   let v = self.data[self.pos].to_int()
   self.pos += 1
@@ -68,7 +68,7 @@ pub fn PacketReader::u8(self : PacketReader) -> Int raise MysqlError {
 /// Read an `n`-byte little-endian unsigned integer.
 pub fn PacketReader::uint_le(
   self : PacketReader,
-  n : Int,
+  n : Int32,
 ) -> Int64 raise MysqlError {
   self.need(n)
   guard @fixed.read_uint(self.data[:], at=self.pos, size=n, order=Little)
@@ -83,7 +83,7 @@ pub fn PacketReader::uint_le(
 /// Read `n` raw bytes.
 pub fn PacketReader::bytes(
   self : PacketReader,
-  n : Int,
+  n : Int32,
 ) -> Bytes raise MysqlError {
   self.need(n)
   let s = self.data[self.pos:self.pos + n].to_owned()
@@ -95,7 +95,7 @@ pub fn PacketReader::bytes(
 /// Skip `n` bytes.
 pub fn PacketReader::skip(
   self : PacketReader,
-  n : Int,
+  n : Int32,
 ) -> Unit raise MysqlError {
   self.need(n)
   self.pos += n
@@ -164,7 +164,7 @@ pub fn PacketReader::rest(self : PacketReader) -> Bytes {
 
 ///|
 /// Append an `n`-byte little-endian unsigned integer.
-pub fn put_uint_le(buf : Buffer, v : Int64, n : Int) -> Unit {
+pub fn put_uint_le(buf : Buffer, v : Int64, n : Int32) -> Unit {
   @fixed.write_uint(buf, v.reinterpret_as_uint64(), size=n, order=Little)
 }
 

@@ -166,7 +166,7 @@ test "sqlite matrix: upsert ON CONFLICT DO UPDATE overwrites in place" {
   let db = open_matrix()
   db.execute("CREATE TABLE kv (k TEXT PRIMARY KEY, v INTEGER)", []) |> ignore
   // moonorm's insert("kv").set(...).on_conflict(["k"]).do_update_excluded("v").
-  let upsert = fn(k : String, v : Int) -> Unit raise @moondb.DbError {
+  let upsert = fn(k : String, v : Int32) -> Unit raise @moondb.DbError {
     db.execute(
       "INSERT INTO kv (k, v) VALUES (?, ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v",
       [@moondb.Text(k), @moondb.Int(v)],

@@ -38,7 +38,7 @@ pub(open) trait Cursor {
 /// layer test against it.
 pub struct ArrayCursor {
   rows : Array[Row]
-  mut pos : Int
+  mut pos : Int32
 }
 
 ///|

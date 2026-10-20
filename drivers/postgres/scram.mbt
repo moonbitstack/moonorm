@@ -40,7 +40,7 @@ pub fn scram_server_signature(salted : Bytes, auth_message : Bytes) -> Bytes {
 }
 
 ///|
-fn atoi(s : String) -> Int {
+fn atoi(s : String) -> Int32 {
   let mut n = 0
   for c in s {
     n = n * 10 + (c.to_int() - 48)

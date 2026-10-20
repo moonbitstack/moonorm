@@ -16,7 +16,7 @@
 ///   caching_sha2_password full-auth exchange, a LOCAL INFILE request).
 pub(all) suberror MysqlError {
   ProtocolError(String)
-  ServerError(Int, String, String)
+  ServerError(Int32, String, String)
   UnsupportedError(String)
 } derive(Eq)
 

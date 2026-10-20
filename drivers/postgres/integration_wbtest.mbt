@@ -16,7 +16,7 @@ fn env_or(key : String, default : String) -> String {
 }
 
 ///|
-fn env_port() -> Int {
+fn env_port() -> Int32 {
   match parse_int(env_or("PGPORT", "5432")) {
     Some(p) => p
     None => 5432

@@ -161,7 +161,7 @@ struct SqliteCursor {
   driver : SqliteDriver
   st : Int64
   cols : Array[String]
-  ncol : Int
+  ncol : Int32
   mut done : Bool
 }
 

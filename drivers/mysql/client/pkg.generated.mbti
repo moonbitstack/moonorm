@@ -14,7 +14,7 @@ import {
 // Types and methods
 pub struct MysqlConn {
   tcp : @socket.Tcp
-  mut seq : Int
+  mut seq : Int32
   mut closed : Bool
   mut server_kind : @moonmysql.ServerKind
   mut streaming : Bool
@@ -23,7 +23,7 @@ pub struct MysqlConn {
 pub async fn MysqlConn::begin(Self) -> Unit
 pub fn MysqlConn::close(Self) -> Unit
 pub async fn MysqlConn::commit(Self) -> Unit
-pub async fn MysqlConn::connect(String, Int, String, String, String) -> Self
+pub async fn MysqlConn::connect(String, Int32, String, String, String) -> Self
 pub async fn MysqlConn::execute(Self, String, Array[@moondb.Value]) -> @moondb.ExecResult
 pub async fn MysqlConn::query(Self, String, Array[@moondb.Value]) -> Array[@moondb.Row]
 pub async fn MysqlConn::query_stream(Self, String, Array[@moondb.Value]) -> MysqlRowStream
@@ -32,7 +32,7 @@ pub fn MysqlConn::server_kind(Self) -> @moonmysql.ServerKind
 
 pub struct MysqlDriver {
   host : String
-  port : Int
+  port : Int32
   user : String
   password : String
   database : String
@@ -41,7 +41,7 @@ pub fn MysqlDriver::begin(Self) -> Unit raise @moondb.DbError
 pub fn MysqlDriver::close(Self) -> Unit
 pub fn MysqlDriver::commit(Self) -> Unit raise @moondb.DbError
 pub fn MysqlDriver::execute(Self, String, Array[@moondb.Value]) -> @moondb.ExecResult raise @moondb.DbError
-pub fn MysqlDriver::new(user~ : String, password? : String, database? : String, host? : String, port? : Int) -> Self
+pub fn MysqlDriver::new(user~ : String, password? : String, database? : String, host? : String, port? : Int32) -> Self
 pub fn MysqlDriver::ping(Self) -> Bool
 pub fn MysqlDriver::query(Self, String, Array[@moondb.Value]) -> Array[@moondb.Row] raise @moondb.DbError
 pub fn MysqlDriver::query_stream(Self, String, Array[@moondb.Value]) -> &@moondb.Cursor raise @moondb.DbError

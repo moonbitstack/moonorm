@@ -11,8 +11,8 @@
 /// A factory that counts how many connections it has opened, and the pool over it.
 /// The count lives in a one-cell array so the closure can mutate it.
 fn counting_pool(
-  max_size? : Int = 10,
-) -> (@pool.Pool[@moondb.MockDriver], Array[Int]) raise @moondb.DbError {
+  max_size~ : Int32 = 10,
+) -> (@pool.Pool[@moondb.MockDriver], Array[Int32]) raise @moondb.DbError {
   let opened = [0]
   let pool = @pool.Pool::new(
     () => {
