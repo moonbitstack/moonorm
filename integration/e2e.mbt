@@ -28,8 +28,8 @@ fn team_model() -> @orm.Model[Team] {
   @orm.Model::new(
     "team",
     [
-      @orm.column("id", @orm.IntType, primary_key=true),
-      @orm.column("name", @orm.TextType, nullable=false),
+      @orm.column("id", IntType, primary_key=true),
+      @orm.column("name", TextType, nullable=false),
     ],
     r => { id: r.int(0), name: r.text(1), },
     t => [("id", @moondb.Int(t.id)), ("name", @moondb.Text(t.name))],
@@ -43,10 +43,10 @@ fn hero_model() -> @orm.Model[Hero] {
   @orm.Model::new(
     "hero",
     [
-      @orm.column("id", @orm.IntType, primary_key=true),
-      @orm.column("name", @orm.TextType, nullable=false),
-      @orm.column("team_id", @orm.IntType, references=("team", "id")),
-      @orm.column("version", @orm.IntType, nullable=false),
+      @orm.column("id", IntType, primary_key=true),
+      @orm.column("name", TextType, nullable=false),
+      @orm.column("team_id", IntType, references=("team", "id")),
+      @orm.column("version", IntType, nullable=false),
     ],
     r => {
       id: r.int(0),
@@ -134,7 +134,7 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
   // fetch_as with a refined Select decodes rows into records.
   let avengers = sess.fetch_as(
     heroes,
-    heroes.select().eq("team_id", @moondb.Int(1)).order_by("id", @orm.Asc),
+    heroes.select().eq("team_id", @moondb.Int(1)).order_by("id", Asc),
   )
   assert_eq(avengers.length(), 2)
   assert_eq(avengers[0].name, "ironman")
@@ -146,7 +146,7 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
     .column("name")
     .with_cte("teamed", @orm.select("hero").column("team_id"))
     .where_in("id", @orm.select("teamed").column("team_id"))
-    .order_by("name", @orm.Asc)
+    .order_by("name", Asc)
   let rows = sess.fetch(with_heroes)
   assert_eq(rows.length(), 2)
   assert_eq(rows[0].text(0), "avengers")
@@ -175,7 +175,7 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
     |> ignore
     false
   } catch {
-    @orm.LostUpdate(_) => true
+    @session.LostUpdate(_) => true
     _ => false
   }
   assert_eq(stale, true)
