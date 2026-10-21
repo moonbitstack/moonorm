@@ -33,7 +33,7 @@ fn main {
     .eq("orders.status", @moondb.Text("paid"))
     .group_by("users.name")
     .having("SUM(orders.total)", ">", @moondb.Int(23333))
-    .order_by("users.name", @moonorm.Asc)
+    .order_by("users.name", Asc)
     .build()
   println("-- grouped aggregate with JOIN + HAVING")
   println(sql)

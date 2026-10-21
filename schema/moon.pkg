@@ -1,0 +1,5 @@
+// Columns, models and relations: how a MoonBit type maps to a table.
+import {
+  "moonbitstack/moonorm/query",
+  "moonbitstack/moondb",
+}

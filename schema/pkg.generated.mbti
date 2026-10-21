@@ -1,0 +1,106 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonorm/schema"
+
+import {
+  "moonbitstack/moondb",
+  "moonbitstack/moonorm/query",
+}
+
+// Values
+pub fn[S, T] belongs_to(Model[T], String, (S) -> @moondb.Value) -> Relation[S, T]
+
+pub fn column(String, ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Column
+
+pub fn[T] field(String, ColumnType, (T) -> @moondb.Value, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Field[T]
+
+pub fn[S, T] has_many(Model[T], String, (S) -> @moondb.Value) -> Relation[S, T]
+
+pub fn[S, T] many_to_many(Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -> @moondb.Value) -> ManyToMany[S, T]
+
+// Errors
+
+// Types and methods
+pub(all) struct Column {
+  name : String
+  col_type : ColumnType
+  primary_key : Bool
+  autoincrement : Bool
+  nullable : Bool
+  unique : Bool
+  default : String?
+  checks : Array[String]
+  references : (String, String)?
+  on_delete : String?
+  on_update : String?
+}
+pub fn Column::ddl(Self, inline_pk? : Bool) -> String
+pub fn Column::ddl_for(Self, @query.Dialect, inline_pk? : Bool) -> String
+
+pub(all) enum ColumnType {
+  IntType
+  TextType
+  RealType
+  BlobType
+  BoolType
+  VarcharType(Int32)
+  NumericType
+  DateTimeType
+  DateType
+  TimeType
+  UuidType
+  JsonType
+} derive(Eq)
+pub fn ColumnType::equal(Self, Self) -> Bool
+pub fn ColumnType::not_equal(Self, Self) -> Bool
+pub fn ColumnType::sql_for(Self, @query.Dialect) -> String
+
+pub struct Field[T] {
+  column : Column
+  encode : (T) -> @moondb.Value
+}
+pub fn[T] Field::name(Self[T]) -> String
+
+pub struct ManyToMany[S, T] {
+  target : Model[T]
+  junction : String
+  source_fk : String
+  target_fk : String
+  target_key : String
+  source_key : (S) -> @moondb.Value
+}
+pub fn[S, T] ManyToMany::query(Self[S, T], S) -> @query.Select
+
+pub struct Model[T] {
+  table : String
+  columns : Array[Column]
+  from_row : (@moondb.Row) -> T raise @moondb.DbError
+  to_columns : (T) -> Array[(String, @moondb.Value)]
+  ident : Map[Int32, Map[String, T]]
+}
+pub fn[T] Model::column_names(Self[T]) -> Array[String]
+pub fn[T] Model::create_table_sql(Self[T], if_not_exists? : Bool) -> String
+pub fn[T] Model::create_table_sql_for(Self[T], @query.Dialect, if_not_exists? : Bool) -> String
+pub fn[T] Model::from_fields(String, Array[Field[T]], (@moondb.Row) -> T raise @moondb.DbError) -> Self[T]
+pub fn[T] Model::insert_of(Self[T], T) -> @query.Insert
+pub fn[T] Model::map_row(Self[T], @moondb.Row) -> T raise @moondb.DbError
+pub fn[T] Model::map_rows(Self[T], Array[@moondb.Row]) -> Array[T] raise @moondb.DbError
+pub fn[T] Model::new(String, Array[Column], (@moondb.Row) -> T raise @moondb.DbError, (T) -> Array[(String, @moondb.Value)]) -> Self[T]
+pub fn[T] Model::parent_tables(Self[T]) -> Array[String]
+pub fn[T] Model::pk_columns(Self[T]) -> Array[String]
+pub fn[T] Model::pk_of(Self[T], T) -> Array[@moondb.Value]
+pub fn[T] Model::select(Self[T]) -> @query.Select
+pub fn[T] Model::table_descriptor(Self[T]) -> @query.Table
+
+pub struct Relation[S, T] {
+  target : Model[T]
+  key_column : String
+  source_key : (S) -> @moondb.Value
+  to_many : Bool
+}
+pub fn[S, T] Relation::batch_query(Self[S, T], Array[S]) -> @query.Select
+pub fn[S, T] Relation::query(Self[S, T], S) -> @query.Select
+pub fn[S, T] Relation::source_value(Self[S, T], S) -> @moondb.Value
+
+// Type aliases
+
+// Traits

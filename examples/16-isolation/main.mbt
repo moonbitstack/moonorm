@@ -10,58 +10,51 @@
 #coverage.skip
 fn main {
   println("-- IsolationLevel keywords")
-  for
-    lvl in [
-      @moonorm.ReadUncommitted,
-      @moonorm.ReadCommitted,
-      @moonorm.RepeatableRead,
-      @moonorm.Serializable,
-    ] {
+  let levels : Array[@moonorm.IsolationLevel] = [
+    ReadUncommitted,
+    ReadCommitted,
+    RepeatableRead,
+    Serializable,
+  ]
+  for lvl in levels {
     println("  \{lvl.keyword()}")
   }
 
   // Serializable rendered per dialect.
   let serializable : @moonorm.TxOptions = {
-    isolation: Some(@moonorm.Serializable),
+    isolation: Some(Serializable),
     read_only: false,
   }
   println("")
   println(
-    "-- Serializable, PostgreSQL: " +
-    serializable.to_sql(@moonorm.Postgres).join(" | "),
+    "-- Serializable, PostgreSQL: " + serializable.to_sql(Postgres).join(" | "),
   )
   println(
-    "-- Serializable, MySQL:      " +
-    serializable.to_sql(@moonorm.Mysql).join(" | "),
+    "-- Serializable, MySQL:      " + serializable.to_sql(Mysql).join(" | "),
   )
 
   // Read-only + the one weaker level SQLite models (via PRAGMA).
   let ro : @moonorm.TxOptions = {
-    isolation: Some(@moonorm.ReadUncommitted),
+    isolation: Some(ReadUncommitted),
     read_only: true,
   }
   println(
-    "-- ReadUncommitted+read_only, SQLite:     " +
-    ro.to_sql(@moonorm.Sqlite).join(" | "),
+    "-- ReadUncommitted+read_only, SQLite:     " + ro.to_sql(Sqlite).join(" | "),
   )
   println(
     "-- ReadUncommitted+read_only, PostgreSQL: " +
-    ro.to_sql(@moonorm.Postgres).join(" | "),
+    ro.to_sql(Postgres).join(" | "),
   )
 
   // Defaults render nothing — the backend's own defaults already suffice.
   let defaults = @moonorm.TxOptions::default()
-  println(
-    "-- defaults, SQLite: [" +
-    defaults.to_sql(@moonorm.Sqlite).join(" | ") +
-    "]",
-  )
+  println("-- defaults, SQLite: [" + defaults.to_sql(Sqlite).join(" | ") + "]")
 
   // begin_with issues those statements around the transaction bracket.
   try {
     let drv = @moondb.MockDriver::new()
     let sess = @moonorm.Session::new(drv)
-    sess.begin_with(serializable, dialect=@moonorm.Postgres)
+    sess.begin_with(serializable, dialect=Postgres)
     sess.add(@moonorm.insert("t").set("n", @moondb.Int(233))) |> ignore
     sess.commit()
     println("")

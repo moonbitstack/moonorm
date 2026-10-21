@@ -2,443 +2,113 @@
 package "moonbitstack/moonorm"
 
 import {
-  "moonbitlang/core/debug",
   "moonbitstack/moondb",
-  "moonbitstack/moondb/pool",
+  "moonbitstack/moonorm/migrate",
+  "moonbitstack/moonorm/query",
+  "moonbitstack/moonorm/schema",
+  "moonbitstack/moonorm/session",
 }
 
 // Values
-pub fn[S, T] belongs_to(Model[T], String, (S) -> @moondb.Value) -> Relation[S, T]
+pub fn[S, T] belongs_to(@schema.Model[T], String, (S) -> @moondb.Value) -> @schema.Relation[S, T]
 
 pub fn case_(Array[(String, String)], else_? : String) -> String
 
 pub fn cast(String, String) -> String
 
-pub fn column(String, ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Column
+pub fn column(String, @schema.ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> @schema.Column
 
-pub fn delete(String) -> Delete
+pub fn delete(String) -> @query.Delete
 
-pub fn diff_schema(Array[Column], Array[Column]) -> Array[ColumnDiff]
+pub fn diff_schema(Array[@schema.Column], Array[@schema.Column]) -> Array[@migrate.ColumnDiff]
 
-pub fn[T] field(String, ColumnType, (T) -> @moondb.Value, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Field[T]
+pub fn[T] field(String, @schema.ColumnType, (T) -> @moondb.Value, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> @schema.Field[T]
 
 pub fn func(String, Array[String]) -> String
 
-pub fn[S, T] has_many(Model[T], String, (S) -> @moondb.Value) -> Relation[S, T]
+pub fn[S, T] has_many(@schema.Model[T], String, (S) -> @moondb.Value) -> @schema.Relation[S, T]
 
 pub fn index_ddl(String, String, Array[String], unique? : Bool) -> String
 
-pub fn insert(String) -> Insert
+pub fn insert(String) -> @query.Insert
 
-pub fn[S, T] many_to_many(Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -> @moondb.Value) -> ManyToMany[S, T]
+pub fn[S, T] many_to_many(@schema.Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -> @moondb.Value) -> @schema.ManyToMany[S, T]
 
-pub fn reflect_columns(Array[@moondb.Row]) -> Array[Column] raise @moondb.DbError
+pub fn reflect_columns(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
 
-pub fn reflect_columns_mysql(Array[@moondb.Row]) -> Array[Column] raise @moondb.DbError
+pub fn reflect_columns_mysql(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
 
-pub fn reflect_columns_pg(Array[@moondb.Row]) -> Array[Column] raise @moondb.DbError
+pub fn reflect_columns_pg(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
 
-pub fn reflect_table(&@moondb.Driver, String) -> Array[Column] raise @moondb.DbError
+pub fn reflect_table(&@moondb.Driver, String) -> Array[@schema.Column] raise @moondb.DbError
 
-pub fn reflect_table_for(&@moondb.Driver, String, Dialect) -> Array[Column] raise @moondb.DbError
+pub fn reflect_table_for(&@moondb.Driver, String, @query.Dialect) -> Array[@schema.Column] raise @moondb.DbError
 
-pub fn[S : AsSource] select(S) -> Select
+pub fn[S : @query.AsSource] select(S) -> @query.Select
 
-pub fn update(String) -> Update
+pub fn update(String) -> @query.Update
 
 // Errors
-pub(all) suberror LostUpdate {
-  LostUpdate(String)
-}
-pub fn LostUpdate::output(Self, &Logger) -> Unit
-pub fn LostUpdate::to_string(Self) -> String
-pub impl Show for LostUpdate
 
 // Types and methods
-type Assign
-
-pub(all) struct Column {
-  name : String
-  col_type : ColumnType
-  primary_key : Bool
-  autoincrement : Bool
-  nullable : Bool
-  unique : Bool
-  default : String?
-  checks : Array[String]
-  references : (String, String)?
-  on_delete : String?
-  on_update : String?
-}
-pub fn Column::ddl(Self, inline_pk? : Bool) -> String
-pub fn Column::ddl_for(Self, Dialect, inline_pk? : Bool) -> String
-
-pub(all) enum ColumnDiff {
-  Added(name~ : String, col_type~ : ColumnType)
-  Removed(String)
-  TypeChanged(name~ : String, from~ : ColumnType, to~ : ColumnType)
-} derive(Eq)
-pub fn ColumnDiff::equal(Self, Self) -> Bool
-pub fn ColumnDiff::not_equal(Self, Self) -> Bool
-
-pub(all) enum ColumnType {
-  IntType
-  TextType
-  RealType
-  BlobType
-  BoolType
-  VarcharType(Int32)
-  NumericType
-  DateTimeType
-  DateType
-  TimeType
-  UuidType
-  JsonType
-} derive(Eq)
-pub fn ColumnType::equal(Self, Self) -> Bool
-pub fn ColumnType::not_equal(Self, Self) -> Bool
-pub fn ColumnType::sql_for(Self, Dialect) -> String
-
-type Cond
-
-type Conflict
-
-type Cte
-
-pub struct Delete {
-  table : String
-  filter : Where
-  returning : Array[String]
-}
-pub fn Delete::build(Self) -> (String, Array[@moondb.Value])
-pub fn Delete::build_for(Self, Dialect) -> (String, Array[@moondb.Value])
-pub fn Delete::returning(Self, String) -> Self
-pub fn Delete::returning_all(Self) -> Self
-pub fn Delete::where_(Self, String, String, @moondb.Value) -> Self
-pub fn Delete::where_in(Self, String, Select) -> Self
-pub fn Delete::where_not_in(Self, String, Select) -> Self
-pub fn Delete::where_pred(Self, Predicate) -> Self
-
-pub(all) enum Dialect {
-  Sqlite
-  Postgres
-  Mysql
-} derive(Eq)
-pub fn Dialect::equal(Self, Self) -> Bool
-pub fn Dialect::not_equal(Self, Self) -> Bool
-
-pub struct Field[T] {
-  column : Column
-  encode : (T) -> @moondb.Value
-}
-pub fn[T] Field::name(Self[T]) -> String
-
-pub struct Insert {
-  table : String
-  cols : Array[String]
-  vals : Array[@moondb.Value]
-  extra_rows : Array[Array[@moondb.Value]]
-  mut conflict : Conflict?
-  returning : Array[String]
-}
-pub fn Insert::build(Self) -> (String, Array[@moondb.Value])
-pub fn Insert::build_for(Self, Dialect) -> (String, Array[@moondb.Value])
-pub fn Insert::do_nothing(Self) -> Self
-pub fn Insert::do_update(Self, String, @moondb.Value) -> Self
-pub fn Insert::do_update_excluded(Self, String) -> Self
-pub fn Insert::on_conflict(Self, Array[String]) -> Self
-pub fn Insert::returning(Self, String) -> Self
-pub fn Insert::returning_all(Self) -> Self
-pub fn Insert::set(Self, String, @moondb.Value) -> Self
-pub fn Insert::values(Self, Array[@moondb.Value]) -> Self
-
-pub(all) enum IsolationLevel {
-  ReadUncommitted
-  ReadCommitted
-  RepeatableRead
-  Serializable
-} derive(Eq)
-pub fn IsolationLevel::equal(Self, Self) -> Bool
-pub fn IsolationLevel::keyword(Self) -> String
-pub fn IsolationLevel::not_equal(Self, Self) -> Bool
-
-type JoinClause
-
-pub(all) struct LockClause {
-  mode : LockMode
-  of : Array[String]
-  nowait : Bool
-  skip_locked : Bool
-} derive(Eq, @debug.Debug)
-pub fn LockClause::equal(Self, Self) -> Bool
-pub fn LockClause::not_equal(Self, Self) -> Bool
-pub fn LockClause::to_repr(Self) -> @debug.Repr
-
-pub(all) enum LockMode {
-  ForUpdate
-  ForShare
-} derive(Eq, @debug.Debug)
-pub fn LockMode::equal(Self, Self) -> Bool
-pub fn LockMode::not_equal(Self, Self) -> Bool
-pub fn LockMode::to_repr(Self) -> @debug.Repr
-
-pub struct ManyToMany[S, T] {
-  target : Model[T]
-  junction : String
-  source_fk : String
-  target_fk : String
-  target_key : String
-  source_key : (S) -> @moondb.Value
-}
-pub fn[S, T] ManyToMany::query(Self[S, T], S) -> Select
-
-pub(all) struct Migration {
-  version : Int32
-  name : String
-  up : Array[String]
-  down : Array[String]
-}
-
-pub struct Migrator {
-  table : String
-}
-pub fn Migrator::applied_versions(Self, Session) -> Array[Int32] raise @moondb.DbError
-pub fn Migrator::current_version(Self, Session) -> Int32 raise @moondb.DbError
-pub fn Migrator::down_to(Self, Session, Array[Migration], Int32) -> Int32 raise @moondb.DbError
-pub fn Migrator::ensure_table(Self, Session) -> Unit raise @moondb.DbError
-pub fn Migrator::new(table? : String) -> Self raise @moondb.DbError
-pub fn Migrator::up(Self, Session, Array[Migration]) -> Int32 raise @moondb.DbError
-
-pub struct Model[T] {
-  table : String
-  columns : Array[Column]
-  from_row : (@moondb.Row) -> T raise @moondb.DbError
-  to_columns : (T) -> Array[(String, @moondb.Value)]
-  ident : Map[Int32, Map[String, T]]
-}
-pub fn[T] Model::column_names(Self[T]) -> Array[String]
-pub fn[T] Model::create_table_sql(Self[T], if_not_exists? : Bool) -> String
-pub fn[T] Model::create_table_sql_for(Self[T], Dialect, if_not_exists? : Bool) -> String
-pub fn[T] Model::from_fields(String, Array[Field[T]], (@moondb.Row) -> T raise @moondb.DbError) -> Self[T]
-pub fn[T] Model::insert_of(Self[T], T) -> Insert
-pub fn[T] Model::map_row(Self[T], @moondb.Row) -> T raise @moondb.DbError
-pub fn[T] Model::map_rows(Self[T], Array[@moondb.Row]) -> Array[T] raise @moondb.DbError
-pub fn[T] Model::new(String, Array[Column], (@moondb.Row) -> T raise @moondb.DbError, (T) -> Array[(String, @moondb.Value)]) -> Self[T]
-pub fn[T] Model::parent_tables(Self[T]) -> Array[String]
-pub fn[T] Model::pk_columns(Self[T]) -> Array[String]
-pub fn[T] Model::pk_of(Self[T], T) -> Array[@moondb.Value]
-pub fn[T] Model::select(Self[T]) -> Select
-pub fn[T] Model::table_descriptor(Self[T]) -> Table
-
-pub(all) enum Nulls {
-  Auto
-  First
-  Last
-} derive(Eq)
-pub fn Nulls::equal(Self, Self) -> Bool
-pub fn Nulls::not_equal(Self, Self) -> Bool
-
-pub(all) enum Order {
-  Asc
-  Desc
-} derive(Eq)
-pub fn Order::equal(Self, Self) -> Bool
-pub fn Order::not_equal(Self, Self) -> Bool
-
-type OrderTerm
-
-pub(all) enum Predicate {
-  Cmp(col~ : String, op~ : String, val~ : @moondb.Value)
-  InList(col~ : String, vals~ : Array[@moondb.Value], negated~ : Bool)
-  Exists(sub~ : Select, negated~ : Bool)
-  And(Array[Predicate])
-  Or(Array[Predicate])
-  Not(Predicate)
-}
-pub fn Predicate::build(Self) -> (String, Array[@moondb.Value])
-
-pub struct Relation[S, T] {
-  target : Model[T]
-  key_column : String
-  source_key : (S) -> @moondb.Value
-  to_many : Bool
-}
-pub fn[S, T] Relation::batch_query(Self[S, T], Array[S]) -> Select
-pub fn[S, T] Relation::query(Self[S, T], S) -> Select
-pub fn[S, T] Relation::source_value(Self[S, T], S) -> @moondb.Value
-
-pub struct RowStream[T] {
-  cursor : &@moondb.Cursor
-  model : Model[T]
-}
-pub fn[T] RowStream::close(Self[T]) -> Unit
-pub fn[T] RowStream::next(Self[T]) -> T? raise @moondb.DbError
-
-pub struct Savepoint {
-  sess : Session
-  name : String
-  depth : Int32
-  mut finished : Bool
-}
-pub fn Savepoint::commit(Self) -> Unit raise @moondb.DbError
-pub fn Savepoint::depth(Self) -> Int32
-pub fn Savepoint::name(Self) -> String
-pub fn Savepoint::release(Self) -> Unit raise @moondb.DbError
-pub fn Savepoint::rollback(Self) -> Unit raise @moondb.DbError
-
-pub struct Select {
-  from_ : Source
-  ctes : Array[Cte]
-  cols : Array[String]
-  joins : Array[JoinClause]
-  filter : Where
-  groups : Array[String]
-  havings : Array[Cond]
-  orders : Array[OrderTerm]
-  set_ops : Array[(String, Select)]
-  distinct_on_ : Array[String]
-  mut distinct_ : Bool
-  mut limit_ : Int32?
-  mut offset_ : Int32?
-  mut lock_ : LockClause?
-}
-pub fn Select::build(Self) -> (String, Array[@moondb.Value])
-pub fn Select::column(Self, String) -> Self
-pub fn Select::count(Self) -> Self
-pub fn[S : AsSource] Select::cross_join(Self, S) -> Self
-pub fn Select::distinct(Self) -> Self
-pub fn Select::distinct_on(Self, Array[String]) -> Self
-pub fn Select::eq(Self, String, @moondb.Value) -> Self
-pub fn Select::except_(Self, Self) -> Self
-pub fn Select::for_update(Self, read? : Bool, of? : Array[String], nowait? : Bool, skip_locked? : Bool) -> Self
-pub fn[S : AsSource] Select::full_join(Self, S, String) -> Self
-pub fn Select::group_by(Self, String) -> Self
-pub fn Select::having(Self, String, String, @moondb.Value) -> Self
-pub fn Select::intersect(Self, Self) -> Self
-pub fn[S : AsSource] Select::join(Self, S, String) -> Self
-pub fn[S : AsSource] Select::join_using(Self, S, Array[String]) -> Self
-pub fn Select::label(Self, String, String) -> Self
-pub fn[S : AsSource] Select::left_join(Self, S, String) -> Self
-pub fn Select::limit(Self, Int32) -> Self
-pub fn Select::offset(Self, Int32) -> Self
-pub fn Select::order_by(Self, String, Order, nulls? : Nulls) -> Self
-pub fn Select::raw(Self, String) -> Self
-pub fn[S : AsSource] Select::right_join(Self, S, String) -> Self
-pub fn Select::union(Self, Self) -> Self
-pub fn Select::union_all(Self, Self) -> Self
-pub fn Select::where_(Self, String, String, @moondb.Value) -> Self
-pub fn Select::where_exists(Self, Self) -> Self
-pub fn Select::where_in(Self, String, Self) -> Self
-pub fn Select::where_in_values(Self, String, Array[@moondb.Value]) -> Self
-pub fn Select::where_not_exists(Self, Self) -> Self
-pub fn Select::where_not_in(Self, String, Self) -> Self
-pub fn Select::where_not_in_values(Self, String, Array[@moondb.Value]) -> Self
-pub fn Select::where_pred(Self, Predicate) -> Self
-pub fn Select::window(Self, String, partition_by? : Array[String], order_by? : Array[(String, Order)], as_? : String) -> Self
-pub fn Select::with_cte(Self, String, Self) -> Self
-pub fn Select::with_recursive(Self, String, Self, Self, all? : Bool) -> Self
-
-pub struct Session {
-  driver : &@moondb.Driver
-  mut sp_depth : Int32
-  mut sp_seq : Int32
-  id : Int32
-  pending : Array[Work]
-  dirty : Array[Work]
-  deleted : Array[Work]
-  detach : Array[() -> Unit]
-}
-pub fn Session::add(Self, Insert) -> @moondb.ExecResult raise @moondb.DbError
-pub fn[T] Session::add_record(Self, Model[T], T) -> Unit
-pub fn[T] Session::all(Self, Model[T]) -> Array[T] raise @moondb.DbError
-pub fn Session::begin(Self) -> Unit raise @moondb.DbError
-pub fn Session::begin_nested(Self) -> Savepoint raise @moondb.DbError
-pub fn Session::begin_with(Self, TxOptions, dialect? : Dialect) -> Unit raise @moondb.DbError
-pub fn Session::close(Self) -> Unit
-pub fn Session::commit(Self) -> Unit raise @moondb.DbError
-pub fn[T] Session::create_table(Self, Model[T], if_not_exists? : Bool) -> @moondb.ExecResult raise @moondb.DbError
-pub fn[T] Session::delete_record(Self, Model[T], T) -> Unit raise @moondb.DbError
-pub fn Session::deleted_count(Self) -> Int32
-pub fn Session::dirty_count(Self) -> Int32
-pub fn Session::execute(Self, String, Array[@moondb.Value]) -> @moondb.ExecResult raise @moondb.DbError
-pub fn[T] Session::expunge(Self, Model[T], T) -> Unit
-pub fn Session::expunge_all(Self) -> Unit
-pub fn Session::fetch(Self, Select) -> Array[@moondb.Row] raise @moondb.DbError
-pub fn[T] Session::fetch_as(Self, Model[T], Select) -> Array[T] raise @moondb.DbError
-pub fn Session::flush(Self) -> Unit raise @moondb.DbError
-pub fn[T] Session::get(Self, Model[T], @moondb.Value) -> T? raise @moondb.DbError
-pub fn[T] Session::get_by(Self, Model[T], Array[@moondb.Value]) -> T? raise @moondb.DbError
-pub fn[T] Session::insert_record(Self, Model[T], T) -> @moondb.ExecResult raise @moondb.DbError
-pub fn[S, T] Session::load(Self, S, Relation[S, T]) -> Array[T] raise @moondb.DbError
-pub fn[S, T] Session::load_batch(Self, Array[S], Relation[S, T]) -> Array[Array[T]] raise @moondb.DbError
-pub fn[S, T] Session::load_many(Self, S, ManyToMany[S, T]) -> Array[T] raise @moondb.DbError
-pub fn[S, T] Session::load_one(Self, S, Relation[S, T]) -> T? raise @moondb.DbError
-pub fn[S, T] Session::load_one_batch(Self, Array[S], Relation[S, T]) -> Array[T?] raise @moondb.DbError
-pub fn Session::modify(Self, Update) -> @moondb.ExecResult raise @moondb.DbError
-pub fn Session::modify_versioned(Self, Update, what? : String) -> @moondb.ExecResult raise
-pub fn Session::new(&@moondb.Driver) -> Self
-pub fn Session::pending_count(Self) -> Int32
-pub fn Session::query(Self, String, Array[@moondb.Value]) -> Array[@moondb.Row] raise @moondb.DbError
-pub fn Session::query_stream(Self, String, Array[@moondb.Value]) -> &@moondb.Cursor raise @moondb.DbError
-pub fn Session::release(Self, String) -> @moondb.ExecResult raise @moondb.DbError
-pub fn Session::remove(Self, Delete) -> @moondb.ExecResult raise @moondb.DbError
-pub fn Session::rollback(Self) -> Unit raise @moondb.DbError
-pub fn Session::rollback_to(Self, String) -> @moondb.ExecResult raise @moondb.DbError
-pub fn Session::savepoint(Self, String) -> @moondb.ExecResult raise @moondb.DbError
-pub fn Session::savepoint_depth(Self) -> Int32
-pub fn Session::stream(Self, Select) -> &@moondb.Cursor raise @moondb.DbError
-pub fn[T] Session::stream_as(Self, Model[T], Select) -> RowStream[T] raise @moondb.DbError
-pub fn[T] Session::update_record(Self, Model[T], T) -> Unit raise @moondb.DbError
-pub fn[D : @moondb.Driver, T] Session::with_pool(@pool.Pool[D], (Self) -> T raise) -> T raise
-
-pub(all) enum Source {
-  Tbl(String)
-  Sub(Select)
-  Alias(Source, String)
-  Lateral(Source)
-}
-pub fn Source::to_source(Self) -> Self
-pub impl AsSource for Source
-
-pub(all) struct Table {
-  name : String
-  columns : Array[String]
-}
-pub fn Table::select(Self) -> Select
-
-pub(all) struct TxOptions {
-  isolation : IsolationLevel?
-  read_only : Bool
-}
-pub fn TxOptions::default() -> Self
-pub fn TxOptions::to_sql(Self, Dialect) -> Array[String]
-
-pub struct Update {
-  table : String
-  sets : Array[(String, Assign)]
-  filter : Where
-  returning : Array[String]
-}
-pub fn Update::build(Self) -> (String, Array[@moondb.Value])
-pub fn Update::build_for(Self, Dialect) -> (String, Array[@moondb.Value])
-pub fn Update::returning(Self, String) -> Self
-pub fn Update::returning_all(Self) -> Self
-pub fn Update::set(Self, String, @moondb.Value) -> Self
-pub fn Update::set_expr(Self, String, String, vals? : Array[@moondb.Value]) -> Self
-pub fn Update::where_(Self, String, String, @moondb.Value) -> Self
-pub fn Update::where_in(Self, String, Select) -> Self
-pub fn Update::where_not_in(Self, String, Select) -> Self
-pub fn Update::where_pred(Self, Predicate) -> Self
-
-type Where
-
-type Work
 
 // Type aliases
+pub using @schema {type Column}
+
+pub using @migrate {type ColumnDiff}
+
+pub using @schema {type ColumnType}
+
+pub using @query {type Delete}
+
+pub using @query {type Dialect}
+
+pub using @schema {type Field}
+
+pub using @query {type Insert}
+
+pub using @session {type IsolationLevel}
+
+pub using @query {type LockClause}
+
+pub using @query {type LockMode}
+
+pub using @session {type LostUpdate}
+
+pub using @schema {type ManyToMany}
+
+pub using @migrate {type Migration}
+
+pub using @migrate {type Migrator}
+
+pub using @schema {type Model}
+
+pub using @query {type Nulls}
+
+pub using @query {type Order}
+
+pub using @query {type Predicate}
+
+pub using @schema {type Relation}
+
+pub using @session {type RowStream}
+
+pub using @session {type Savepoint}
+
+pub using @query {type Select}
+
+pub using @session {type Session}
+
+pub using @query {type Source}
+
+pub using @query {type Table}
+
+pub using @session {type TxOptions}
+
+pub using @query {type Update}
+
 pub using @moondb {type Value}
 
+pub using @query {trait AsSource}
+
 // Traits
-pub(open) trait AsSource {
-  fn to_source(Self) -> Source
-}
-pub impl AsSource for String

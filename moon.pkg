@@ -7,6 +7,9 @@
 // backend (moonsqlite, moonpostgres, …) is a separate package the caller supplies.
 
 import {
+  "moonbitstack/moonorm/query",
+  "moonbitstack/moonorm/schema",
+  "moonbitstack/moonorm/session",
+  "moonbitstack/moonorm/migrate",
   "moonbitstack/moondb",
-  "moonbitstack/moondb/pool",
 }

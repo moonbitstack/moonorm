@@ -17,19 +17,9 @@ struct Hero {
 let heroes : @moonorm.Model[Hero] = @moonorm.Model::from_fields(
   "heroes",
   [
-    @moonorm.field(
-      "id",
-      @moonorm.IntType,
-      h => @moondb.Int(h.id),
-      primary_key=true,
-    ),
-    @moonorm.field(
-      "name",
-      @moonorm.TextType,
-      h => @moondb.Text(h.name),
-      nullable=false,
-    ),
-    @moonorm.field("power", @moonorm.IntType, h => @moondb.Int(h.power)),
+    @moonorm.field("id", IntType, h => @moondb.Int(h.id), primary_key=true),
+    @moonorm.field("name", TextType, h => @moondb.Text(h.name), nullable=false),
+    @moonorm.field("power", IntType, h => @moondb.Int(h.power)),
   ],
   r => { id: r.int(0), name: r.text(1), power: r.int(2), },
 )
@@ -71,7 +61,7 @@ fn main {
   // A single Field carries its own column metadata.
   let email : @moonorm.Field[Hero] = @moonorm.field(
     "email",
-    @moonorm.TextType,
+    TextType,
     h => @moondb.Text(h.name),
     unique=true,
   )

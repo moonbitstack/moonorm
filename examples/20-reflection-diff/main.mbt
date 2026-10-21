@@ -151,9 +151,9 @@ fn show() -> Unit raise @moondb.DbError {
 
   // The model dropped `power` and added `team_id`; diff it against the reflected table.
   let declared = [
-    @moonorm.column("id", @moonorm.IntType, primary_key=true),
-    @moonorm.column("name", @moonorm.TextType, nullable=false),
-    @moonorm.column("team_id", @moonorm.IntType),
+    @moonorm.column("id", IntType, primary_key=true),
+    @moonorm.column("name", TextType, nullable=false),
+    @moonorm.column("team_id", IntType),
   ]
   println("")
   println("-- diff_schema (declared vs reflected)")
@@ -174,7 +174,7 @@ fn show() -> Unit raise @moondb.DbError {
     println("  \{c.name}: \{type_name(c.col_type)}")
   }
   println("-- reflect_table_for(Sqlite)")
-  for c in @moonorm.reflect_table_for(drv, "tags", @moonorm.Sqlite) {
+  for c in @moonorm.reflect_table_for(drv, "tags", Sqlite) {
     println("  \{c.name}")
   }
 

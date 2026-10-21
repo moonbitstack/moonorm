@@ -16,13 +16,9 @@ struct Category {
 let categories : @moonorm.Model[Category] = @moonorm.Model::new(
   "categories",
   [
-    @moonorm.column("id", @moonorm.IntType, primary_key=true),
-    @moonorm.column("name", @moonorm.TextType, nullable=false),
-    @moonorm.column(
-      "parent_id",
-      @moonorm.IntType,
-      references=("categories", "id"),
-    ),
+    @moonorm.column("id", IntType, primary_key=true),
+    @moonorm.column("name", TextType, nullable=false),
+    @moonorm.column("parent_id", IntType, references=("categories", "id")),
   ],
   r => { id: r.int(0), name: r.text(1), parent: r.int(2), },
   c => {
@@ -65,7 +61,7 @@ fn main {
   let (sql, params) = categories
     .select()
     .where_("parent_id", ">", @moondb.Int(0))
-    .order_by("name", @moonorm.Asc)
+    .order_by("name", Asc)
     .limit(233)
     .build()
   println("-- filtered select")
@@ -85,7 +81,7 @@ fn main {
     .column("id")
     .column("name")
     .with_recursive("subtree", anchor, step, all=true)
-    .order_by("name", @moonorm.Asc)
+    .order_by("name", Asc)
     .limit(23333)
     .build()
   println("")

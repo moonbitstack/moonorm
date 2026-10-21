@@ -1,0 +1,115 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonorm/session"
+
+import {
+  "moonbitstack/moondb",
+  "moonbitstack/moondb/pool",
+  "moonbitstack/moonorm/query",
+  "moonbitstack/moonorm/schema",
+}
+
+// Values
+
+// Errors
+pub(all) suberror LostUpdate {
+  LostUpdate(String)
+}
+pub fn LostUpdate::output(Self, &Logger) -> Unit
+pub fn LostUpdate::to_string(Self) -> String
+pub impl Show for LostUpdate
+
+// Types and methods
+pub(all) enum IsolationLevel {
+  ReadUncommitted
+  ReadCommitted
+  RepeatableRead
+  Serializable
+} derive(Eq)
+pub fn IsolationLevel::equal(Self, Self) -> Bool
+pub fn IsolationLevel::keyword(Self) -> String
+pub fn IsolationLevel::not_equal(Self, Self) -> Bool
+
+pub struct RowStream[T] {
+  cursor : &@moondb.Cursor
+  model : @schema.Model[T]
+}
+pub fn[T] RowStream::close(Self[T]) -> Unit
+pub fn[T] RowStream::next(Self[T]) -> T? raise @moondb.DbError
+
+pub struct Savepoint {
+  sess : Session
+  name : String
+  depth : Int32
+  mut finished : Bool
+}
+pub fn Savepoint::commit(Self) -> Unit raise @moondb.DbError
+pub fn Savepoint::depth(Self) -> Int32
+pub fn Savepoint::name(Self) -> String
+pub fn Savepoint::release(Self) -> Unit raise @moondb.DbError
+pub fn Savepoint::rollback(Self) -> Unit raise @moondb.DbError
+
+pub struct Session {
+  driver : &@moondb.Driver
+  mut sp_depth : Int32
+  mut sp_seq : Int32
+  id : Int32
+  pending : Array[Work]
+  dirty : Array[Work]
+  deleted : Array[Work]
+  detach : Array[() -> Unit]
+}
+pub fn Session::add(Self, @query.Insert) -> @moondb.ExecResult raise @moondb.DbError
+pub fn[T] Session::add_record(Self, @schema.Model[T], T) -> Unit
+pub fn[T] Session::all(Self, @schema.Model[T]) -> Array[T] raise @moondb.DbError
+pub fn Session::begin(Self) -> Unit raise @moondb.DbError
+pub fn Session::begin_nested(Self) -> Savepoint raise @moondb.DbError
+pub fn Session::begin_with(Self, TxOptions, dialect? : @query.Dialect) -> Unit raise @moondb.DbError
+pub fn Session::close(Self) -> Unit
+pub fn Session::commit(Self) -> Unit raise @moondb.DbError
+pub fn[T] Session::create_table(Self, @schema.Model[T], if_not_exists? : Bool) -> @moondb.ExecResult raise @moondb.DbError
+pub fn[T] Session::delete_record(Self, @schema.Model[T], T) -> Unit raise @moondb.DbError
+pub fn Session::deleted_count(Self) -> Int32
+pub fn Session::dirty_count(Self) -> Int32
+pub fn Session::execute(Self, String, Array[@moondb.Value]) -> @moondb.ExecResult raise @moondb.DbError
+pub fn[T] Session::expunge(Self, @schema.Model[T], T) -> Unit
+pub fn Session::expunge_all(Self) -> Unit
+pub fn Session::fetch(Self, @query.Select) -> Array[@moondb.Row] raise @moondb.DbError
+pub fn[T] Session::fetch_as(Self, @schema.Model[T], @query.Select) -> Array[T] raise @moondb.DbError
+pub fn Session::flush(Self) -> Unit raise @moondb.DbError
+pub fn[T] Session::get(Self, @schema.Model[T], @moondb.Value) -> T? raise @moondb.DbError
+pub fn[T] Session::get_by(Self, @schema.Model[T], Array[@moondb.Value]) -> T? raise @moondb.DbError
+pub fn[T] Session::insert_record(Self, @schema.Model[T], T) -> @moondb.ExecResult raise @moondb.DbError
+pub fn[S, T] Session::load(Self, S, @schema.Relation[S, T]) -> Array[T] raise @moondb.DbError
+pub fn[S, T] Session::load_batch(Self, Array[S], @schema.Relation[S, T]) -> Array[Array[T]] raise @moondb.DbError
+pub fn[S, T] Session::load_many(Self, S, @schema.ManyToMany[S, T]) -> Array[T] raise @moondb.DbError
+pub fn[S, T] Session::load_one(Self, S, @schema.Relation[S, T]) -> T? raise @moondb.DbError
+pub fn[S, T] Session::load_one_batch(Self, Array[S], @schema.Relation[S, T]) -> Array[T?] raise @moondb.DbError
+pub fn Session::modify(Self, @query.Update) -> @moondb.ExecResult raise @moondb.DbError
+pub fn Session::modify_versioned(Self, @query.Update, what? : String) -> @moondb.ExecResult raise
+pub fn Session::new(&@moondb.Driver) -> Self
+pub fn Session::pending_count(Self) -> Int32
+pub fn Session::query(Self, String, Array[@moondb.Value]) -> Array[@moondb.Row] raise @moondb.DbError
+pub fn Session::query_stream(Self, String, Array[@moondb.Value]) -> &@moondb.Cursor raise @moondb.DbError
+pub fn Session::release(Self, String) -> @moondb.ExecResult raise @moondb.DbError
+pub fn Session::remove(Self, @query.Delete) -> @moondb.ExecResult raise @moondb.DbError
+pub fn Session::rollback(Self) -> Unit raise @moondb.DbError
+pub fn Session::rollback_to(Self, String) -> @moondb.ExecResult raise @moondb.DbError
+pub fn Session::savepoint(Self, String) -> @moondb.ExecResult raise @moondb.DbError
+pub fn Session::savepoint_depth(Self) -> Int32
+pub fn Session::stream(Self, @query.Select) -> &@moondb.Cursor raise @moondb.DbError
+pub fn[T] Session::stream_as(Self, @schema.Model[T], @query.Select) -> RowStream[T] raise @moondb.DbError
+pub fn[T] Session::update_record(Self, @schema.Model[T], T) -> Unit raise @moondb.DbError
+pub fn[D : @moondb.Driver, T] Session::with_pool(@pool.Pool[D], (Self) -> T raise) -> T raise
+
+pub(all) struct TxOptions {
+  isolation : IsolationLevel?
+  read_only : Bool
+}
+pub fn TxOptions::default() -> Self
+pub fn TxOptions::to_sql(Self, @query.Dialect) -> Array[String]
+
+type Work
+
+// Type aliases
+
+// Traits

@@ -39,7 +39,7 @@ fn main {
     .where_("role", "=", @moondb.Text("qwq"))
   let (usql, uparams) = active
     .union_all(staff)
-    .order_by("id", @moonorm.Asc)
+    .order_by("id", Asc)
     .limit(233)
     .build()
   println("")

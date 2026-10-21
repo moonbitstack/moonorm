@@ -1,0 +1,218 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonorm/query"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitstack/moondb",
+}
+
+// Values
+pub fn case_(Array[(String, String)], else_? : String) -> String
+
+pub fn cast(String, String) -> String
+
+pub fn delete(String) -> Delete
+
+pub fn func(String, Array[String]) -> String
+
+pub fn insert(String) -> Insert
+
+pub fn is_ident(String) -> Bool
+
+pub fn[S : AsSource] select(S) -> Select
+
+pub fn update(String) -> Update
+
+// Errors
+
+// Types and methods
+type Assign
+
+type Cond
+
+type Conflict
+
+type Cte
+
+pub struct Delete {
+  table : String
+  filter : Where
+  returning : Array[String]
+}
+pub fn Delete::build(Self) -> (String, Array[@moondb.Value])
+pub fn Delete::build_for(Self, Dialect) -> (String, Array[@moondb.Value])
+pub fn Delete::returning(Self, String) -> Self
+pub fn Delete::returning_all(Self) -> Self
+pub fn Delete::where_(Self, String, String, @moondb.Value) -> Self
+pub fn Delete::where_in(Self, String, Select) -> Self
+pub fn Delete::where_not_in(Self, String, Select) -> Self
+pub fn Delete::where_pred(Self, Predicate) -> Self
+
+pub(all) enum Dialect {
+  Sqlite
+  Postgres
+  Mysql
+} derive(Eq)
+pub fn Dialect::equal(Self, Self) -> Bool
+pub fn Dialect::not_equal(Self, Self) -> Bool
+
+pub struct Insert {
+  table : String
+  cols : Array[String]
+  vals : Array[@moondb.Value]
+  extra_rows : Array[Array[@moondb.Value]]
+  mut conflict : Conflict?
+  returning : Array[String]
+}
+pub fn Insert::build(Self) -> (String, Array[@moondb.Value])
+pub fn Insert::build_for(Self, Dialect) -> (String, Array[@moondb.Value])
+pub fn Insert::do_nothing(Self) -> Self
+pub fn Insert::do_update(Self, String, @moondb.Value) -> Self
+pub fn Insert::do_update_excluded(Self, String) -> Self
+pub fn Insert::on_conflict(Self, Array[String]) -> Self
+pub fn Insert::returning(Self, String) -> Self
+pub fn Insert::returning_all(Self) -> Self
+pub fn Insert::set(Self, String, @moondb.Value) -> Self
+pub fn Insert::values(Self, Array[@moondb.Value]) -> Self
+
+type JoinClause
+
+pub(all) struct LockClause {
+  mode : LockMode
+  of : Array[String]
+  nowait : Bool
+  skip_locked : Bool
+} derive(Eq, @debug.Debug)
+pub fn LockClause::equal(Self, Self) -> Bool
+pub fn LockClause::not_equal(Self, Self) -> Bool
+pub fn LockClause::to_repr(Self) -> @debug.Repr
+
+pub(all) enum LockMode {
+  ForUpdate
+  ForShare
+} derive(Eq, @debug.Debug)
+pub fn LockMode::equal(Self, Self) -> Bool
+pub fn LockMode::not_equal(Self, Self) -> Bool
+pub fn LockMode::to_repr(Self) -> @debug.Repr
+
+pub(all) enum Nulls {
+  Auto
+  First
+  Last
+} derive(Eq)
+pub fn Nulls::equal(Self, Self) -> Bool
+pub fn Nulls::not_equal(Self, Self) -> Bool
+
+pub(all) enum Order {
+  Asc
+  Desc
+} derive(Eq)
+pub fn Order::equal(Self, Self) -> Bool
+pub fn Order::not_equal(Self, Self) -> Bool
+
+type OrderTerm
+
+pub(all) enum Predicate {
+  Cmp(col~ : String, op~ : String, val~ : @moondb.Value)
+  InList(col~ : String, vals~ : Array[@moondb.Value], negated~ : Bool)
+  Exists(sub~ : Select, negated~ : Bool)
+  And(Array[Predicate])
+  Or(Array[Predicate])
+  Not(Predicate)
+}
+pub fn Predicate::build(Self) -> (String, Array[@moondb.Value])
+
+pub struct Select {
+  from_ : Source
+  ctes : Array[Cte]
+  cols : Array[String]
+  joins : Array[JoinClause]
+  filter : Where
+  groups : Array[String]
+  havings : Array[Cond]
+  orders : Array[OrderTerm]
+  set_ops : Array[(String, Select)]
+  distinct_on_ : Array[String]
+  mut distinct_ : Bool
+  mut limit_ : Int32?
+  mut offset_ : Int32?
+  mut lock_ : LockClause?
+}
+pub fn Select::build(Self) -> (String, Array[@moondb.Value])
+pub fn Select::column(Self, String) -> Self
+pub fn Select::count(Self) -> Self
+pub fn[S : AsSource] Select::cross_join(Self, S) -> Self
+pub fn Select::distinct(Self) -> Self
+pub fn Select::distinct_on(Self, Array[String]) -> Self
+pub fn Select::eq(Self, String, @moondb.Value) -> Self
+pub fn Select::except_(Self, Self) -> Self
+pub fn Select::for_update(Self, read? : Bool, of? : Array[String], nowait? : Bool, skip_locked? : Bool) -> Self
+pub fn[S : AsSource] Select::full_join(Self, S, String) -> Self
+pub fn Select::group_by(Self, String) -> Self
+pub fn Select::having(Self, String, String, @moondb.Value) -> Self
+pub fn Select::intersect(Self, Self) -> Self
+pub fn[S : AsSource] Select::join(Self, S, String) -> Self
+pub fn[S : AsSource] Select::join_using(Self, S, Array[String]) -> Self
+pub fn Select::label(Self, String, String) -> Self
+pub fn[S : AsSource] Select::left_join(Self, S, String) -> Self
+pub fn Select::limit(Self, Int32) -> Self
+pub fn Select::offset(Self, Int32) -> Self
+pub fn Select::order_by(Self, String, Order, nulls? : Nulls) -> Self
+pub fn Select::raw(Self, String) -> Self
+pub fn[S : AsSource] Select::right_join(Self, S, String) -> Self
+pub fn Select::union(Self, Self) -> Self
+pub fn Select::union_all(Self, Self) -> Self
+pub fn Select::where_(Self, String, String, @moondb.Value) -> Self
+pub fn Select::where_exists(Self, Self) -> Self
+pub fn Select::where_in(Self, String, Self) -> Self
+pub fn Select::where_in_values(Self, String, Array[@moondb.Value]) -> Self
+pub fn Select::where_not_exists(Self, Self) -> Self
+pub fn Select::where_not_in(Self, String, Self) -> Self
+pub fn Select::where_not_in_values(Self, String, Array[@moondb.Value]) -> Self
+pub fn Select::where_pred(Self, Predicate) -> Self
+pub fn Select::window(Self, String, partition_by? : Array[String], order_by? : Array[(String, Order)], as_? : String) -> Self
+pub fn Select::with_cte(Self, String, Self) -> Self
+pub fn Select::with_recursive(Self, String, Self, Self, all? : Bool) -> Self
+
+pub(all) enum Source {
+  Tbl(String)
+  Sub(Select)
+  Alias(Source, String)
+  Lateral(Source)
+}
+pub fn Source::to_source(Self) -> Self
+pub impl AsSource for Source
+
+pub(all) struct Table {
+  name : String
+  columns : Array[String]
+}
+pub fn Table::select(Self) -> Select
+
+pub struct Update {
+  table : String
+  sets : Array[(String, Assign)]
+  filter : Where
+  returning : Array[String]
+}
+pub fn Update::build(Self) -> (String, Array[@moondb.Value])
+pub fn Update::build_for(Self, Dialect) -> (String, Array[@moondb.Value])
+pub fn Update::returning(Self, String) -> Self
+pub fn Update::returning_all(Self) -> Self
+pub fn Update::set(Self, String, @moondb.Value) -> Self
+pub fn Update::set_expr(Self, String, String, vals? : Array[@moondb.Value]) -> Self
+pub fn Update::where_(Self, String, String, @moondb.Value) -> Self
+pub fn Update::where_in(Self, String, Select) -> Self
+pub fn Update::where_not_in(Self, String, Select) -> Self
+pub fn Update::where_pred(Self, Predicate) -> Self
+
+type Where
+
+// Type aliases
+pub using @moondb {type Value}
+
+// Traits
+pub(open) trait AsSource {
+  fn to_source(Self) -> Source
+}
+pub impl AsSource for String

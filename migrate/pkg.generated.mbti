@@ -1,0 +1,56 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonorm/migrate"
+
+import {
+  "moonbitstack/moondb",
+  "moonbitstack/moonorm/query",
+  "moonbitstack/moonorm/schema",
+  "moonbitstack/moonorm/session",
+}
+
+// Values
+pub fn diff_schema(Array[@schema.Column], Array[@schema.Column]) -> Array[ColumnDiff]
+
+pub fn index_ddl(String, String, Array[String], unique? : Bool) -> String
+
+pub fn reflect_columns(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
+
+pub fn reflect_columns_mysql(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
+
+pub fn reflect_columns_pg(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
+
+pub fn reflect_table(&@moondb.Driver, String) -> Array[@schema.Column] raise @moondb.DbError
+
+pub fn reflect_table_for(&@moondb.Driver, String, @query.Dialect) -> Array[@schema.Column] raise @moondb.DbError
+
+// Errors
+
+// Types and methods
+pub(all) enum ColumnDiff {
+  Added(name~ : String, col_type~ : @schema.ColumnType)
+  Removed(String)
+  TypeChanged(name~ : String, from~ : @schema.ColumnType, to~ : @schema.ColumnType)
+} derive(Eq)
+pub fn ColumnDiff::equal(Self, Self) -> Bool
+pub fn ColumnDiff::not_equal(Self, Self) -> Bool
+
+pub(all) struct Migration {
+  version : Int32
+  name : String
+  up : Array[String]
+  down : Array[String]
+}
+
+pub struct Migrator {
+  table : String
+}
+pub fn Migrator::applied_versions(Self, @session.Session) -> Array[Int32] raise @moondb.DbError
+pub fn Migrator::current_version(Self, @session.Session) -> Int32 raise @moondb.DbError
+pub fn Migrator::down_to(Self, @session.Session, Array[Migration], Int32) -> Int32 raise @moondb.DbError
+pub fn Migrator::ensure_table(Self, @session.Session) -> Unit raise @moondb.DbError
+pub fn Migrator::new(table? : String) -> Self raise @moondb.DbError
+pub fn Migrator::up(Self, @session.Session, Array[Migration]) -> Int32 raise @moondb.DbError
+
+// Type aliases
+
+// Traits

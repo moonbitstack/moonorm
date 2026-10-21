@@ -16,9 +16,9 @@ struct Hero {
 let heroes : @moonorm.Model[Hero] = @moonorm.Model::new(
   "heroes",
   [
-    @moonorm.column("id", @moonorm.IntType, primary_key=true),
-    @moonorm.column("name", @moonorm.TextType, nullable=false),
-    @moonorm.column("power", @moonorm.IntType),
+    @moonorm.column("id", IntType, primary_key=true),
+    @moonorm.column("name", TextType, nullable=false),
+    @moonorm.column("power", IntType),
   ],
   r => { id: r.int(0), name: r.text(1), power: r.int(2), },
   h => {

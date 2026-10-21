@@ -65,7 +65,7 @@ fn main {
   println("-- upsert (SQLite/PostgreSQL): do_update_excluded + returning_all")
   println(ssql)
   println("params: " + params_str(sparams))
-  let (ysql, yparams) = upsert().build_for(@moonorm.Mysql)
+  let (ysql, yparams) = upsert().build_for(Mysql)
   println("")
   println("-- upsert (MySQL): ON DUPLICATE KEY UPDATE, RETURNING dropped")
   println(ysql)
@@ -92,7 +92,7 @@ fn main {
     .do_nothing()
   }
   let (dsql, _) = nothing().build()
-  let (dmsql, _) = nothing().build_for(@moonorm.Mysql)
+  let (dmsql, _) = nothing().build_for(Mysql)
   println("")
   println("-- do_nothing: SQLite/PostgreSQL")
   println(dsql)

@@ -17,32 +17,16 @@ struct Hero {
 let heroes : @moonorm.Model[Hero] = @moonorm.Model::new(
   "heroes",
   [
-    @moonorm.column(
-      "id",
-      @moonorm.IntType,
-      primary_key=true,
-      autoincrement=true,
-    ),
-    @moonorm.column(
-      "name",
-      @moonorm.VarcharType(64),
-      nullable=false,
-      unique=true,
-    ),
-    @moonorm.column("power", @moonorm.IntType, default="0", checks=[
-      "power >= 0",
-    ]),
+    @moonorm.column("id", IntType, primary_key=true, autoincrement=true),
+    @moonorm.column("name", VarcharType(64), nullable=false, unique=true),
+    @moonorm.column("power", IntType, default="0", checks=["power >= 0"]),
     @moonorm.column(
       "team_id",
-      @moonorm.IntType,
+      IntType,
       references=("teams", "id"),
       on_delete="CASCADE",
     ),
-    @moonorm.column(
-      "created",
-      @moonorm.DateTimeType,
-      default="CURRENT_TIMESTAMP",
-    ),
+    @moonorm.column("created", DateTimeType, default="CURRENT_TIMESTAMP"),
   ],
   r => { id: r.int(0), name: r.text(1), team_id: r.int(3), },
   h => {
@@ -60,8 +44,8 @@ let heroes : @moonorm.Model[Hero] = @moonorm.Model::new(
 let memberships : @moonorm.Model[Hero] = @moonorm.Model::new(
   "memberships",
   [
-    @moonorm.column("hero_id", @moonorm.IntType, primary_key=true),
-    @moonorm.column("team_id", @moonorm.IntType, primary_key=true),
+    @moonorm.column("hero_id", IntType, primary_key=true),
+    @moonorm.column("team_id", IntType, primary_key=true),
   ],
   r => { id: r.int(0), name: "", team_id: r.int(1), },
   _ => [],
@@ -74,10 +58,10 @@ fn main {
   println(heroes.create_table_sql())
   println("")
   println("-- CREATE TABLE (PostgreSQL)")
-  println(heroes.create_table_sql_for(@moonorm.Postgres))
+  println(heroes.create_table_sql_for(Postgres))
   println("")
   println("-- CREATE TABLE (MySQL)")
-  println(heroes.create_table_sql_for(@moonorm.Mysql))
+  println(heroes.create_table_sql_for(Mysql))
   println("")
   println("-- idempotent DDL (IF NOT EXISTS)")
   println(heroes.create_table_sql(if_not_exists=true))
@@ -85,7 +69,7 @@ fn main {
   // One column on its own, and the type keyword each dialect renders.
   let fk = @moonorm.column(
     "team_id",
-    @moonorm.IntType,
+    IntType,
     nullable=false,
     references=("teams", "id"),
     on_update="RESTRICT",
@@ -94,17 +78,17 @@ fn main {
   println("-- one Column::ddl")
   println(fk.ddl())
   println("-- ColumnType::sql_for across dialects")
-  for
-    t in [
-      ("uuid", @moonorm.UuidType),
-      ("json", @moonorm.JsonType),
-      ("bool", @moonorm.BoolType),
-      ("real", @moonorm.RealType),
-    ] {
+  let types : Array[(String, @moonorm.ColumnType)] = [
+    ("uuid", UuidType),
+    ("json", JsonType),
+    ("bool", BoolType),
+    ("real", RealType),
+  ]
+  for t in types {
     let name = t.0
     let ty = t.1
     println(
-      "  \{name}: sqlite=\{ty.sql_for(@moonorm.Sqlite)} pg=\{ty.sql_for(@moonorm.Postgres)} mysql=\{ty.sql_for(@moonorm.Mysql)}",
+      "  \{name}: sqlite=\{ty.sql_for(Sqlite)} pg=\{ty.sql_for(Postgres)} mysql=\{ty.sql_for(Mysql)}",
     )
   }
 

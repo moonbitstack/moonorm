@@ -1,5 +1,6 @@
 import {
   "moonbitstack/moonorm",
+  "moonbitstack/moonorm/session",
   "moonbitstack/moondb",
 }
 

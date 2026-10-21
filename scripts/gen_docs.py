@@ -6,36 +6,26 @@ import re, html, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SECTIONS = [
-    ("builder", "builder.mbt", "Query builder",
-     "select / insert / update / delete builders with WHERE / ORDER BY / LIMIT, "
-     "JOIN, GROUP BY / HAVING, WITH common table expressions, and IN (subquery) "
-     "predicates. Every builder renders (sql, params) - values are always ? "
-     "placeholders, never spliced in, and subquery/CTE params keep SQL text order."),
-    ("session", "session.mbt", "Execution layer",
-     "An explicit Session over any @moondb.Driver: it runs built statements and "
-     "returns typed @moondb.Row values, with depth-tracked nested transactions "
-     "(begin_nested returns a named SAVEPOINT handle), isolation-level / read-only "
-     "transactions (begin_with renders SET TRANSACTION per dialect), optimistic-locked "
-     "updates (modify_versioned raises LostUpdate on a stale version), and eager "
-     "relationship loading including N+1-avoiding batch loads (load_batch / "
-     "load_one_batch). moonorm owns no driver contract - the seam is @moondb, so a "
-     "Session drives moonsqlite, a Postgres backend, or MockDriver."),
-    ("models", "models.mbt", "Models & relationships",
-     "The declarative model layer: typed columns and Fields, a Model[T] Row<->record "
-     "mapper (built by hand or via from_fields from a field list, the shape moonctl "
-     "generates), CREATE TABLE DDL, and foreign-key 1:N / N:1 relationships loaded "
-     "explicitly via session.load / session.load_one and batched via load_batch (the "
-     "faithful attribute-interception equivalent, as Diesel and GORM also make "
-     "explicit)."),
-    ("migrations", "migrations.mbt", "Schema migrations",
-     "Versioned up/down migrations tracked in a schema_migrations table: a Migrator "
-     "applies pending versions ascending, is idempotent on re-run, rolls back to a "
-     "target version descending, and reports the current version. The Alembic / "
-     "diesel-migrations counterpart, run over any @moondb.Driver."),
-    ("session_pool", "session_pool.mbt", "Pooled sessions",
-     "Session::with_pool borrows a connection for the duration of one call and "
-     "returns it with defer, so it comes back on every path including a raise or a "
-     "cancellation."),
+    ("query", "query/", "query: the query builder",
+     "SELECT / INSERT / UPDATE / DELETE with WHERE, ORDER BY, LIMIT, JOIN, GROUP BY / "
+     "HAVING, window functions, set operations, WITH common table expressions, upserts, "
+     "RETURNING and row locks, rendered per dialect. Every statement renders (sql, params): "
+     "values are always ? placeholders, never spliced in, and subquery and CTE params keep "
+     "SQL text order."),
+    ("schema", "schema/", "schema: columns, models and relations",
+     "Typed columns and Fields, a Model[T] Row<->record mapper (by hand or from_fields, the "
+     "shape moonctl generates), CREATE TABLE DDL per dialect, and 1:N, N:1 and N:M "
+     "relationships loaded explicitly."),
+    ("session", "session/", "session: the execution layer",
+     "An explicit Session over any @moondb.Driver: it runs built statements and returns typed "
+     "rows, with nested transactions as named SAVEPOINT handles, isolation-level and read-only "
+     "transactions, optimistic-locked updates (modify_versioned raises LostUpdate on a stale "
+     "version), batched relationship loading that avoids N+1, the unit of work, and "
+     "Session::with_pool, which returns a pooled connection on every path."),
+    ("migrate", "migrate/", "migrate: schema migrations",
+     "Versioned up/down migrations tracked in a schema_migrations table: the Migrator applies "
+     "pending versions in order, is idempotent on re-run, rolls back to a target version, and "
+     "diffs a declared model against the reflected database."),
     ("driver", "db/driver.mbt", "Driver seam",
      "The @moondb contract every backend implements - execute, query, ping, close, "
      "and the transaction verbs. moonorm reaches nothing past this seam, which is "
@@ -282,7 +272,11 @@ def main():
     for sid, rel, title, desc in SECTIONS:
         body.append('<section class="pkg" id="%s"><h2><span class="at">§</span>%s</h2>'
                     '<p class="pdesc">%s</p>' % (sid, title, esc(desc)))
-        files = rel if isinstance(rel, tuple) else (rel,)
+        if isinstance(rel, str) and rel.endswith("/"):
+            files = sorted(f.relative_to(ROOT) for f in (ROOT / rel).glob("*.mbt")
+                           if not f.stem.endswith(("_test", "_wbtest")))
+        else:
+            files = rel if isinstance(rel, tuple) else (rel,)
         for kind, sig, doc in [it for f in files for it in parse(ROOT / f)]:
             total += 1
             body.append('<div class="item" data-k="%s"><span class="kind">%s</span>'

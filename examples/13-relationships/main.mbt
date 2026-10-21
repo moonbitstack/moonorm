@@ -31,8 +31,8 @@ struct Tag {
 let team_model : @moonorm.Model[Team] = @moonorm.Model::new(
   "teams",
   [
-    @moonorm.column("id", @moonorm.IntType, primary_key=true),
-    @moonorm.column("name", @moonorm.TextType, nullable=false),
+    @moonorm.column("id", IntType, primary_key=true),
+    @moonorm.column("name", TextType, nullable=false),
   ],
   r => { id: r.int(0), name: r.text(1), },
   t => [("id", @moondb.Int(t.id)), ("name", @moondb.Text(t.name))],
@@ -42,9 +42,9 @@ let team_model : @moonorm.Model[Team] = @moonorm.Model::new(
 let hero_model : @moonorm.Model[Hero] = @moonorm.Model::new(
   "heroes",
   [
-    @moonorm.column("id", @moonorm.IntType, primary_key=true),
-    @moonorm.column("name", @moonorm.TextType, nullable=false),
-    @moonorm.column("team_id", @moonorm.IntType, references=("teams", "id")),
+    @moonorm.column("id", IntType, primary_key=true),
+    @moonorm.column("name", TextType, nullable=false),
+    @moonorm.column("team_id", IntType, references=("teams", "id")),
   ],
   r => { id: r.int(0), name: r.text(1), team_id: r.int(2), },
   h => {
@@ -60,8 +60,8 @@ let hero_model : @moonorm.Model[Hero] = @moonorm.Model::new(
 let tag_model : @moonorm.Model[Tag] = @moonorm.Model::new(
   "tags",
   [
-    @moonorm.column("id", @moonorm.IntType, primary_key=true),
-    @moonorm.column("label", @moonorm.TextType, nullable=false),
+    @moonorm.column("id", IntType, primary_key=true),
+    @moonorm.column("label", TextType, nullable=false),
   ],
   r => { id: r.int(0), label: r.text(1), },
   t => [("id", @moondb.Int(t.id)), ("label", @moondb.Text(t.label))],

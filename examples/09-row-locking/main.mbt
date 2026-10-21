@@ -53,7 +53,7 @@ fn main {
   let (qsql, _) = @moonorm.select("jobs j")
     .raw("j.id")
     .where_("j.state", "=", @moondb.Text("qwe"))
-    .order_by("j.id", @moonorm.Asc)
+    .order_by("j.id", Asc)
     .limit(1)
     .for_update(of=["j"], skip_locked=true)
     .build()

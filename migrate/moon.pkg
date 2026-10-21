@@ -1,0 +1,8 @@
+// Migrations: versioned steps, the migrator, and schema diffs against a
+// reflected database.
+import {
+  "moonbitstack/moonorm/query",
+  "moonbitstack/moonorm/schema",
+  "moonbitstack/moonorm/session",
+  "moonbitstack/moondb",
+}

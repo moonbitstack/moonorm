@@ -102,7 +102,7 @@ fn main {
     sess2.modify_versioned(stmt(), what="hero") |> ignore
     println("-- unexpected: stale write succeeded")
   } catch {
-    @moonorm.LostUpdate(msg) => println("-- LostUpdate raised: " + msg)
+    @session.LostUpdate(msg) => println("-- LostUpdate raised: " + msg)
     e => println("-- other error: \{e}")
   }
   sess2.close()

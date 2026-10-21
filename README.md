@@ -6,7 +6,7 @@
 
 [![Check and Test](https://github.com/moonbitstack/moonorm/actions/workflows/ci.yml/badge.svg)](https://github.com/moonbitstack/moonorm/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
-[![mooncakes](https://img.shields.io/badge/mooncakes-Lfan--ke%2Fmoonorm-brightgreen)](https://mooncakes.io/docs/moonbitstack/moonorm)
+[![mooncakes](https://img.shields.io/badge/mooncakes-moonbitstack%2Fmoonorm-brightgreen)](https://mooncakes.io/docs/moonbitstack/moonorm)
 
 </div>
 
@@ -16,11 +16,22 @@
 
 `moonorm` owns **no driver contract of its own**. It is written entirely against the [`moondb`](https://github.com/moonbitstack/moonorm/tree/master/db) interface — the standard database-access seam for MoonBit — so it is **pure MoonBit with zero C** and compiles on every backend (`wasm` / `wasm-gc` / `js` / `native`). A concrete backend is a separate package you supply: the native SQLite driver lives in [`moonsqlite`](https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite), and a `Session` drives any `@moondb.Driver` — including the dependency-free `@moondb.MockDriver` for tests.
 
-> **Imports.** Bound-value constructors (`Int`, `Text`, `Null`, …) are moondb's —
-> the `Value` type is re-exported by moonorm, but you construct values as `@moondb.Int`
-> / `@moondb.Text` (add `moon add moonbitstack/moondb`). The SQLite driver's package name is
-> hyphenated, so import it under an alias in `moon.pkg.json`
-> (`{"path": "moonbitstack/moonsqlite", "alias": "sqlite"}`) and reach it as `@sqlite`.
+> **Imports.** Bound-value constructors (`Int`, `Text`, `Null`, …) are moondb's: the `Value` type is re-exported by moonorm, but you construct values as `@moondb.Int` / `@moondb.Text` (add `moon add moonbitstack/moondb`). The examples below import the SQLite driver under a short alias, `"moonbitstack/moonsqlite" @sqlite` in `moon.pkg`.
+
+## Packages
+
+Each layer is its own subpackage, mirroring SQLAlchemy's: Core, table mapping, the ORM session, and Alembic's migrations. The root re-exports all of them, so `@moonorm.select` and `@moonorm.Session` work as they always did.
+
+|  Package  | What it holds | Depends on |
+|:--:|:--|:--|
+| `moonorm/query` | dialects, predicates, `select` / `insert` / `update` / `delete`, `Table`, `is_ident` | moondb's `Value` |
+| `moonorm/schema` | `ColumnType`, `Column`, `Field`, `Model`, `Relation`, `ManyToMany` | `query`, moondb |
+| `moonorm/session` | `Session`, row streams, transactions and savepoints, the unit of work, pooled sessions | `schema`, `query`, moondb |
+| `moonorm/migrate` | `Migration`, `Migrator`, schema diffs | `session`, `schema`, `query` |
+
+A program that only renders SQL imports `query` and nothing else.
+
+**Constructors are written without the package.** `pub using` re-exports types but not their constructors, so `@moonorm.Postgres` does not resolve. Write the bare constructor and let the expected type pick it: `stmt.build_for(Postgres)`. Where nothing gives the type, annotate or name the subpackage: `let levels : Array[@moonorm.IsolationLevel] = [ReadCommitted, Serializable]`, or `catch { @session.LostUpdate(msg) => ... }`.
 
 ## Quickstart
 
@@ -29,7 +40,7 @@ let (sql, params) = @moonorm.select("users")
   .column("id").column("name")
   .eq("age", @moondb.Int(18))
   .where_("name", "LIKE", @moondb.Text("bob%"))
-  .order_by("name", @moonorm.Asc)
+  .order_by("name", Asc)
   .limit(10)
   .build()
 // sql    = "SELECT id, name FROM users WHERE age = ? AND name LIKE ? ORDER BY name ASC LIMIT 10"
@@ -39,8 +50,8 @@ let (isql, ivals) = @moonorm.insert("users")
   .set("name", @moondb.Text("bob")).set("age", @moondb.Int(30)).build()
 // "INSERT INTO users (name, age) VALUES (?, ?)"
 
-@moonorm.update("users").set("age", @moondb.Int(31)).where_("id", "=", @moondb.Int(1)).build()
-@moonorm.delete("users").where_("id", "=", @moondb.Int(9)).build()
+let (usql, uvals) = @moonorm.update("users").set("age", @moondb.Int(31)).where_("id", "=", @moondb.Int(1)).build()
+let (dsql, dvals) = @moonorm.delete("users").where_("id", "=", @moondb.Int(9)).build()
 
 // JOIN + GROUP BY + HAVING, with aggregates and a Table descriptor:
 let orders : @moonorm.Table = { name: "orders", columns: [] }
@@ -110,16 +121,16 @@ surfaces at the call site, not as a silent zero. Write them in **arrow form** so
 // A parent model and a child model with a foreign key back to it.
 let teams : @moonorm.Model[Team] = @moonorm.Model::new(
   "teams",
-  [@moonorm.column("id", @moonorm.IntType, primary_key=true),
-   @moonorm.column("name", @moonorm.TextType, nullable=false)],
+  [@moonorm.column("id", IntType, primary_key=true),
+   @moonorm.column("name", TextType, nullable=false)],
   (r) => { id: r.int(0), name: r.text(1) },
   (t) => [("id", @moondb.Int(t.id)), ("name", @moondb.Text(t.name))],
 )
 let heroes : @moonorm.Model[Hero] = @moonorm.Model::new(
   "heroes",
-  [@moonorm.column("id", @moonorm.IntType, primary_key=true),
-   @moonorm.column("name", @moonorm.TextType, nullable=false),
-   @moonorm.column("team_id", @moonorm.IntType, references=Some(("teams", "id")))],
+  [@moonorm.column("id", IntType, primary_key=true),
+   @moonorm.column("name", TextType, nullable=false),
+   @moonorm.column("team_id", IntType, references=("teams", "id"))],
   (r) => { id: r.int(0), name: r.text(1), team_id: r.int(2) },
   (h) => [("id", @moondb.Int(h.id)), ("name", @moondb.Text(h.name)),
           ("team_id", @moondb.Int(h.team_id))],
@@ -157,10 +168,10 @@ emits from an `#orm`-annotated struct — a `[field(...)]` array and a `from_row
 let heroes : @moonorm.Model[Hero] = @moonorm.Model::from_fields(
   "heroes",
   [
-    @moonorm.field("id", @moonorm.IntType, (h : Hero) => @moondb.Int(h.id), primary_key=true),
-    @moonorm.field("name", @moonorm.TextType, (h : Hero) => @moondb.Text(h.name), nullable=false),
-    @moonorm.field("team_id", @moonorm.IntType, (h : Hero) => @moondb.Int(h.team_id),
-                   references=Some(("teams", "id"))),
+    @moonorm.field("id", IntType, (h : Hero) => @moondb.Int(h.id), primary_key=true),
+    @moonorm.field("name", TextType, (h : Hero) => @moondb.Text(h.name), nullable=false),
+    @moonorm.field("team_id", IntType, (h : Hero) => @moondb.Int(h.team_id),
+                   references=("teams", "id")),
   ],
   (r) => { id: r.int(0), name: r.text(1), team_id: r.int(2) },   // the one closure that stays
 )
@@ -192,7 +203,7 @@ let sp = sess.begin_nested()          // SAVEPOINT moonorm_sp_1; sess.savepoint_
 sess.add(insert_stmt) |> ignore
 sp.rollback()                         // undo just this savepoint's work; depth back to 0
 
-sess.begin_with({ isolation: Some(@moonorm.Serializable), read_only: false }, dialect=@moonorm.Postgres)
+sess.begin_with({ isolation: Some(Serializable), read_only: false }, dialect=Postgres)
 // BEGIN; SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
 ```
 

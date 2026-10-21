@@ -33,7 +33,7 @@ fn main {
     .window(
       "ROW_NUMBER()",
       partition_by=["region"],
-      order_by=[("amount", @moonorm.Desc)],
+      order_by=[("amount", Desc)],
       as_="rn",
     )
     .window("SUM(amount)", partition_by=["region"], as_="region_total")
