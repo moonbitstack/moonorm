@@ -1,8 +1,10 @@
 // A connection pool over any moondb driver, kept out of the interface package so a
 // driver that only implements `Driver` carries none of the pool's dependencies. The
 // bookkeeping — how many are live, which are idle, when each was born — is
-// moonpool's; this package adds opening, closing and probing connections.
+// moonpool's, and so is the ward; this package adds opening, closing and probing
+// connections.
 import {
+  "moonbitlang/core/random",
   "moonbitstack/moondate",
   "moonbitstack/moondb",
   "moonbitstack/moonpool",
@@ -10,4 +12,6 @@ import {
 
 import {
   "moonbitstack/moondb",
+  "moonbitstack/moonpool",
+  "moonbitstack/moonward",
 } for "test"

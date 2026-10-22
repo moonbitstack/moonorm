@@ -369,3 +369,83 @@ test "pool: a failed open gives its slot back" {
   pool.release(a)
   pool.close_all()
 }
+
+///|
+/// A connect that failed holds the next one back for the ward's backoff delay,
+/// and only `acquire` says so; `try_acquire` answers `None`.
+test "pool ward: a failed open holds new connections back by the backoff" {
+  let fail = [true]
+  let now = [0L]
+  let pool = @pool.Pool::new(
+    () => {
+      if fail[0] {
+        raise ConnectError("connection refused")
+      }
+      @moondb.MockDriver::new()
+    },
+    clock=() => now[0],
+    ward=@moonpool.Ward::new(backoff=@moonward.backoff),
+    rand=() => 0.5,
+  )
+  try pool.acquire() |> ignore catch {
+    _ => ()
+  }
+  fail[0] = false
+  let held = try {
+    pool.acquire() |> ignore
+    ""
+  } catch {
+    ConnectError(m) => m
+    _ => ""
+  }
+  // Full jitter at a roll of 0.5: half of the first 100ms step.
+  assert_eq(held, "new connections held back for 50ms")
+  assert_eq(pool.try_acquire() is None, true)
+  now[0] = 50L
+  let conn = pool.acquire()
+  assert_eq(pool.open_count(), 1)
+  pool.release(conn)
+  pool.close_all()
+}
+
+///|
+/// A breaker in the ward counts failed connects and, once the backend is failing,
+/// refuses new ones without calling `make`.
+test "pool ward: a breaker refuses connects to a failing backend" {
+  let made = [0]
+  let pool : @pool.Pool[@moondb.MockDriver] = @pool.Pool::new(
+    () => {
+      made[0] = made[0] + 1
+      raise ConnectError("connection refused")
+    },
+    ward=@moonpool.Ward::new(breaker=@moonward.Breaker::new()),
+    rand=() => 0.0,
+  )
+  let mut shed = ""
+  for _ in 0..<10 {
+    try pool.acquire() |> ignore catch {
+      ConnectError(m) if m != "connection refused" => shed = m
+      _ => ()
+    }
+  }
+  assert_eq(shed, "the pool's ward refused a connection")
+  assert_eq(made[0] < 10, true)
+  assert_eq(pool.open_count(), 0)
+}
+
+///|
+/// Without a ward the pool never answers `Later` or `Shed`: failed connects are
+/// retried at once, every time.
+test "pool ward: no ward, no hold" {
+  let made = [0]
+  let pool : @pool.Pool[@moondb.MockDriver] = @pool.Pool::new(() => {
+    made[0] = made[0] + 1
+    raise ConnectError("connection refused")
+  })
+  for _ in 0..<10 {
+    try pool.acquire() |> ignore catch {
+      _ => ()
+    }
+  }
+  assert_eq(made[0], 10)
+}

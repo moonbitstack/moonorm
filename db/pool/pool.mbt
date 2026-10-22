@@ -40,8 +40,10 @@
 /// The reuse, ceiling, health, and lifecycle bookkeeping all live here.
 ///
 /// The counting is moonpool's `Pool`: live, idle and lent, each lent connection's
-/// birth recognised on its way back so `max_lifetime` counts from creation. This
-/// type adds only what needs a driver — opening, closing, probing.
+/// birth recognised on its way back so `max_lifetime` counts from creation. So is
+/// the optional `ward` in front of the database: backoff after failed connects, a
+/// token bucket spacing reconnections, a breaker, a shedder. This type adds only
+/// what needs a driver — opening, closing, probing.
 pub struct Pool[D] {
   priv make : () -> D raise @moondb.DbError
   priv books : @moonpool.Pool[D]
@@ -50,6 +52,8 @@ pub struct Pool[D] {
   priv pre_ping : Bool
   priv acquire_timeout_ms : Int64
   priv clock : () -> Int64
+  priv roll : () -> Double
+  priv cpu : () -> Int32
   priv mut closed : Bool
 }
 
@@ -71,6 +75,12 @@ pub struct Pool[D] {
 /// * `clock` returns a monotonically non-decreasing millisecond reading and exists
 ///   so `max_lifetime` is testable and portable; it defaults to a constant `0`,
 ///   which disables age-based retirement.
+/// * `ward` is moonpool's, none by default. A ward that times anything needs a
+///   real `clock`.
+/// * `rand` draws from `[0, 1)` for the ward's breaker and backoff jitter; without
+///   it the pool draws from a system-seeded generator.
+/// * `cpu` reads the processor load in thousandths for the ward's shedder; without
+///   it the load reads as zero and the shedder never sheds.
 pub fn[D] Pool::new(
   make : () -> D raise @moondb.DbError,
   max_size~ : Int32 = 10,
@@ -78,6 +88,9 @@ pub fn[D] Pool::new(
   pre_ping~ : Bool = false,
   acquire_timeout_ms~ : Int64 = 0,
   clock~ : () -> Int64 = fn() { 0L },
+  ward~ : @moonpool.Ward = @moonpool.ward,
+  rand? : () -> Double,
+  cpu? : () -> Int32,
 ) -> Pool[D] raise @moondb.DbError {
   if max_size <= 0 {
     raise QueryError(
@@ -95,14 +108,23 @@ pub fn[D] Pool::new(
     keep=@moonpool.forever,
     life=@moondate.Span::new(millis=max_lifetime_ms),
   )
+  let roll = match rand {
+    Some(f) => f
+    None => {
+      let src = @random.Rand()
+      () => src.double()
+    }
+  }
   {
     make,
-    books: @moonpool.Pool::new(limits~),
+    books: @moonpool.Pool::new(limits~, ward~),
     max_size,
     max_lifetime_ms,
     pre_ping,
     acquire_timeout_ms,
     clock,
+    roll,
+    cpu: cpu.unwrap_or(fn() { 0 }),
     closed: false,
   }
 }
@@ -173,14 +195,22 @@ fn[D] Pool::now(self : Pool[D]) -> Int64 {
 /// probe when `pre_ping` is on, is closed and dropped rather than handed back; the
 /// pool then tries the next idle connection or opens a fresh one. Raises
 /// `QueryError` if the pool is exhausted (all `max_size` connections are checked
-/// out) or [`Closed`] if it has been closed. The caller must return the connection
-/// with [`release`] — or use [`with_conn`], which does so even on error.
+/// out), `ConnectError` if the ward holds back or refuses a new connection, or
+/// [`Closed`] if it has been closed. The caller must return the connection with
+/// [`release`] — or use [`with_conn`], which does so even on error.
 pub fn[D : @moondb.Driver] Pool::acquire(
   self : Pool[D],
 ) -> D raise @moondb.DbError {
   match self.next() {
-    Some(conn) => conn
-    None => {
+    Ok(conn) => conn
+    Err(Later(wait)) =>
+      raise ConnectError(
+        "new connections held back for " +
+        (wait.nanos / 1_000_000L).to_string() +
+        "ms",
+      )
+    Err(Shed) => raise ConnectError("the pool's ward refused a connection")
+    Err(Full) => {
       let budget = if self.acquire_timeout_ms > 0L {
         "; wait timed out after " + self.acquire_timeout_ms.to_string() + "ms"
       } else {
@@ -199,46 +229,57 @@ pub fn[D : @moondb.Driver] Pool::acquire(
 ///|
 /// Take a connection only if one is immediately available — an idle one or fresh
 /// headroom under `max_size` — returning `None` instead of raising when the pool
-/// is exhausted. This is the non-blocking counterpart of [`acquire`]: it never
-/// reports the exhaustion case as an error, so a caller can choose to shed load or
-/// retry. Health and lifetime eviction apply exactly as in `acquire`; a genuine
-/// failure while opening a fresh connection (the `make` factory raising) still
-/// propagates.
+/// is exhausted or its ward says no. This is the non-blocking counterpart of
+/// [`acquire`], so a caller can choose to shed load or retry. Health and lifetime
+/// eviction apply exactly as in `acquire`; a genuine failure while opening a fresh
+/// connection (the `make` factory raising) still propagates.
 pub fn[D : @moondb.Driver] Pool::try_acquire(
   self : Pool[D],
 ) -> D? raise @moondb.DbError {
-  self.next()
+  self.next().to_option()
 }
 
 ///|
-/// A healthy connection, idle or new, or `None` when every one is lent out.
+/// Why no connection could be had.
+priv enum Refused {
+  Full
+  Later(@moondate.Span)
+  Shed
+}
+
+///|
+/// A healthy connection, idle or new, or why there is none.
 ///
 /// An idle connection past `max_lifetime_ms`, or one that fails the probe when
 /// `pre_ping` is on, is closed and forgotten, and the next is tried; each one closed
 /// frees the room a fresh one is then opened in.
-fn[D : @moondb.Driver] Pool::next(self : Pool[D]) -> D? raise @moondb.DbError {
+fn[D : @moondb.Driver] Pool::next(
+  self : Pool[D],
+) -> Result[D, Refused] raise @moondb.DbError {
   if self.closed {
     raise Closed
   }
   for ;; {
-    match self.books.take(self.now()) {
+    match self.books.take(self.now(), roll=(self.roll)(), cpu=(self.cpu)()) {
       Ready(conn) =>
         if self.pre_ping && not_alive(conn) {
           conn.close()
           self.books.drop(conn)
         } else {
-          return Some(conn)
+          return Ok(conn)
         }
       Stale(conn) => conn.close()
       Make => {
         // A factory that fails must give the room back, or one bad connect
         // would shrink the pool for good.
-        errdefer self.books.unmade()
+        errdefer self.books.unmade(self.now(), roll=(self.roll)())
         let conn = (self.make)()
         self.books.made(conn, self.now())
-        return Some(conn)
+        return Ok(conn)
       }
-      Wait => return None
+      Wait => return Err(Full)
+      Later(wait) => return Err(Later(wait))
+      Shed => return Err(Shed)
     }
   }
 }
