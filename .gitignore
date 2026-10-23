@@ -1,7 +1,7 @@
 .*
 !.git*
 !.moonignore
-_build/
+_*
 target/
 
 examples/*/pkg.generated.mbti

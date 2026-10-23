@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   resolve:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       dir: ${{ steps.pick.outputs.dir }}
       target: ${{ steps.pick.outputs.target }}
@@ -45,12 +45,12 @@ jobs:
 
   test:
     needs: resolve
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     defaults:
       run:
         working-directory: ${{ needs.resolve.outputs.dir }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -68,13 +68,13 @@ jobs:
   publish:
     needs: [resolve, test]
     if: vars.MOONCAKES_PUBLISH == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: mooncakes
     defaults:
       run:
         working-directory: ${{ needs.resolve.outputs.dir }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 

@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-26.04, macos-26, windows-2025]
         module:
           - { dir: ".", name: "moonorm (root)" }
           - { dir: "db", name: "moondb" }
@@ -26,18 +26,18 @@ jobs:
       run:
         working-directory: ${{ matrix.module.dir }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: install-unix
-        if: ${{ matrix.os != 'windows-latest' }}
+        if: ${{ runner.os != 'Windows' }}
         run: |
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: install-windows
-        if: ${{ matrix.os == 'windows-latest' }}
+        if: ${{ runner.os == 'Windows' }}
         run: |
           Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
           "C:\Users\runneradmin\.moon\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
@@ -60,31 +60,35 @@ jobs:
         run: |
           moon fmt && git diff --exit-code
 
+      - name: interfaces are up to date
+        run: |
+          moon info --target all && git diff --exit-code
+
   # The SQLite driver links the vendored amalgamation, so it is native-only; it
   # still builds on all three OSes.
   sqlite:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-26.04, macos-26, windows-2025]
     name: moonsqlite (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: drivers/sqlite
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: install-unix
-        if: ${{ matrix.os != 'windows-latest' }}
+        if: ${{ runner.os != 'Windows' }}
         run: |
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> $GITHUB_PATH
 
       - name: install-windows
-        if: ${{ matrix.os == 'windows-latest' }}
+        if: ${{ runner.os == 'Windows' }}
         run: |
           Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
           "C:\Users\runneradmin\.moon\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
@@ -107,17 +111,21 @@ jobs:
         run: |
           moon fmt && git diff --exit-code
 
+      - name: interfaces are up to date
+        run: |
+          moon info --target all && git diff --exit-code
+
   # End-to-end: the published ORM plus the published SQLite driver, driven against
   # a real SQLite file. It resolves its dependencies from mooncakes, so it runs
   # after those versions are published. Native-only (moonsqlite links C).
   integration:
     name: moone2e (native, real SQLite, published deps)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     defaults:
       run:
         working-directory: integration
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -144,11 +152,15 @@ jobs:
         run: |
           moon fmt && git diff --exit-code
 
+      - name: interfaces are up to date
+        run: |
+          moon info --target all && git diff --exit-code
+
   # The PostgreSQL driver's real round trip runs on native and wasm against a
   # live postgres:16. Service containers are Linux-only, so this job is ubuntu-only.
   postgres:
     name: moonpostgres (native + wasm, live PostgreSQL)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     defaults:
       run:
         working-directory: drivers/postgres
@@ -169,7 +181,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -203,18 +215,22 @@ jobs:
         run: |
           moon fmt && git diff --exit-code
 
+      - name: interfaces are up to date
+        run: |
+          moon info --target all && git diff --exit-code
+
   # The MySQL driver's integration test runs against a real MySQL 8 on native and
   # wasm, pinned to mysql_native_password so this round's SHA1-scramble handshake
   # authenticates. GitHub service containers cannot append server flags, so we run
   # the container directly and health-gate it.
   mysql:
     name: moonmysql (native + wasm, live MySQL 8)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     defaults:
       run:
         working-directory: drivers/mysql
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -271,17 +287,21 @@ jobs:
         run: |
           moon fmt && git diff --exit-code
 
+      - name: interfaces are up to date
+        run: |
+          moon info --target all && git diff --exit-code
+
   # MySQL 8's own default plugin is caching_sha2_password. A fresh container has an
   # empty auth cache, so the very first connection always performs full auth — the
   # RSA public-key exchange + OAEP path — which this job exercises end to end.
   mysql-caching-sha2:
     name: moonmysql (caching_sha2 full auth, live MySQL 8)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     defaults:
       run:
         working-directory: drivers/mysql
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -338,13 +358,17 @@ jobs:
         run: |
           moon fmt && git diff --exit-code
 
+      - name: interfaces are up to date
+        run: |
+          moon info --target all && git diff --exit-code
+
   # MariaDB speaks the MySQL wire protocol, so the SAME integration suite must be
   # green against it. We start MariaDB the same container way (no
   # --default-authentication-plugin: MariaDB has no such flag and already defaults
   # to mysql_native_password) and run against both a current and an LTS release.
   mariadb:
     name: moonmysql (native, live MariaDB ${{ matrix.mariadb }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -353,7 +377,7 @@ jobs:
       run:
         working-directory: drivers/mysql
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -411,6 +435,10 @@ jobs:
         run: |
           moon fmt && git diff --exit-code
 
+      - name: interfaces are up to date
+        run: |
+          moon info --target all && git diff --exit-code
+
   # MariaDB's client_ed25519 plugin. We create an account that authenticates VIA
   # ed25519 and run the same round trip as it: the server drives an
   # AuthSwitchRequest to client_ed25519 with a 32-byte nonce, and the driver signs
@@ -418,12 +446,12 @@ jobs:
   # so a green job proves the whole path.
   mariadb-ed25519:
     name: moonmysql (client_ed25519, live MariaDB 11)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     defaults:
       run:
         working-directory: drivers/mysql
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -481,3 +509,7 @@ jobs:
       - name: lint (fmt is clean)
         run: |
           moon fmt && git diff --exit-code
+
+      - name: interfaces are up to date
+        run: |
+          moon info --target all && git diff --exit-code
