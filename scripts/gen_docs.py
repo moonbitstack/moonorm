@@ -5,6 +5,17 @@ gh-pages from the package sources' `///` doc comments. Reproducible: reads the
 import re, html, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+SRC = ROOT / "src"
+MODULES = ("drivers/sqlite", "drivers/postgres", "drivers/mysql", "db", "integration")
+
+
+def source(rel):
+    """A path in the root module, or `<module>/<file>` in one of the sibling modules."""
+    rel = str(rel).replace("\\", "/")
+    for m in MODULES:
+        if rel.startswith(m + "/"):
+            return ROOT / m / "src" / rel[len(m) + 1:]
+    return SRC / rel
 SECTIONS = [
     ("query", "query/", "query: the query builder",
      "SELECT / INSERT / UPDATE / DELETE with WHERE, ORDER BY, LIMIT, JOIN, GROUP BY / "
@@ -273,11 +284,11 @@ def main():
         body.append('<section class="pkg" id="%s"><h2><span class="at">§</span>%s</h2>'
                     '<p class="pdesc">%s</p>' % (sid, title, esc(desc)))
         if isinstance(rel, str) and rel.endswith("/"):
-            files = sorted(f.relative_to(ROOT) for f in (ROOT / rel).glob("*.mbt")
+            files = sorted(rel + f.name for f in source(rel).glob("*.mbt")
                            if not f.stem.endswith(("_test", "_wbtest")))
         else:
             files = rel if isinstance(rel, tuple) else (rel,)
-        for kind, sig, doc in [it for f in files for it in parse(ROOT / f)]:
+        for kind, sig, doc in [it for f in files for it in parse(source(f))]:
             total += 1
             body.append('<div class="item" data-k="%s"><span class="kind">%s</span>'
                         '<pre class="sig">%s</pre>%s</div>'

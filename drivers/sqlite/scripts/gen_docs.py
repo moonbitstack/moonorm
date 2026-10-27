@@ -223,7 +223,7 @@ def main():
     for sid, rel, title, desc in SECTIONS:
         body.append('<section class="pkg" id="%s"><h2><span class="at">§</span>%s</h2>'
                     '<p class="pdesc">%s</p>' % (sid, title, esc(desc)))
-        for kind, sig, doc in parse(ROOT / rel):
+        for kind, sig, doc in parse(ROOT / "src" / rel):
             total += 1
             body.append('<div class="item" data-k="%s"><span class="kind">%s</span>'
                         '<pre class="sig">%s</pre>%s</div>'

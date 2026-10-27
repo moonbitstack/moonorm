@@ -1,0 +1,13 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonorm/examples/20-reflection-diff"
+
+// Values
+
+// Errors
+
+// Types and methods
+type Pragma
+
+// Type aliases
+
+// Traits

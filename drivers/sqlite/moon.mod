@@ -25,3 +25,5 @@ preferred_target = "native"
 import {
   "moonbitstack/moondb@0.2.0",
 }
+
+source = "src"

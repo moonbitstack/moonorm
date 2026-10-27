@@ -17,8 +17,10 @@ keywords = [
   "moonbit",
 ]
 
-description = "moonorm — an ORM / SQL toolkit for MoonBit (← SQLAlchemy / SQLModel): a parameterized, injection-safe query builder (select / insert / update / delete)."
+description = "An ORM and SQL toolkit for MoonBit."
 
 import {
   "moonbitstack/moondb@0.2.0",
 }
+
+source = "src"

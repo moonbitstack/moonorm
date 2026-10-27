@@ -1,0 +1,19 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonorm/examples/13-relationships"
+
+// Values
+
+// Errors
+
+// Types and methods
+type Hero
+
+type Rows
+
+type Tag
+
+type Team
+
+// Type aliases
+
+// Traits

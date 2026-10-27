@@ -56,6 +56,15 @@ jobs:
       - name: moon test (all backends)
         run: moon test --target all
 
+      - name: examples run
+        if: runner.os == 'Linux'
+        run: |
+          for dir in src/examples/*/; do
+            if grep -q 'kind: "executable"' "$dir/moon.pkg" && ! grep -q 'supported_targets = "js"' "$dir/moon.pkg"; then
+              moon run "$dir" --target native > /dev/null
+            fi
+          done
+
       - name: lint (fmt is clean)
         run: |
           moon fmt && git diff --exit-code
