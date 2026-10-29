@@ -1,0 +1,165 @@
+/* ============================================================================
+   moonorm · site styles — "Mirror Seam · Light/Dark Twin"
+   The seam is the signature; the two worlds are its halves.
+   Radius is 0. Structure is line, not fill.
+   ========================================================================== */
+
+/* ---- top bar (identical on every page) ---- */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; gap: var(--s3);
+  padding: var(--s2) var(--s3);
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--hair);
+}
+.brand { display: flex; align-items: center; gap: var(--s1); font-family: var(--font-serif); font-weight: 600; font-size: 19px; color: var(--ink); border: 0; }
+.brand .glyph { width: 22px; height: 22px; }
+.nav { display: flex; gap: var(--s3); margin-left: auto; font-family: var(--font-mono); font-size: 13px; }
+.nav a { color: var(--ink-soft); border: 0; padding: var(--s1) 0; }
+.nav a:hover, .nav a[aria-current="page"] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--pointer); }
+.nav a[aria-current="page"] { color: var(--ink); }
+.topbar .theme-toggle { border: 1px solid var(--hair-strong); background: transparent; color: var(--ink); padding: 6px 10px; cursor: pointer; font-family: var(--font-mono); font-size: 12px; }
+.topbar .theme-toggle:hover { border-color: var(--pointer); color: var(--pointer); }
+
+/* ---- hero / the seam ---- */
+.hero { padding: var(--s6) 0 var(--s5); }
+.hero .eyebrow { margin-bottom: var(--s2); }
+.hero .lede { font-family: var(--font-serif); font-size: clamp(18px, 2.2vw, 26px); line-height: 1.4; max-width: 70ch; color: var(--ink); margin: var(--s3) 0 var(--s5); }
+.hero .lede b { color: var(--moonbit); font-weight: 600; }
+.hero .lede i { color: var(--relation); font-style: normal; font-weight: 600; }
+
+.seam-stage {
+  position: relative;
+  display: grid; grid-template-columns: 1fr 64px 1fr; align-items: stretch;
+  border: 1px solid var(--hair); background: var(--paper-2);
+  overflow: hidden;
+}
+.world { padding: var(--s3); }
+.world h4 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 var(--s2); }
+.world.left h4 { color: var(--moonbit); }
+.world.right h4 { color: var(--relation); }
+.world .src { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.9; white-space: pre; overflow: auto; }
+
+/* the seam itself */
+.seam { position: relative; border-left: 1px solid var(--hair-strong); border-right: 1px solid var(--hair-strong); }
+.seam-core { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-1px); background: var(--seam); }
+.seam-stitch {
+  position: absolute; left: 50%; width: 12px; height: 12px; transform: translate(-50%, -50%);
+  background: var(--seam-glow); box-shadow: 0 0 0 4px color-mix(in srgb, var(--seam-glow) 22%, transparent);
+  animation: seam-travel var(--t3) linear infinite;
+}
+@keyframes seam-travel { 0% { top: 6%; } 100% { top: 94%; } }
+.seam-flag {
+  position: absolute; left: 50%; transform: translateX(-50%); top: 8px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+  color: var(--mapped); white-space: nowrap;
+}
+
+/* mapping nodes */
+.node { display: flex; align-items: center; gap: var(--s1); padding: 2px 0; border-bottom: 1px dotted var(--hair); }
+.node .k { font-family: var(--font-mono); font-size: 12.5px; }
+.node .v { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); }
+.node.sel { background: color-mix(in srgb, var(--mapped) 12%, transparent); }
+.node.broken.sel { background: color-mix(in srgb, var(--broken) 14%, transparent); }
+.world.left .node .k { color: var(--moonbit); }
+.world.right .node .k { color: var(--relation); }
+
+/* connection beams span the whole stage; the seam is their midpoint */
+.beam { position: absolute; left: 0; right: 0; height: 0; border-top: 2px solid var(--mapped); opacity: 0; transition: opacity var(--t2) var(--ease); z-index: 1; pointer-events: none; }
+.beam.lit { opacity: 0.9; }
+.beam.broken { border-top-color: var(--broken); border-top-style: dashed; }
+/* the seam column sits above the beams, carrying the core line + stitch */
+.seam { z-index: 2; background: var(--paper-2); }
+
+/* compile diagnostic strip */
+.diagnostic {
+  margin-top: var(--s3); font-family: var(--font-mono); font-size: 13px;
+  border: 1px solid var(--hair); background: var(--paper-2); padding: var(--s2) var(--s3);
+  display: flex; align-items: center; gap: var(--s2);
+}
+.diagnostic .badge { font-weight: 700; letter-spacing: 0.04em; }
+.diagnostic.ok .badge { color: var(--mapped); }
+.diagnostic.err { border-color: color-mix(in srgb, var(--broken) 50%, var(--hair)); }
+.diagnostic.err .badge { color: var(--broken); }
+.diagnostic .msg { color: var(--ink-soft); }
+
+/* generated SQL ribbon */
+.gen-sql {
+  margin-top: var(--s2); font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
+  border: 1px solid var(--hair); border-left: 3px solid var(--mapped); background: var(--paper-2);
+  padding: var(--s2) var(--s3); color: var(--ink); white-space: pre; overflow: auto;
+}
+
+/* ---- feature cards (the four acts) ---- */
+.acts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--hair); border: 1px solid var(--hair); }
+.act { background: var(--paper); padding: var(--s4); }
+.act .no { font-family: var(--font-mono); font-size: 13px; color: var(--pointer); letter-spacing: 0.1em; }
+.act .act-body { color: var(--ink-soft); font-size: 15px; }
+.act .act-body code.inline { color: var(--ink); }
+
+/* ---- type-mapping table ---- */
+.map-table th:nth-child(2), .map-table td:nth-child(2) { color: var(--moonbit); font-family: var(--font-mono); font-size: 13px; }
+.map-table th:nth-child(3), .map-table td:nth-child(3) { color: var(--relation); font-family: var(--font-mono); font-size: 13px; }
+.map-table tr.broken td { color: var(--broken); }
+.map-table tr.broken td:first-child::after { content: " ✗"; color: var(--broken); }
+
+/* ---- code ⟷ SQL side-by-side ---- */
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--hair); border: 1px solid var(--hair); }
+.duo > div { background: var(--paper-2); padding: var(--s1); }
+.duo .cap { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: var(--s1) var(--s2); color: var(--ink-faint); }
+
+/* ---- spec status bar ---- */
+.statusbar { display: flex; flex-wrap: wrap; gap: var(--s3); font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft); border: 1px solid var(--hair); background: var(--paper-2); padding: var(--s2) var(--s3); }
+.statusbar b { color: var(--ink); font-weight: 600; }
+
+/* ---- CTA ---- */
+.cta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); padding: var(--s5) 0; }
+.btn { font-family: var(--font-mono); font-size: 14px; padding: var(--s2) var(--s3); border: 1px solid var(--ink); color: var(--ink); background: transparent; cursor: pointer; }
+.btn:hover { background: var(--ink); color: var(--paper); }
+.btn.primary { border-color: var(--pointer); color: var(--pointer); }
+.btn.primary:hover { background: var(--pointer); color: var(--paper); }
+
+/* ---- side index (docs pages) ---- */
+.doc-grid { display: grid; grid-template-columns: 240px 1fr; gap: var(--s5); align-items: start; }
+.side { position: sticky; top: 72px; font-family: var(--font-mono); font-size: 13px; }
+.side a { display: block; color: var(--ink-soft); border: 0; padding: 6px 0 6px var(--s2); border-left: 2px solid var(--hair); }
+.side a:hover, .side a[aria-current="page"] { color: var(--ink); border-left-color: var(--pointer); }
+.side .grp { color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; margin-top: var(--s3); }
+
+/* ---- footer ---- */
+.foot { border-top: 1px solid var(--hair); padding: var(--s5) 0; color: var(--ink-faint); font-family: var(--font-mono); font-size: 12px; display: flex; flex-wrap: wrap; gap: var(--s3); justify-content: space-between; }
+.foot a { color: var(--ink-soft); border: 0; }
+
+/* ---- showcase / live engine playground ---- */
+.pg-section { padding: var(--s5) 0; border-top: 1px solid var(--hair); }
+.pg-section h2 { font-family: var(--font-serif); font-size: clamp(22px, 3vw, 30px); color: var(--ink); margin: 0 0 var(--s2); }
+.pg-section .pg-intro { color: var(--ink-soft); font-size: 16px; max-width: 72ch; margin: 0 0 var(--s4); }
+.pg-block { display: grid; grid-template-columns: 220px 1fr; gap: var(--s4); align-items: start; margin-bottom: var(--s5); }
+.pg-block .pg-label { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+.pg-block .pg-label b { display: block; color: var(--ink); font-size: 15px; letter-spacing: 0; text-transform: none; margin-top: 4px; font-weight: 600; }
+.pg-tabs { display: flex; gap: 1px; background: var(--hair); border: 1px solid var(--hair); margin-bottom: var(--s3); }
+.pg-tab { flex: 1; font-family: var(--font-mono); font-size: 13px; padding: var(--s2); border: 0; background: var(--paper-2); color: var(--ink-soft); cursor: pointer; }
+.pg-tab:hover { color: var(--ink); }
+.pg-tab.active { background: var(--paper); color: var(--moonbit); box-shadow: inset 0 -3px 0 var(--moonbit); font-weight: 600; }
+.pg-controls { display: flex; flex-wrap: wrap; gap: var(--s3); margin-bottom: var(--s3); }
+.pg-toggle { display: flex; align-items: center; gap: var(--s1); font-family: var(--font-mono); font-size: 13px; color: var(--ink); cursor: pointer; border: 1px solid var(--hair); background: var(--paper-2); padding: var(--s1) var(--s2); }
+.pg-toggle input { accent-color: var(--pointer); width: 16px; height: 16px; }
+.pg-note { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--ink-soft); border: 1px dashed var(--hair-strong); padding: var(--s2) var(--s3); background: var(--paper-2); }
+.pg-note b { color: var(--mapped); }
+@media (width <= 860px) {
+  .pg-block { grid-template-columns: 1fr; gap: var(--s2); }
+}
+
+/* ---- mobile: seam becomes a vertical stack (top MoonBit, bottom SQL) ---- */
+@media (width <= 860px) {
+  .seam-stage { grid-template-columns: 1fr; }
+  .seam { height: 28px; border: 0; border-top: 1px solid var(--hair-strong); border-bottom: 1px solid var(--hair-strong); }
+  .seam-core { top: 50%; left: 0; right: 0; bottom: auto; width: auto; height: 2px; transform: translateY(-1px); }
+  .seam-stitch { top: 50%; left: 50%; animation: seam-travel-h var(--t3) linear infinite; }
+  @keyframes seam-travel-h { 0% { left: 6%; } 100% { left: 94%; } }
+  .acts, .duo { grid-template-columns: 1fr; }
+  .doc-grid { grid-template-columns: 1fr; }
+  .side { position: static; }
+  .nav { gap: var(--s2); }
+}

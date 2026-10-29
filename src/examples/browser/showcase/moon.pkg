@@ -1,0 +1,8 @@
+import {
+  "moonbitstack/moonorm",
+  "moonbitstack/moonorm/query",
+  "moonbitstack/moonorm/schema",
+  "moonbitstack/moondb",
+}
+
+pkgtype(kind: "executable")

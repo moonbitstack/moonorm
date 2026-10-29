@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API · moonorm</title>
+  <meta name="description" content="moonorm public API reference, generated from pkg.generated.mbti and /// docs.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/moonorm.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html" style="border:0">
+      <svg class="glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true"><line x1="16" y1="2" x2="16" y2="30" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="4" fill="var(--mapped)"/></svg>
+      moonorm
+    </a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="guide.html">Guide</a>
+      <a href="api.html" aria-current="page">API</a>
+      <a href="showcase.html">Showcase</a>
+      <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
+    </nav>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">day</button>
+  </header>
+
+  <main class="wrap">
+    <div class="doc-grid">
+      <aside class="side">
+        <div class="grp">Packages</div>
+        <a href="#moonorm" aria-current="page">moonorm</a>
+<a href="#schema" aria-current="page">schema</a>
+<a href="#query" aria-current="page">query</a>
+<a href="#session" aria-current="page">session</a>
+<a href="#migrate" aria-current="page">migrate</a>
+      </aside>
+      <div>
+        <section class="hero" style="padding-top:var(--s5)">
+          <p class="folio">API</p>
+          <h1 style="font-size:clamp(30px,4vw,46px)">Public surface</h1>
+          <p class="lede">Generated from <code class="inline">pkg.generated.mbti</code> via <code class="inline">moon info</code>. This page is rebuilt by the docs workflow, so it never drifts from the code.</p>
+        </section>
+<section class="section" id="moonorm">
+<p class="folio">moonbitstack/moonorm</p>
+<h2>moonorm</h2>
+<h3>Functions &amp; methods</h3>
+<pre class="signature">pub fn[S, T] belongs_to(@schema.Model[T], String, (S) -&gt; @moondb.Value) -&gt; @schema.Relation[S, T]</pre>
+<pre class="signature">pub fn case_(Array[(String, String)], else_? : String) -&gt; String</pre>
+<pre class="signature">pub fn cast(String, String) -&gt; String</pre>
+<pre class="signature">pub fn column(String, @schema.ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; @schema.Column</pre>
+<pre class="signature">pub fn delete(String) -&gt; @query.Delete</pre>
+<pre class="signature">pub fn diff_schema(Array[@schema.Column], Array[@schema.Column], dialect? : @query.Dialect) -&gt; Array[@migrate.ColumnDiff]</pre>
+<pre class="signature">pub fn[T, V : @moondb.ToValue] field(String, @schema.ColumnType, (T) -&gt; V, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; @schema.Field[T]</pre>
+<pre class="signature">pub fn func(String, Array[String]) -&gt; String</pre>
+<pre class="signature">pub fn[S, T] has_many(@schema.Model[T], String, (S) -&gt; @moondb.Value) -&gt; @schema.Relation[S, T]</pre>
+<pre class="signature">pub fn index_ddl(String, String, Array[String], unique? : Bool) -&gt; String</pre>
+<pre class="signature">pub fn insert(String) -&gt; @query.Insert</pre>
+<pre class="signature">pub fn[S, T] many_to_many(@schema.Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -&gt; @moondb.Value) -&gt; @schema.ManyToMany[S, T]</pre>
+<pre class="signature">pub fn reflect_columns(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
+<pre class="signature">pub fn reflect_columns_mysql(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
+<pre class="signature">pub fn reflect_columns_pg(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
+<pre class="signature">pub fn reflect_table(&amp;@moondb.Driver, String) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
+<pre class="signature">pub fn reflect_table_for(&amp;@moondb.Driver, String, @query.Dialect) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
+<pre class="signature">pub fn[S : @query.AsSource] select(S) -&gt; @query.Select</pre>
+<pre class="signature">pub fn update(String) -&gt; @query.Update</pre>
+</section>
+<section class="section" id="schema">
+<p class="folio">moonbitstack/moonorm/schema</p>
+<h2>schema</h2>
+<h3>Types</h3>
+<pre class="signature">pub(all) struct Column {
+  name : String
+  col_type : ColumnType
+  primary_key : Bool
+  autoincrement : Bool
+  nullable : Bool
+  unique : Bool
+  default : String?
+  checks : Array[String]
+  references : (String, String)?
+  on_delete : String?
+  on_update : String?
+}</pre>
+<pre class="signature">pub(all) enum ColumnType {
+  IntType
+  BigIntType
+  TextType
+  RealType
+  BlobType
+  BoolType
+  VarcharType(Int32)
+  NumericType
+  DateTimeType
+  DateType
+  TimeType
+  UuidType
+  JsonType
+} derive(Eq)</pre>
+<pre class="signature">pub struct Field[T] {
+  column : Column
+  encode : (T) -&gt; @moondb.Value
+}</pre>
+<pre class="signature">pub struct ManyToMany[S, T] {
+  target : Model[T]
+  junction : String
+  source_fk : String
+  target_fk : String
+  target_key : String
+  source_key : (S) -&gt; @moondb.Value
+}</pre>
+<pre class="signature">pub struct Model[T] {
+  table : String
+  columns : Array[Column]
+  from_row : (@moondb.Row) -&gt; T raise @moondb.DbError
+  to_columns : (T) -&gt; Array[(String, @moondb.Value)]
+  ident : Map[Int32, Map[String, T]]
+}</pre>
+<pre class="signature">pub struct Relation[S, T] {
+  target : Model[T]
+  key_column : String
+  source_key : (S) -&gt; @moondb.Value
+  to_many : Bool
+}</pre>
+<h3>Functions &amp; methods</h3>
+<pre class="signature">pub fn[S, T] belongs_to(Model[T], String, (S) -&gt; @moondb.Value) -&gt; Relation[S, T]</pre>
+<pre class="signature">pub fn column(String, ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; Column</pre>
+<pre class="signature">pub fn[T, V : @moondb.ToValue] field(String, ColumnType, (T) -&gt; V, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; Field[T]</pre>
+<pre class="signature">pub fn[S, T] has_many(Model[T], String, (S) -&gt; @moondb.Value) -&gt; Relation[S, T]</pre>
+<pre class="signature">pub fn[S, T] many_to_many(Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -&gt; @moondb.Value) -&gt; ManyToMany[S, T]</pre>
+<pre class="signature">pub fn Column::ddl(Self, inline_pk? : Bool) -&gt; String</pre>
+<pre class="signature">pub fn Column::ddl_for(Self, @query.Dialect, inline_pk? : Bool) -&gt; String</pre>
+<pre class="signature">pub fn ColumnType::equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn ColumnType::not_equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn ColumnType::sql_for(Self, @query.Dialect) -&gt; String</pre>
+<pre class="signature">pub fn[T] Field::name(Self[T]) -&gt; String</pre>
+<pre class="signature">pub fn[S, T] ManyToMany::query(Self[S, T], S) -&gt; @query.Select</pre>
+<pre class="signature">pub fn[T] Model::column_names(Self[T]) -&gt; Array[String]</pre>
+<pre class="signature">pub fn[T] Model::create_table_sql(Self[T], if_not_exists? : Bool) -&gt; String</pre>
+<pre class="signature">pub fn[T] Model::create_table_sql_for(Self[T], @query.Dialect, if_not_exists? : Bool) -&gt; String</pre>
+<pre class="signature">pub fn[T] Model::from_fields(String, Array[Field[T]], (@moondb.Row) -&gt; T raise @moondb.DbError) -&gt; Self[T]</pre>
+<pre class="signature">pub fn[T] Model::insert_of(Self[T], T) -&gt; @query.Insert</pre>
+<pre class="signature">pub fn[T] Model::map_row(Self[T], @moondb.Row) -&gt; T raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Model::map_rows(Self[T], Array[@moondb.Row]) -&gt; Array[T] raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Model::new(String, Array[Column], (@moondb.Row) -&gt; T raise @moondb.DbError, (T) -&gt; Array[(String, @moondb.Value)]) -&gt; Self[T]</pre>
+<pre class="signature">pub fn[T] Model::parent_tables(Self[T]) -&gt; Array[String]</pre>
+<pre class="signature">pub fn[T] Model::pk_columns(Self[T]) -&gt; Array[String]</pre>
+<pre class="signature">pub fn[T] Model::pk_of(Self[T], T) -&gt; Array[@moondb.Value]</pre>
+<pre class="signature">pub fn[T] Model::select(Self[T]) -&gt; @query.Select</pre>
+<pre class="signature">pub fn[T] Model::table_descriptor(Self[T]) -&gt; @query.Table</pre>
+<pre class="signature">pub fn[S, T] Relation::batch_query(Self[S, T], Array[S]) -&gt; @query.Select</pre>
+<pre class="signature">pub fn[S, T] Relation::query(Self[S, T], S) -&gt; @query.Select</pre>
+<pre class="signature">pub fn[S, T] Relation::source_value(Self[S, T], S) -&gt; @moondb.Value</pre>
+</section>
+<section class="section" id="query">
+<p class="folio">moonbitstack/moonorm/query</p>
+<h2>query</h2>
+<h3>Types</h3>
+<pre class="signature">pub struct Delete {
+  table : String
+  filter : Where
+  returning : Array[String]
+}</pre>
+<pre class="signature">pub(all) enum Dialect {
+  Sqlite
+  Postgres
+  Mysql
+} derive(Eq)</pre>
+<pre class="signature">pub struct Insert {
+  table : String
+  cols : Array[String]
+  vals : Array[@moondb.Value]
+  extra_rows : Array[Array[@moondb.Value]]
+  mut conflict : Conflict?
+  returning : Array[String]
+}</pre>
+<pre class="signature">pub(all) struct LockClause {
+  mode : LockMode
+  of : Array[String]
+  nowait : Bool
+  skip_locked : Bool
+} derive(Eq, @debug.Debug)</pre>
+<pre class="signature">pub(all) enum LockMode {
+  ForUpdate
+  ForShare
+} derive(Eq, @debug.Debug)</pre>
+<pre class="signature">pub(all) enum Nulls {
+  Auto
+  First
+  Last
+} derive(Eq)</pre>
+<pre class="signature">pub(all) enum Order {
+  Asc
+  Desc
+} derive(Eq)</pre>
+<pre class="signature">pub(all) enum Predicate {
+  Cmp(col~ : String, op~ : String, val~ : @moondb.Value)
+  InList(col~ : String, vals~ : Array[@moondb.Value], negated~ : Bool)
+  Exists(sub~ : Select, negated~ : Bool)
+  And(Array[Predicate])
+  Or(Array[Predicate])
+  Not(Predicate)
+}</pre>
+<pre class="signature">pub struct Select {
+  from_ : Source
+  ctes : Array[Cte]
+  cols : Array[String]
+  joins : Array[JoinClause]
+  filter : Where
+  groups : Array[String]
+  havings : Array[Cond]
+  orders : Array[OrderTerm]
+  set_ops : Array[(String, Select)]
+  distinct_on_ : Array[String]
+  mut distinct_ : Bool
+  mut limit_ : Int32?
+  mut offset_ : Int32?
+  mut lock_ : LockClause?
+}</pre>
+<pre class="signature">pub(all) enum Source {
+  Tbl(String)
+  Sub(Select)
+  Alias(Source, String)
+  Lateral(Source)
+}</pre>
+<pre class="signature">pub(all) struct Table {
+  name : String
+  columns : Array[String]
+}</pre>
+<pre class="signature">pub struct Update {
+  table : String
+  sets : Array[(String, Assign)]
+  filter : Where
+  returning : Array[String]
+}</pre>
+<pre class="signature">pub(open) trait AsSource {
+  fn to_source(Self) -&gt; Source
+}</pre>
+<h3>Functions &amp; methods</h3>
+<pre class="signature">pub fn case_(Array[(String, String)], else_? : String) -&gt; String</pre>
+<pre class="signature">pub fn cast(String, String) -&gt; String</pre>
+<pre class="signature">pub fn delete(String) -&gt; Delete</pre>
+<pre class="signature">pub fn func(String, Array[String]) -&gt; String</pre>
+<pre class="signature">pub fn insert(String) -&gt; Insert</pre>
+<pre class="signature">pub fn is_ident(String) -&gt; Bool</pre>
+<pre class="signature">pub fn[S : AsSource] select(S) -&gt; Select</pre>
+<pre class="signature">pub fn update(String) -&gt; Update</pre>
+<pre class="signature">pub fn Delete::build(Self) -&gt; (String, Array[@moondb.Value])</pre>
+<pre class="signature">pub fn Delete::build_for(Self, Dialect) -&gt; (String, Array[@moondb.Value])</pre>
+<pre class="signature">pub fn Delete::returning(Self, String) -&gt; Self</pre>
+<pre class="signature">pub fn Delete::returning_all(Self) -&gt; Self</pre>
+<pre class="signature">pub fn Delete::where_(Self, String, String, @moondb.Value) -&gt; Self</pre>
+<pre class="signature">pub fn Delete::where_in(Self, String, Select) -&gt; Self</pre>
+<pre class="signature">pub fn Delete::where_not_in(Self, String, Select) -&gt; Self</pre>
+<pre class="signature">pub fn Delete::where_pred(Self, Predicate) -&gt; Self</pre>
+<pre class="signature">pub fn Dialect::equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn Dialect::not_equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn Insert::build(Self) -&gt; (String, Array[@moondb.Value])</pre>
+<pre class="signature">pub fn Insert::build_for(Self, Dialect) -&gt; (String, Array[@moondb.Value])</pre>
+<pre class="signature">pub fn Insert::do_nothing(Self) -&gt; Self</pre>
+<pre class="signature">pub fn Insert::do_update(Self, String, @moondb.Value) -&gt; Self</pre>
+<pre class="signature">pub fn Insert::do_update_excluded(Self, String) -&gt; Self</pre>
+<pre class="signature">pub fn Insert::on_conflict(Self, Array[String]) -&gt; Self</pre>
+<pre class="signature">pub fn Insert::returning(Self, String) -&gt; Self</pre>
+<pre class="signature">pub fn Insert::returning_all(Self) -&gt; Self</pre>
+<pre class="signature">pub fn Insert::set(Self, String, @moondb.Value) -&gt; Self</pre>
+<pre class="signature">pub fn Insert::values(Self, Array[@moondb.Value]) -&gt; Self</pre>
+<pre class="signature">pub fn LockClause::equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn LockClause::not_equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn LockClause::to_repr(Self) -&gt; @debug.Repr</pre>
+<pre class="signature">pub fn LockMode::equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn LockMode::not_equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn LockMode::to_repr(Self) -&gt; @debug.Repr</pre>
+<pre class="signature">pub fn Nulls::equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn Nulls::not_equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn Order::equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn Order::not_equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn Predicate::build(Self) -&gt; (String, Array[@moondb.Value])</pre>
+<pre class="signature">pub fn Select::build(Self) -&gt; (String, Array[@moondb.Value])</pre>
+<pre class="signature">pub fn Select::column(Self, String) -&gt; Self</pre>
+<pre class="signature">pub fn Select::count(Self) -&gt; Self</pre>
+<pre class="signature">pub fn[S : AsSource] Select::cross_join(Self, S) -&gt; Self</pre>
+<pre class="signature">pub fn Select::distinct(Self) -&gt; Self</pre>
+<pre class="signature">pub fn Select::distinct_on(Self, Array[String]) -&gt; Self</pre>
+<pre class="signature">pub fn Select::eq(Self, String, @moondb.Value) -&gt; Self</pre>
+<pre class="signature">pub fn Select::except_(Self, Self) -&gt; Self</pre>
+<pre class="signature">pub fn Select::for_update(Self, read? : Bool, of? : Array[String], nowait? : Bool, skip_locked? : Bool) -&gt; Self</pre>
+<pre class="signature">pub fn[S : AsSource] Select::full_join(Self, S, String) -&gt; Self</pre>
+<pre class="signature">pub fn Select::group_by(Self, String) -&gt; Self</pre>
+<pre class="signature">pub fn Select::having(Self, String, String, @moondb.Value) -&gt; Self</pre>
+<pre class="signature">pub fn Select::intersect(Self, Self) -&gt; Self</pre>
+<pre class="signature">pub fn[S : AsSource] Select::join(Self, S, String) -&gt; Self</pre>
+<pre class="signature">pub fn[S : AsSource] Select::join_using(Self, S, Array[String]) -&gt; Self</pre>
+<pre class="signature">pub fn Select::label(Self, String, String) -&gt; Self</pre>
+<pre class="signature">pub fn[S : AsSource] Select::left_join(Self, S, String) -&gt; Self</pre>
+<pre class="signature">pub fn Select::limit(Self, Int32) -&gt; Self</pre>
+<pre class="signature">pub fn Select::offset(Self, Int32) -&gt; Self</pre>
+<pre class="signature">pub fn Select::order_by(Self, String, Order, nulls? : Nulls) -&gt; Self</pre>
+<pre class="signature">pub fn Select::raw(Self, String) -&gt; Self</pre>
+<pre class="signature">pub fn[S : AsSource] Select::right_join(Self, S, String) -&gt; Self</pre>
+<pre class="signature">pub fn Select::union(Self, Self) -&gt; Self</pre>
+<pre class="signature">pub fn Select::union_all(Self, Self) -&gt; Self</pre>
+<pre class="signature">pub fn Select::where_(Self, String, String, @moondb.Value) -&gt; Self</pre>
+<pre class="signature">pub fn Select::where_exists(Self, Self) -&gt; Self</pre>
+<pre class="signature">pub fn Select::where_in(Self, String, Self) -&gt; Self</pre>
+<pre class="signature">pub fn Select::where_in_values(Self, String, Array[@moondb.Value]) -&gt; Self</pre>
+<pre class="signature">pub fn Select::where_not_exists(Self, Self) -&gt; Self</pre>
+<pre class="signature">pub fn Select::where_not_in(Self, String, Self) -&gt; Self</pre>
+<pre class="signature">pub fn Select::where_not_in_values(Self, String, Array[@moondb.Value]) -&gt; Self</pre>
+<pre class="signature">pub fn Select::where_pred(Self, Predicate) -&gt; Self</pre>
+<pre class="signature">pub fn Select::window(Self, String, partition_by? : Array[String], order_by? : Array[(String, Order)], as_? : String) -&gt; Self</pre>
+<pre class="signature">pub fn Select::with_cte(Self, String, Self) -&gt; Self</pre>
+<pre class="signature">pub fn Select::with_recursive(Self, String, Self, Self, all? : Bool) -&gt; Self</pre>
+<pre class="signature">pub fn Source::to_source(Self) -&gt; Self</pre>
+<pre class="signature">pub fn Table::select(Self) -&gt; Select</pre>
+<pre class="signature">pub fn Update::build(Self) -&gt; (String, Array[@moondb.Value])</pre>
+<pre class="signature">pub fn Update::build_for(Self, Dialect) -&gt; (String, Array[@moondb.Value])</pre>
+<pre class="signature">pub fn Update::returning(Self, String) -&gt; Self</pre>
+<pre class="signature">pub fn Update::returning_all(Self) -&gt; Self</pre>
+<pre class="signature">pub fn Update::set(Self, String, @moondb.Value) -&gt; Self</pre>
+<pre class="signature">pub fn Update::set_expr(Self, String, String, vals? : Array[@moondb.Value]) -&gt; Self</pre>
+<pre class="signature">pub fn Update::where_(Self, String, String, @moondb.Value) -&gt; Self</pre>
+<pre class="signature">pub fn Update::where_in(Self, String, Select) -&gt; Self</pre>
+<pre class="signature">pub fn Update::where_not_in(Self, String, Select) -&gt; Self</pre>
+<pre class="signature">pub fn Update::where_pred(Self, Predicate) -&gt; Self</pre>
+</section>
+<section class="section" id="session">
+<p class="folio">moonbitstack/moonorm/session</p>
+<h2>session</h2>
+<h3>Types</h3>
+<pre class="signature">pub(all) suberror LostUpdate {
+  LostUpdate(String)
+}</pre>
+<pre class="signature">pub(all) enum IsolationLevel {
+  ReadUncommitted
+  ReadCommitted
+  RepeatableRead
+  Serializable
+} derive(Eq)</pre>
+<pre class="signature">pub struct RowStream[T] {
+  cursor : &amp;@moondb.Cursor
+  model : @schema.Model[T]
+}</pre>
+<pre class="signature">pub struct Savepoint {
+  sess : Session
+  name : String
+  depth : Int32
+  mut finished : Bool
+}</pre>
+<pre class="signature">pub struct Session {
+  driver : &amp;@moondb.Driver
+  mut sp_depth : Int32
+  mut sp_seq : Int32
+  id : Int32
+  pending : Array[Work]
+  dirty : Array[Work]
+  deleted : Array[Work]
+  detach : Array[() -&gt; Unit]
+}</pre>
+<pre class="signature">pub(all) struct TxOptions {
+  isolation : IsolationLevel?
+  read_only : Bool
+}</pre>
+<h3>Functions &amp; methods</h3>
+<pre class="signature">pub fn LostUpdate::output(Self, &amp;Logger) -&gt; Unit</pre>
+<pre class="signature">pub fn LostUpdate::to_string(Self) -&gt; String</pre>
+<pre class="signature">pub fn IsolationLevel::equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn IsolationLevel::keyword(Self) -&gt; String</pre>
+<pre class="signature">pub fn IsolationLevel::not_equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn[T] RowStream::close(Self[T]) -&gt; Unit</pre>
+<pre class="signature">pub fn[T] RowStream::next(Self[T]) -&gt; T? raise @moondb.DbError</pre>
+<pre class="signature">pub fn Savepoint::commit(Self) -&gt; Unit raise @moondb.DbError</pre>
+<pre class="signature">pub fn Savepoint::depth(Self) -&gt; Int32</pre>
+<pre class="signature">pub fn Savepoint::name(Self) -&gt; String</pre>
+<pre class="signature">pub fn Savepoint::release(Self) -&gt; Unit raise @moondb.DbError</pre>
+<pre class="signature">pub fn Savepoint::rollback(Self) -&gt; Unit raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::add(Self, @query.Insert) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Session::add_record(Self, @schema.Model[T], T) -&gt; Unit</pre>
+<pre class="signature">pub fn[T] Session::all(Self, @schema.Model[T]) -&gt; Array[T] raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::begin(Self) -&gt; Unit raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::begin_nested(Self) -&gt; Savepoint raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::begin_with(Self, TxOptions, dialect? : @query.Dialect) -&gt; Unit raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::close(Self) -&gt; Unit</pre>
+<pre class="signature">pub fn Session::commit(Self) -&gt; Unit raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Session::create_table(Self, @schema.Model[T], if_not_exists? : Bool) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Session::delete_record(Self, @schema.Model[T], T) -&gt; Unit raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::deleted_count(Self) -&gt; Int32</pre>
+<pre class="signature">pub fn Session::dirty_count(Self) -&gt; Int32</pre>
+<pre class="signature">pub fn Session::execute(Self, String, Array[@moondb.Value]) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Session::expunge(Self, @schema.Model[T], T) -&gt; Unit</pre>
+<pre class="signature">pub fn Session::expunge_all(Self) -&gt; Unit</pre>
+<pre class="signature">pub fn Session::fetch(Self, @query.Select) -&gt; Array[@moondb.Row] raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Session::fetch_as(Self, @schema.Model[T], @query.Select) -&gt; Array[T] raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::flush(Self) -&gt; Unit raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Session::get(Self, @schema.Model[T], @moondb.Value) -&gt; T? raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Session::get_by(Self, @schema.Model[T], Array[@moondb.Value]) -&gt; T? raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Session::insert_record(Self, @schema.Model[T], T) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
+<pre class="signature">pub fn[S, T] Session::load(Self, S, @schema.Relation[S, T]) -&gt; Array[T] raise @moondb.DbError</pre>
+<pre class="signature">pub fn[S, T] Session::load_batch(Self, Array[S], @schema.Relation[S, T]) -&gt; Array[Array[T]] raise @moondb.DbError</pre>
+<pre class="signature">pub fn[S, T] Session::load_many(Self, S, @schema.ManyToMany[S, T]) -&gt; Array[T] raise @moondb.DbError</pre>
+<pre class="signature">pub fn[S, T] Session::load_one(Self, S, @schema.Relation[S, T]) -&gt; T? raise @moondb.DbError</pre>
+<pre class="signature">pub fn[S, T] Session::load_one_batch(Self, Array[S], @schema.Relation[S, T]) -&gt; Array[T?] raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::modify(Self, @query.Update) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::modify_versioned(Self, @query.Update, what? : String) -&gt; @moondb.ExecResult raise</pre>
+<pre class="signature">pub fn Session::new(&amp;@moondb.Driver) -&gt; Self</pre>
+<pre class="signature">pub fn Session::pending_count(Self) -&gt; Int32</pre>
+<pre class="signature">pub fn Session::query(Self, String, Array[@moondb.Value]) -&gt; Array[@moondb.Row] raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::query_stream(Self, String, Array[@moondb.Value]) -&gt; &amp;@moondb.Cursor raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::release(Self, String) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::remove(Self, @query.Delete) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::rollback(Self) -&gt; Unit raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::rollback_to(Self, String) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::savepoint(Self, String) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
+<pre class="signature">pub fn Session::savepoint_depth(Self) -&gt; Int32</pre>
+<pre class="signature">pub fn Session::stream(Self, @query.Select) -&gt; &amp;@moondb.Cursor raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Session::stream_as(Self, @schema.Model[T], @query.Select) -&gt; RowStream[T] raise @moondb.DbError</pre>
+<pre class="signature">pub fn[T] Session::update_record(Self, @schema.Model[T], T) -&gt; Unit raise @moondb.DbError</pre>
+<pre class="signature">pub fn[D : @moondb.Driver, T] Session::with_pool(@pool.Pool[D], (Self) -&gt; T raise) -&gt; T raise</pre>
+<pre class="signature">pub fn TxOptions::default() -&gt; Self</pre>
+<pre class="signature">pub fn TxOptions::to_sql(Self, @query.Dialect) -&gt; Array[String]</pre>
+</section>
+<section class="section" id="migrate">
+<p class="folio">moonbitstack/moonorm/migrate</p>
+<h2>migrate</h2>
+<h3>Types</h3>
+<pre class="signature">pub(all) enum ColumnDiff {
+  Added(name~ : String, col_type~ : @schema.ColumnType)
+  Removed(String)
+  TypeChanged(name~ : String, from~ : @schema.ColumnType, to~ : @schema.ColumnType)
+} derive(Eq)</pre>
+<pre class="signature">pub(all) struct Migration {
+  version : Int32
+  name : String
+  up : Array[String]
+  down : Array[String]
+}</pre>
+<pre class="signature">pub struct Migrator {
+  table : String
+}</pre>
+<h3>Functions &amp; methods</h3>
+<pre class="signature">pub fn diff_schema(Array[@schema.Column], Array[@schema.Column], dialect? : @query.Dialect) -&gt; Array[ColumnDiff]</pre>
+<pre class="signature">pub fn index_ddl(String, String, Array[String], unique? : Bool) -&gt; String</pre>
+<pre class="signature">pub fn reflect_columns(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
+<pre class="signature">pub fn reflect_columns_mysql(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
+<pre class="signature">pub fn reflect_columns_pg(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
+<pre class="signature">pub fn reflect_table(&amp;@moondb.Driver, String) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
+<pre class="signature">pub fn reflect_table_for(&amp;@moondb.Driver, String, @query.Dialect) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
+<pre class="signature">pub fn ColumnDiff::equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn ColumnDiff::not_equal(Self, Self) -&gt; Bool</pre>
+<pre class="signature">pub fn Migrator::applied_versions(Self, @session.Session) -&gt; Array[Int32] raise @moondb.DbError</pre>
+<pre class="signature">pub fn Migrator::current_version(Self, @session.Session) -&gt; Int32 raise @moondb.DbError</pre>
+<pre class="signature">pub fn Migrator::down_to(Self, @session.Session, Array[Migration], Int32) -&gt; Int32 raise @moondb.DbError</pre>
+<pre class="signature">pub fn Migrator::ensure_table(Self, @session.Session) -&gt; Unit raise @moondb.DbError</pre>
+<pre class="signature">pub fn Migrator::new(table? : String) -&gt; Self raise @moondb.DbError</pre>
+<pre class="signature">pub fn Migrator::up(Self, @session.Session, Array[Migration]) -&gt; Int32 raise @moondb.DbError</pre>
+</section>
+        <div class="cta">
+          <a class="btn primary" href="guide.html">Read the guide</a>
+          <a class="btn" href="index.html">Back to the seam</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span>moonorm · Apache-2.0 · MoonBit ORM &amp; SQL toolkit</span>
+    <span><a href="https://github.com/moonbitstack/moonorm" rel="noopener">github.com/moonbitstack/moonorm</a></span>
+  </footer>
+
+  <script src="assets/js/theme.js"></script>
+</body>
+</html>

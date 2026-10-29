@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>moondb — Guide</title>
+  <meta name="description" content="How to implement the moondb Driver trait for a new MoonBit database backend.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/moonphase.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html" style="border:0">
+      <svg class="glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="16" cy="16" r="11" fill="var(--phase-light)"/>
+        <circle cx="21" cy="16" r="11" fill="var(--phase-dark)"/>
+      </svg>
+      moondb
+    </a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="guide.html" aria-current="page">Guide</a>
+      <a href="api.html">API</a>
+      <a href="showcase.html">Showcase</a>
+      <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
+    </nav>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">day</button>
+  </header>
+
+  <main class="wrap">
+    <div class="doc-grid">
+      <aside class="side">
+        <div class="grp">Guide</div>
+        <a href="#install" aria-current="page">Install</a>
+        <a href="#implement">Implement Driver</a>
+        <a href="#values">Values &amp; params</a>
+        <a href="#rows">Reading rows</a>
+        <a href="#defaults">Defaults &amp; overrides</a>
+        <a href="#orm">Built on moondb</a>
+      </aside>
+
+      <div>
+        <section class="hero" style="padding-top:var(--s5)">
+          <p class="folio">Guide</p>
+          <h1 style="font-size:clamp(30px,4vw,46px)">Ratify the contract</h1>
+          <p class="lede">Implementing <code class="inline">Driver</code> is how a backend joins the moondb family. You write five operations; the other two are given to you.</p>
+        </section>
+
+        <section class="section" id="install">
+          <p class="folio">§1</p>
+          <h2>Install</h2>
+          <pre class="signature">moon add moonbitstack/moondb</pre>
+          <p class="muted">moondb is a library package. It defines the interface; it opens no connections itself. A driver package depends on it and implements <code class="inline">Driver</code>.</p>
+        </section>
+
+        <section class="section" id="implement">
+          <p class="folio">§2</p>
+          <h2>Implement the trait</h2>
+          <p class="muted">A driver is a struct that owns the connection handle, plus an <code class="inline">impl Driver</code> block. You must supply <code class="inline">execute</code>, <code class="inline">query</code>, <code class="inline">begin</code>, <code class="inline">commit</code>, <code class="inline">rollback</code>, and <code class="inline">close</code>.</p>
+          <pre class="signature"><span class="kw">struct</span> MyConn { handle : Handle }
+
+<span class="kw">impl</span> Driver <span class="kw">for</span> MyConn {
+  <span class="kw">fn</span> execute(self, sql, params) -&gt; ExecResult <span class="kw">raise</span> DbError {
+    <span class="kw">//</span> run a non-row statement, report rows changed + last id
+  }
+  <span class="kw">fn</span> query(self, sql, params) -&gt; Array[Row] <span class="kw">raise</span> DbError {
+    <span class="kw">//</span> run a row statement, materialise every row
+  }
+  <span class="kw">fn</span> begin(self) -&gt; Unit <span class="kw">raise</span> DbError { ... }
+  <span class="kw">fn</span> commit(self) -&gt; Unit <span class="kw">raise</span> DbError { ... }
+  <span class="kw">fn</span> rollback(self) -&gt; Unit <span class="kw">raise</span> DbError { ... }
+  <span class="kw">fn</span> close(self) -&gt; Unit { ... }   <span class="kw">//</span> best-effort, idempotent
+}</pre>
+        </section>
+
+        <section class="section" id="values">
+          <p class="folio">§3</p>
+          <h2>Values &amp; parameters</h2>
+          <p class="muted">Parameters arrive as <code class="inline">Array[Value]</code> — one per positional placeholder, in order. Never interpolate them into the SQL string; bind them out-of-band. The placeholder token is the driver's choice (<code class="inline">?</code> for SQLite/MySQL, <code class="inline">$1</code> for PostgreSQL).</p>
+          <pre class="signature"><span class="kw">pub(all) enum</span> Value {
+  Null | Bool(Bool) | Int(Int32) | Int64(Int64)
+  | Double(Double) | Text(String) | Blob(Bytes)
+}</pre>
+          <p class="muted">Use <code class="inline">Value::kind</code> and <code class="inline">Value::is_null</code> when classifying an inbound value.</p>
+        </section>
+
+        <section class="section" id="rows">
+          <p class="folio">§4</p>
+          <h2>Reading rows</h2>
+          <p class="muted">A <code class="inline">Row</code> is read positionally or by name, with one typed accessor per <code class="inline">Value</code> case. Each raises <code class="inline">DbError::TypeError</code> if the column is not the requested shape.</p>
+          <pre class="signature">row.int64(0)        <span class="kw">//</span> read column 0 as Int64
+row.text_by("email") <span class="kw">//</span> read by column name
+row.is_null(2)       <span class="kw">//</span> SQL NULL check
+row.width()          <span class="kw">//</span> column count</pre>
+        </section>
+
+        <section class="section" id="defaults">
+          <p class="folio">§5</p>
+          <h2>Defaults &amp; overrides</h2>
+          <p class="muted">Two operations ship with defaults you may keep or override:</p>
+          <div class="article"><div class="num">i</div><div class="body"><h3>ping → Bool</h3><p class="muted">Default issues <code class="inline">SELECT 1</code> and returns whether it round-trips, never raising. Override with a cheaper heartbeat if your backend has one.</p></div></div>
+          <div class="article"><div class="num">ii</div><div class="body"><h3>query_stream → &amp;Cursor</h3><p class="muted">Default materialises via <code class="inline">query</code> and returns an <code class="inline">ArrayCursor</code>. A driver with incremental fetch overrides this with a live cursor for bounded memory.</p></div></div>
+        </section>
+
+        <section class="section" id="orm">
+          <p class="folio">§6</p>
+          <h2>Built on moondb</h2>
+          <p class="muted">ORMs such as <a href="https://github.com/moonbitstack/moonorm">moonorm</a> write their SQL generation against the <code class="inline">Driver</code> trait — not against any one backend. That is the whole point of the contract: one query layer, every ratified driver.</p>
+          <div class="cta">
+            <a class="btn primary" href="api.html">Full API reference</a>
+            <a class="btn" href="showcase.html">See the driver family</a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span>moondb · Apache-2.0 · the MoonBit database contract</span>
+    <span><a href="https://github.com/moonbitstack/moonorm" rel="noopener">github.com/moonbitstack/moonorm</a></span>
+  </footer>
+
+  <script src="assets/js/moonphase.js"></script>
+  <script src="assets/js/theme.js"></script>
+</body>
+</html>

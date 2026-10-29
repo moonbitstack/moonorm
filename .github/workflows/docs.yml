@@ -1,0 +1,68 @@
+name: Docs
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docs/**"
+      - "src/**"
+      - "scripts/**"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Generate .mbti for the core packages
+        run: |
+          for p in src src/schema src/query src/session src/migrate; do
+            moon info --target js "$p"
+          done
+
+      - name: Build the showcase engine (real compiled library, not hand-written JS)
+        run: |
+          moon build --target js src/examples/browser/showcase
+          mkdir -p docs/engine
+          cp _build/js/debug/build/examples/browser/showcase/showcase.js docs/engine/moonorm.js
+
+      - name: Generate the API page from pkg.generated.mbti
+        # The API page is regenerated on every docs build so it can never drift
+        # from the code. Run `python3 scripts/gen_api.py --check` locally to verify
+        # docs/api.html is in sync before committing.
+        run: python3 scripts/gen_api.py
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

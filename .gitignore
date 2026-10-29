@@ -5,3 +5,6 @@ _*
 target/
 
 examples/*/pkg.generated.mbti
+
+# Compiled showcase engine — rebuilt by the docs workflow.
+docs/engine/

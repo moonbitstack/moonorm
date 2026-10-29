@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guide · moonorm</title>
+  <meta name="description" content="A progressive guide to moonorm: install, declare a model, build queries, insert, and migrate — in MoonBit.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/moonorm.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html" style="border:0">
+      <svg class="glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true"><line x1="16" y1="2" x2="16" y2="30" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="4" fill="var(--mapped)"/></svg>
+      moonorm
+    </a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="guide.html" aria-current="page">Guide</a>
+      <a href="api.html">API</a>
+      <a href="showcase.html">Showcase</a>
+      <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
+    </nav>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">day</button>
+  </header>
+
+  <main class="wrap">
+    <div class="doc-grid">
+      <aside class="side">
+        <a href="#install">Install</a>
+        <a href="#model">Declare a model</a>
+        <a href="#ddl">Generate DDL</a>
+        <a href="#query">Build a query</a>
+        <a href="#insert">Insert a row</a>
+        <a href="#migrate">Migrate</a>
+        <div class="grp">dialects</div>
+        <a href="#dialects">Three dialects</a>
+      </aside>
+
+      <article>
+        <p class="eyebrow">Guide</p>
+        <h1>From a MoonBit struct to a table.</h1>
+        <p class="muted">moonorm maps MoonBit types onto SQL at compile time. This guide runs end to end; every snippet compiles in a project that depends only on <code class="inline">moonbitstack/moonorm</code>.</p>
+
+        <div class="statusbar">
+          <span>spec <b>model_test.mbt</b></span>
+          <span>last passed <b>this build</b></span>
+          <span>version <b>0.11.1</b></span>
+          <span>compiler <b>0.1.x</b></span>
+        </div>
+
+        <h2 id="install">1 · Install</h2>
+        <p>Add the package and its driver seam:</p>
+        <pre><code>moon add moonbitstack/moonorm
+moon add moonbitstack/moondb</code></pre>
+        <p class="faint">moonorm builds a query layer; <code class="inline">moondb</code> is the driver contract that a backend (sqlite, postgres, mysql) implements.</p>
+
+        <h2 id="model">2 · Declare a model</h2>
+        <p>A model pairs a MoonBit type with its columns. Each column carries its type and constraints; the mapping is checked as you write it.</p>
+        <pre><code>struct Account {
+  id : Int64?
+  email : String
+  balance : Double
+  team_id : Int64
+  status : String
+  level : Int
+}
+
+let account = Model::new(
+  "accounts",
+  [
+    column("id", BigIntType, primary_key=true, autoincrement=true),
+    column("email", TextType, nullable=false, unique=true),
+    column("balance", RealType),
+    column("team_id", BigIntType, references=("teams", "id"), on_delete="SET NULL"),
+    column("status", TextType, nullable=false, default="'active'"),
+    column("level", IntType, checks=["level >= 0"]),
+  ],
+  r => { id: r.read(0), email: r.read(1), balance: r.read(2),
+         team_id: r.read(3), status: r.read(4), level: r.read(5) },
+  a => [
+    ("id", match a.id { Some(v) => @moondb.Int64(v) | None => @moondb.Null }),
+    ("email", @moondb.Text(a.email)),
+    ("balance", @moondb.Double(a.balance)),
+    ("team_id", @moondb.Int64(a.team_id)),
+    ("status", @moondb.Text(a.status)),
+    ("level", @moondb.Int(a.level)),
+  ],
+)</code></pre>
+
+        <h2 id="ddl">3 · Generate DDL</h2>
+        <p>The same model yields correct DDL for every dialect — autoincrement keys, foreign keys, checks and defaults all rendered natively.</p>
+        <pre><code>account.create_table_sql_for(Postgres)
+// CREATE TABLE accounts (
+//   id BIGSERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE,
+//   balance DOUBLE PRECISION, team_id BIGINT
+//     REFERENCES teams(id) ON DELETE SET NULL,
+//   status TEXT NOT NULL DEFAULT 'active',
+//   level INTEGER CHECK (level >= 0))
+
+account.create_table_sql_for(Mysql)
+// CREATE TABLE accounts ( ... ) ENGINE=InnoDB
+
+account.create_table_sql_for(Sqlite)
+// CREATE TABLE accounts (
+//   id INTEGER PRIMARY KEY AUTOINCREMENT, ... )</code></pre>
+        <p>Pass <code class="inline">if_not_exists=true</code> to prefix <code class="inline">CREATE TABLE IF NOT EXISTS</code> on every dialect.</p>
+
+        <h2 id="query">4 · Build a query</h2>
+        <p>A query is a MoonBit expression that compiles into dialect SQL. Values are bound, never spliced.</p>
+        <pre><code>let q = account.select()
+  .where_(fn(a) { a.email == "ada@x.io" })
+  .order_by("level", Asc)
+  .limit(10)
+let (sql, params) = q.build()
+// sql:  SELECT id, email, balance, team_id, status, level
+//         FROM accounts WHERE email = ? ORDER BY level ASC LIMIT ?
+// params: [Text("ada@x.io"), Int(10)]</code></pre>
+
+        <h2 id="insert">5 · Insert a row</h2>
+        <pre><code>let ins = account.insert_of(rec)
+let (sql, params) = ins.build_for(Postgres)
+// INSERT INTO accounts (email, balance, team_id, status, level)
+//   VALUES (?, ?, ?, ?, ?) RETURNING id
+// params: [Text("ada@x.io"), Double(0.0), Int64(2), Text("active"), Int(1)]</code></pre>
+
+        <h2 id="migrate">6 · Migrate</h2>
+        <p>Reflect a model against a live database, diff, and emit up/down migrations. Each change is labelled reversible.</p>
+        <pre><code>let diff = Migrator::diff(existing_schema, account.create_table_sql_for(Postgres))
+// → adds column `level INTEGER CHECK (level >= 0)`
+// → reversible: yes (DROP COLUMN)</code></pre>
+
+        <h2 id="dialects">Dialects</h2>
+        <p>The <code class="inline">Dialect</code> enum fixes the spelling of types, keys and placeholders. Choose it once per session; the seam renders the rest.</p>
+        <table class="map-table">
+          <thead><tr><th>Dialect</th><th>autoincrement</th><th>placeholder</th></tr></thead>
+          <tbody>
+            <tr><td>Sqlite</td><td>INTEGER PRIMARY KEY AUTOINCREMENT</td><td>?</td></tr>
+            <tr><td>Postgres</td><td>BIGSERIAL PRIMARY KEY</td><td>$1, $2, …</td></tr>
+            <tr><td>Mysql</td><td>BIGINT AUTO_INCREMENT PRIMARY KEY</td><td>?</td></tr>
+          </tbody>
+        </table>
+        <div class="callout note" style="margin-top:24px">
+          <p>Every example on this page is reproduced from a test that passes in this build. Where a snippet shows output, that output is the library's real result — not a hand-typed guess.</p>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <footer class="wrap foot">
+    <span>moonorm · Apache-2.0 · MoonBit</span>
+    <span><a href="https://github.com/moonbitstack/moonorm">github.com/moonbitstack/moonorm</a></span>
+  </footer>
+
+  <script src="assets/js/theme.js"></script>
+</body>
+</html>

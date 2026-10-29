@@ -1,0 +1,169 @@
+/* ============================================================================
+   moonorm · design tokens — "Mirror Seam · Light/Dark Twin"
+   A single source of truth. Pages only pick a tier; they never invent values.
+   Semantic mapping is LOCKED across light/dark and across pages:
+     structure   = skeleton / contract / type signatures
+     moonbit     = the MoonBit object world  (type side)
+     relation    = the relational world      (SQL side)
+     mapped      = mapping holds / compile passes
+     broken      = mapping breaks / compile fails
+     pointer     = current operation / cursor
+   ----------------------------------------------------------------------------
+   The two themes are the SAME seam under two lights — not an inversion.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* ---- surfaces ("图纸昼" — draft paper, daytime) ---- */
+  --paper:        #F4F1E8;   /* warm white ground */
+  --paper-2:      #EDE8DA;   /* sunken panel */
+  --paper-3:      #E4DDC9;   /* deeper well */
+  --ink:          #1B3A5C;   /* structure / contract / signatures (墨蓝) */
+  --ink-soft:     #5A6B82;   /* secondary text */
+  --ink-faint:    #8A93A3;   /* tertiary / captions */
+  --hair:         #C9C0A8;   /* hairline rules */
+  --hair-strong:  #B3A885;
+
+  /* ---- semantic mapping (LOCKED) ---- */
+  --moonbit:      #3B4CC0;   /* MoonBit object world — indigo */
+  --moonbit-bright:#7C8CFF;
+  --relation:     #B0651E;   /* relational world — warm ochre */
+  --relation-bright:#E0913F;
+  --mapped:       #0FA89A;   /* mapping holds / compile passes — cyan */
+  --mapped-bright:#0FA89A;
+  --broken:       #C8324E;   /* mapping breaks / compile fails — red */
+  --broken-bright:#C8324E;
+  --pointer:      #E8541E;   /* current op / cursor — engineering orange */
+
+  /* ---- the seam ---- */
+  --seam:         var(--ink);
+  --seam-glow:    var(--mapped);
+
+  /* ---- type ---- */
+  --font-body: "Inter", "Source Han Sans SC", system-ui, sans-serif;
+  --font-serif: "Newsreader", "Source Han Serif SC", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* ---- spacing · 8pt grid ---- */
+  --s1: 8px;  --s2: 16px; --s3: 24px; --s4: 32px;
+  --s5: 48px; --s6: 64px; --s7: 96px; --s8: 128px;
+
+  /* ---- motion tiers (only these three, only for real semantics) ---- */
+  --t1: 120ms; --t2: 240ms; --t3: 480ms;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  --maxw: 1180px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* ---- surfaces ("图纸夜" — draft at night) ---- */
+  --paper:        #0C0F16;
+  --paper-2:      #11151F;
+  --paper-3:      #161C28;
+  --ink:          #A9C4E0;   /* structure becomes frost blue */
+  --ink-soft:     #7E90AC;
+  --ink-faint:    #586B86;
+  --hair:         #25303F;
+  --hair-strong:  #33425A;
+
+  /* ---- semantic mapping (same meaning, lit for the dark room) ---- */
+  --moonbit:      #7C8CFF;   /* indigo stays the type side, lit */
+  --moonbit-bright:#9AA8FF;
+  --relation:     #E0913F;   /* ochre stays the SQL side, lit */
+  --relation-bright:#EFA75C;
+  --mapped:       #3BE8D4;   /* mapping holds — glows */
+  --mapped-bright:#3BE8D4;
+  --broken:       #FF4D6D;   /* mapping breaks — flares */
+  --broken-bright:#FF4D6D;
+  --pointer:      #FF7A3D;
+
+  --seam:         var(--ink);
+  --seam-glow:    var(--mapped);
+}
+
+/* ---- reset discipline: radius is always 0 ---- */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+button, input, textarea, select { font: inherit; color: inherit; }
+html, button, input, textarea, select {
+  font-variant-ligatures: no-contextual;   /* show the characters you type */
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- selection ---- */
+::selection { background: color-mix(in srgb, var(--mapped) 30%, transparent); }
+
+/* ---- links ---- */
+a { color: var(--pointer); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--pointer) 40%, transparent); }
+a:hover { border-bottom-color: var(--pointer); }
+
+/* ---- headings: serif carries "types are documents" ---- */
+h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; line-height: 1.12; letter-spacing: -0.01em; color: var(--ink); }
+h1 { font-size: clamp(34px, 5vw, 60px); margin: 0; }
+h2 { font-size: clamp(24px, 3vw, 36px); margin: var(--s6) 0 var(--s3); }
+h3 { font-size: 20px; margin: var(--s4) 0 var(--s2); }
+
+/* ---- code ---- */
+code, pre, .mono { font-family: var(--font-mono); font-variant-ligatures: no-contextual; }
+code.inline { background: var(--paper-2); padding: 0.1em 0.4em; border: 1px solid var(--hair); white-space: nowrap; }
+pre {
+  margin: 0; background: var(--paper-2); border: 1px solid var(--hair);
+  padding: var(--s3); overflow: auto; font-size: 13.5px; line-height: 1.7;
+  white-space: pre;   /* code never wraps; horizontal scroll instead */
+}
+pre code { white-space: pre; }
+
+/* ---- layout helpers ---- */
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--s3); }
+.section { padding: var(--s7) 0; border-top: 1px solid var(--hair); }
+.muted { color: var(--ink-soft); }
+.faint { color: var(--ink-faint); }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-faint); }
+
+/* ---- left color bar stays straight (per docs.md) ---- */
+.callout { border-left: 3px solid var(--pointer); padding: var(--s2) var(--s3); background: var(--paper-2); }
+.callout.note { border-left-color: var(--mapped); }
+.callout.warn { border-left-color: var(--broken); }
+
+/* ---- mobile rule: no horizontal scroll at 390px ---- */
+* { min-width: 0; }
+img, svg, table, pre { max-width: 100%; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: var(--s1) var(--s2); border-bottom: 1px solid var(--hair); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+td .mono { overflow-wrap: anywhere; }
+
+/* ---- custom scrollbars (docs.md exact pattern) ---- */
+@supports selector(::-webkit-scrollbar) {
+  html::-webkit-scrollbar { width: 10px; height: 10px; }
+  html::-webkit-scrollbar-track { background: transparent; }
+  html::-webkit-scrollbar-thumb { border-radius: 99px; border: 3px solid transparent; background-clip: content-box; background-color: color-mix(in srgb, var(--ink) 24%, transparent); }
+  html.at-top::-webkit-scrollbar-thumb { background-color: transparent; }
+}
+@supports not selector(::-webkit-scrollbar) {
+  html { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 26%, transparent) transparent; }
+  html.at-top { scrollbar-color: transparent transparent; }
+}
+
+/* ---- reduced motion: the seam still exists, it just stops travelling ---- */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+/* ---- responsive collapse ---- */
+@media (width <= 860px) {
+  .wrap { padding: 0 var(--s2); }
+  .section { padding: var(--s5) 0; }
+}

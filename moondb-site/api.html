@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>moondb — API</title>
+  <meta name="description" content="The moondb interface surface: Driver, Value, Row, ExecResult, DbError, Cursor.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tokens.css">
+  <link rel="stylesheet" href="assets/css/moonphase.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html" style="border:0">
+      <svg class="glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="16" cy="16" r="11" fill="var(--phase-light)"/>
+        <circle cx="21" cy="16" r="11" fill="var(--phase-dark)"/>
+      </svg>
+      moondb
+    </a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="guide.html">Guide</a>
+      <a href="api.html" aria-current="page">API</a>
+      <a href="showcase.html">Showcase</a>
+      <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
+    </nav>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">day</button>
+  </header>
+
+  <main class="wrap">
+    <div class="doc-grid">
+      <aside class="side">
+        <div class="grp">Interface</div>
+        <a href="#driver" aria-current="page">Driver</a>
+        <a href="#value">Value</a>
+        <a href="#row">Row</a>
+        <a href="#execresult">ExecResult</a>
+        <a href="#dberror">DbError</a>
+        <a href="#cursor">Cursor</a>
+      </aside>
+
+      <div>
+        <section class="hero" style="padding-top:var(--s5)">
+          <p class="folio">API</p>
+          <h1 style="font-size:clamp(30px,4vw,46px)">The interface</h1>
+          <p class="lede">Eight operations, one value type, four error cases. This is the entire surface a driver or query layer touches.</p>
+        </section>
+
+        <section class="section" id="driver">
+          <p class="folio">trait</p>
+          <h2>Driver</h2>
+          <p class="muted"><code class="inline">pub(open)</code> — out-of-tree drivers implement it. Required operations must be written; the two marked <em>default</em> are provided and may be overridden.</p>
+          <pre class="signature"><span class="kw">pub(open) trait</span> Driver {
+  <span class="kw">fn</span> execute(Self, String, Array[Value]) -&gt; ExecResult <span class="kw">raise</span> DbError
+  <span class="kw">fn</span> query(Self, String, Array[Value]) -&gt; Array[Row] <span class="kw">raise</span> DbError
+  <span class="kw">fn</span> query_stream(Self, String, Array[Value]) -&gt; &amp;Cursor <span class="kw">raise</span> DbError = _   <span class="kw">// default</span>
+  <span class="kw">fn</span> begin(Self) -&gt; Unit <span class="kw">raise</span> DbError
+  <span class="kw">fn</span> commit(Self) -&gt; Unit <span class="kw">raise</span> DbError
+  <span class="kw">fn</span> rollback(Self) -&gt; Unit <span class="kw">raise</span> DbError
+  <span class="kw">fn</span> close(Self) -&gt; Unit
+  <span class="kw">fn</span> ping(Self) -&gt; Bool = _   <span class="kw">// default</span>
+}</pre>
+          <table>
+            <thead><tr><th>operation</th><th>returns</th><th>notes</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">execute</td><td class="mono">ExecResult</td><td class="muted">non-row statement; reports rows changed + last id</td></tr>
+              <tr><td class="mono">query</td><td class="mono">Array[Row]</td><td class="muted">row statement; materialises every row</td></tr>
+              <tr><td class="mono">query_stream</td><td class="mono">&amp;Cursor</td><td class="muted">default wraps <code class="inline">query</code> in an ArrayCursor</td></tr>
+              <tr><td class="mono">begin / commit / rollback</td><td class="mono">Unit</td><td class="muted">flat transaction bracket</td></tr>
+              <tr><td class="mono">close</td><td class="mono">Unit</td><td class="muted">best-effort, idempotent, never raises</td></tr>
+              <tr><td class="mono">ping</td><td class="mono">Bool</td><td class="muted">default <code class="inline">SELECT 1</code>; returns false instead of raising</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="section" id="value">
+          <p class="folio">enum</p>
+          <h2>Value</h2>
+          <p class="muted"><code class="inline">pub(all)</code> — the dialect-neutral unit that crosses the driver boundary in both directions.</p>
+          <pre class="signature"><span class="kw">pub(all) enum</span> Value {
+  Null | Bool(Bool) | Int(Int32) | Int64(Int64)
+  | Double(Double) | Text(String) | Blob(Bytes)
+}</pre>
+          <table>
+            <thead><tr><th>method</th><th>signature</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">kind</td><td class="mono">Value::kind(self) -&gt; String</td></tr>
+              <tr><td class="mono">is_null</td><td class="mono">Value::is_null(self) -&gt; Bool</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="section" id="row">
+          <p class="folio">struct</p>
+          <h2>Row</h2>
+          <p class="muted"><code class="inline">pub(all)</code> — one result row; read by index or by name. Typed accessors raise <code class="inline">DbError::TypeError</code> on a shape mismatch.</p>
+          <table>
+            <thead><tr><th>accessor</th><th>signature</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">width</td><td class="mono">Row::width(self) -&gt; Int32</td></tr>
+              <tr><td class="mono">get</td><td class="mono">Row::get(self, idx) -&gt; Value raise DbError</td></tr>
+              <tr><td class="mono">by_name</td><td class="mono">Row::by_name(self, name) -&gt; Value?</td></tr>
+              <tr><td class="mono">index_of</td><td class="mono">Row::index_of(self, name) -&gt; Int32 raise DbError</td></tr>
+              <tr><td class="mono">is_null</td><td class="mono">Row::is_null(self, idx) -&gt; Bool raise DbError</td></tr>
+              <tr><td class="mono">is_null_by</td><td class="mono">Row::is_null_by(self, name) -&gt; Bool raise DbError</td></tr>
+              <tr><td class="mono">bool / bool_by</td><td class="mono">Row::bool[_by](self, …) -&gt; Bool raise DbError</td></tr>
+              <tr><td class="mono">int / int_by</td><td class="mono">Row::int[_by](self, …) -&gt; Int32 raise DbError</td></tr>
+              <tr><td class="mono">int64 / int64_by</td><td class="mono">Row::int64[_by](self, …) -&gt; Int64 raise DbError</td></tr>
+              <tr><td class="mono">double / double_by</td><td class="mono">Row::double[_by](self, …) -&gt; Double raise DbError</td></tr>
+              <tr><td class="mono">text / text_by</td><td class="mono">Row::text[_by](self, …) -&gt; String raise DbError</td></tr>
+              <tr><td class="mono">blob / blob_by</td><td class="mono">Row::blob[_by](self, …) -&gt; Bytes raise DbError</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="section" id="execresult">
+          <p class="folio">struct</p>
+          <h2>ExecResult</h2>
+          <pre class="signature"><span class="kw">pub(all) struct</span> ExecResult {
+  rows_affected : Int64
+  last_insert_id : Int64
+}</pre>
+        </section>
+
+        <section class="section" id="dberror">
+          <p class="folio">suberror</p>
+          <h2>DbError</h2>
+          <p class="muted"><code class="inline">pub(all)</code> — the single error type every fallible operation raises.</p>
+          <pre class="signature"><span class="kw">pub(all) suberror</span> DbError {
+  ConnectError(String)   <span class="kw">//</span> open / handshake / dropped
+  QueryError(String)     <span class="kw">//</span> backend rejected the statement
+  TypeError(String)      <span class="kw">//</span> wrong accessor shape / missing column
+  Closed                 <span class="kw">//</span> used after close
+}</pre>
+        </section>
+
+        <section class="section" id="cursor">
+          <p class="folio">trait</p>
+          <h2>Cursor</h2>
+          <p class="muted"><code class="inline">pub(open)</code> — the streaming counterpart to <code class="inline">query</code>. Forward-only; drain with <code class="inline">next</code> until <code class="inline">None</code> or call <code class="inline">close</code>.</p>
+          <pre class="signature"><span class="kw">pub(open) trait</span> Cursor {
+  <span class="kw">fn</span> next(Self) -&gt; Row? <span class="kw">raise</span> DbError
+  <span class="kw">fn</span> close(Self) -&gt; Unit
+}</pre>
+          <div class="cta">
+            <a class="btn primary" href="guide.html">Implement a driver</a>
+            <a class="btn" href="index.html">Back to the constitution</a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span>moondb · Apache-2.0 · the MoonBit database contract</span>
+    <span><a href="https://github.com/moonbitstack/moonorm" rel="noopener">github.com/moonbitstack/moonorm</a></span>
+  </footer>
+
+  <script src="assets/js/moonphase.js"></script>
+  <script src="assets/js/theme.js"></script>
+</body>
+</html>
