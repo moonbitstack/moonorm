@@ -279,7 +279,7 @@ sess.begin_with({ isolation: Some(Serializable), read_only: false }, dialect=Pos
 // BEGIN; SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
 ```
 
-### Design & boundaries (honest)
+### Design and boundaries
 
 - **Explicit, not magic.** SQLAlchemy issues SQL implicitly when you touch a
   mapped attribute; MoonBit has no attribute interception, so every statement is
@@ -287,8 +287,11 @@ sess.begin_with({ isolation: Some(Serializable), read_only: false }, dialect=Pos
 - **Pure, zero C.** moonorm is written entirely against the `@moondb` seam, so the
   whole library compiles on **every** backend (`wasm` / `wasm-gc` / `js` /
   `native`) and drags no backend behind it. The C lives in one isolated place —
-  [`moonsqlite`](https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite) — not here. A Postgres
-  wire-protocol backend and a JS `node:sqlite` backend are next.
+  [`moonsqlite`](https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite) — not here. The Postgres
+  and MySQL/MariaDB wire-protocol backends live in
+  [`moonpostgres`](https://github.com/moonbitstack/moonorm/tree/master/drivers/postgres) and
+  [`moonmysql`](https://github.com/moonbitstack/moonorm/tree/master/drivers/mysql); a JS `node:sqlite` backend
+  is the remaining one to come.
 - **Tested against a real driver.** The Session/Model/relationship layer is covered
   on every backend against `@moondb.MockDriver`; real SQL execution is proven end to
   end in moonsqlite's native integration tests, which open an actual SQLite database

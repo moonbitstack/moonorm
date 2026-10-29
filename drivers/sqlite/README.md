@@ -26,9 +26,10 @@ is native-gated (`supported_targets = "native"`) because it links C.
 
 ## Quickstart
 
-> The package name is hyphenated, so import it under an alias in `moon.pkg.json`
-> — `{"path": "moonbitstack/moonsqlite", "alias": "sqlite"}` — and reach it as `@sqlite`
-> (as below). `Value` constructors come from `@moondb` (`moon add moonbitstack/moondb`).
+> The package name is `moonsqlite` — no hyphen, so no alias is forced. Import it as
+> `@sqlite` for brevity in `moon.pkg`: `import { "moonbitstack/moonsqlite" @sqlite }`,
+> then reach it as `@sqlite` (as below). `Value` constructors come from `@moondb`
+> (`moon add moonbitstack/moondb`).
 
 ```moonbit
 // native target only — this package links the vendored amalgamation.
@@ -67,7 +68,7 @@ The query builder is dialect-neutral and pure; this driver adapts it to SQLite's
 wire. Because moonorm and moonsqlite both speak `@moondb`, swapping SQLite for
 another backend is a one-line change at `Session::new`.
 
-## Design & boundaries (honest)
+## Design and boundaries
 
 - **Isolated C.** The amalgamation and a thin FFI stub (`sqlite/stub.c`) live in
   `sqlite/`, marked `linguist-vendored` so GitHub reports this as a MoonBit project.
