@@ -127,3 +127,125 @@ test "from_row reads each cell as the field's type" {
   let a = m.map_row(row)
   assert_eq((a.id, a.name, a.note), (Some(3L), "b", None))
 }
+
+///|
+priv struct Acct {
+  id : Int64?
+  email : String
+  balance : Double
+  team_id : Int64
+  status : String
+  level : Int32
+}
+
+///|
+test "multi-dialect CREATE TABLE carries foreign key, check, unique and default" {
+  let m : Model[Acct] = Model::new(
+    "accounts",
+    [
+      column("id", BigIntType, primary_key=true, autoincrement=true),
+      column("email", TextType, nullable=false, unique=true),
+      column("balance", RealType),
+      column(
+        "team_id",
+        BigIntType,
+        references=("teams", "id"),
+        on_delete="SET NULL",
+      ),
+      column("status", TextType, nullable=false, default="'active'"),
+      column("level", IntType, checks=["level >= 0"]),
+    ],
+    r => {
+      id: r.read(0),
+      email: r.read(1),
+      balance: r.read(2),
+      team_id: r.read(3),
+      status: r.read(4),
+      level: r.read(5),
+    },
+    x => {
+      [
+        (
+          "id",
+          match x.id {
+            Some(v) => @moondb.Int64(v)
+            None => @moondb.Null
+          },
+        ),
+        ("email", @moondb.Text(x.email)),
+        ("balance", @moondb.Double(x.balance)),
+        ("team_id", @moondb.Int64(x.team_id)),
+        ("status", @moondb.Text(x.status)),
+        ("level", @moondb.Int(x.level)),
+      ]
+    },
+  )
+  assert_eq(
+    m.create_table_sql_for(Postgres),
+    "CREATE TABLE accounts (id BIGSERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE, balance DOUBLE PRECISION, team_id BIGINT REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INTEGER CHECK (level >= 0))",
+  )
+  assert_eq(
+    m.create_table_sql_for(Mysql),
+    "CREATE TABLE accounts (id BIGINT AUTO_INCREMENT PRIMARY KEY, email TEXT NOT NULL UNIQUE, balance DOUBLE, team_id BIGINT REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INT CHECK (level >= 0)) ENGINE=InnoDB",
+  )
+  assert_eq(
+    m.create_table_sql_for(Sqlite),
+    "CREATE TABLE accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, balance REAL, team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INTEGER CHECK (level >= 0))",
+  )
+}
+
+///|
+test "create_table_sql_for honours if_not_exists on every dialect" {
+  let m : Model[Acct] = Model::new(
+    "accounts",
+    [
+      column("id", BigIntType, primary_key=true, autoincrement=true),
+      column("email", TextType, nullable=false, unique=true),
+      column("balance", RealType),
+      column(
+        "team_id",
+        BigIntType,
+        references=("teams", "id"),
+        on_delete="SET NULL",
+      ),
+      column("status", TextType, nullable=false, default="'active'"),
+      column("level", IntType, checks=["level >= 0"]),
+    ],
+    r => {
+      id: r.read(0),
+      email: r.read(1),
+      balance: r.read(2),
+      team_id: r.read(3),
+      status: r.read(4),
+      level: r.read(5),
+    },
+    x => {
+      [
+        (
+          "id",
+          match x.id {
+            Some(v) => @moondb.Int64(v)
+            None => @moondb.Null
+          },
+        ),
+        ("email", @moondb.Text(x.email)),
+        ("balance", @moondb.Double(x.balance)),
+        ("team_id", @moondb.Int64(x.team_id)),
+        ("status", @moondb.Text(x.status)),
+        ("level", @moondb.Int(x.level)),
+      ]
+    },
+  )
+  assert_eq(
+    m.create_table_sql_for(Postgres, if_not_exists=true),
+    "CREATE TABLE IF NOT EXISTS accounts (id BIGSERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE, balance DOUBLE PRECISION, team_id BIGINT REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INTEGER CHECK (level >= 0))",
+  )
+  assert_eq(
+    m.create_table_sql_for(Mysql, if_not_exists=true),
+    "CREATE TABLE IF NOT EXISTS accounts (id BIGINT AUTO_INCREMENT PRIMARY KEY, email TEXT NOT NULL UNIQUE, balance DOUBLE, team_id BIGINT REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INT CHECK (level >= 0)) ENGINE=InnoDB",
+  )
+  assert_eq(
+    m.create_table_sql_for(Sqlite, if_not_exists=true),
+    "CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, balance REAL, team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INTEGER CHECK (level >= 0))",
+  )
+}
