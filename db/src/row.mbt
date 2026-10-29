@@ -14,7 +14,13 @@
 pub(all) struct Row {
   columns : Array[String]
   values : Array[Value]
-}
+} derive(Eq, Debug)
+
+///|
+pub extend Row with Eq::{equal, not_equal}
+
+///|
+pub extend Row with Debug::{to_repr}
 
 ///|
 /// The number of columns in the row.
@@ -82,94 +88,74 @@ pub fn Row::is_null_by(self : Row, name : String) -> Bool raise DbError {
 //
 // Each reads column `idx` as a specific MoonBit type, raising `TypeError` when the
 // stored value cannot be read that way (including `Null` — use `is_null` first for
-// nullable columns) and `QueryError` when `idx` is out of range. Widening between
-// integer types and from integer to double is allowed and lossless; `int` narrows
-// an `Int64` and is documented as such.
+// nullable columns, or read a `T?`) and `QueryError` when `idx` is out of range.
+// Widening between integer types and from integer to double is allowed and
+// lossless; `int` narrows an `Int64` and is documented as such.
+
+///|
+/// Read column `idx` as any [`FromValue`] type, the typed accessors' common form:
+/// `let age : Int? = row.read(3)`. A refusal names the column.
+pub fn[T : FromValue] Row::read(self : Row, idx : Int32) -> T raise DbError {
+  let v = self.get(idx)
+  T::from_value(v) catch {
+    TypeError(m) => raise TypeError("column " + idx.to_string() + " is " + m)
+    e => raise e
+  }
+}
 
 ///|
 /// Read column `idx` as a `Bool`. Raises `TypeError` unless the cell is `Bool`.
 pub fn Row::bool(self : Row, idx : Int32) -> Bool raise DbError {
-  match self.get(idx) {
-    Bool(v) => v
-    other =>
-      raise TypeError(
-        "column " + idx.to_string() + " is " + other.kind() + ", not Bool",
-      )
-  }
+  self.read(idx)
 }
 
 ///|
 /// Read column `idx` as an `Int`, narrowing an `Int64` to its low 32 bits. Raises
 /// `TypeError` unless the cell is `Int` or `Int64`.
 pub fn Row::int(self : Row, idx : Int32) -> Int32 raise DbError {
-  match self.get(idx) {
-    Int(v) => v
-    Int64(v) => v.to_int()
-    other =>
-      raise TypeError(
-        "column " + idx.to_string() + " is " + other.kind() + ", not Int",
-      )
-  }
+  self.read(idx)
 }
 
 ///|
 /// Read column `idx` as an `Int64`, widening an `Int`. Raises `TypeError` unless
 /// the cell is `Int` or `Int64`.
 pub fn Row::int64(self : Row, idx : Int32) -> Int64 raise DbError {
-  match self.get(idx) {
-    Int64(v) => v
-    Int(v) => v.to_int64()
-    other =>
-      raise TypeError(
-        "column " + idx.to_string() + " is " + other.kind() + ", not Int64",
-      )
-  }
+  self.read(idx)
 }
 
 ///|
 /// Read column `idx` as a `Double`, widening an integer. Raises `TypeError` unless
 /// the cell is `Double`, `Int`, or `Int64`.
 pub fn Row::double(self : Row, idx : Int32) -> Double raise DbError {
-  match self.get(idx) {
-    Double(v) => v
-    Int(v) => v.to_double()
-    Int64(v) => v.to_double()
-    other =>
-      raise TypeError(
-        "column " + idx.to_string() + " is " + other.kind() + ", not Double",
-      )
-  }
+  self.read(idx)
 }
 
 ///|
 /// Read column `idx` as text. Raises `TypeError` unless the cell is `Text`.
 pub fn Row::text(self : Row, idx : Int32) -> String raise DbError {
-  match self.get(idx) {
-    Text(v) => v
-    other =>
-      raise TypeError(
-        "column " + idx.to_string() + " is " + other.kind() + ", not Text",
-      )
-  }
+  self.read(idx)
 }
 
 ///|
 /// Read column `idx` as an opaque blob. Raises `TypeError` unless the cell is
 /// `Blob`.
 pub fn Row::blob(self : Row, idx : Int32) -> Bytes raise DbError {
-  match self.get(idx) {
-    Blob(v) => v
-    other =>
-      raise TypeError(
-        "column " + idx.to_string() + " is " + other.kind() + ", not Blob",
-      )
-  }
+  self.read(idx)
 }
 
 // --- by-name typed accessors ---------------------------------------------------
 //
 // Convenience wrappers that resolve a column name through `index_of` (raising
 // `QueryError` if absent) and then defer to the positional accessor.
+
+///|
+/// Read the column named `name` as any [`FromValue`] type.
+pub fn[T : FromValue] Row::read_by(
+  self : Row,
+  name : String,
+) -> T raise DbError {
+  self.read(self.index_of(name))
+}
 
 ///|
 /// Read the column named `name` as a `Bool`.

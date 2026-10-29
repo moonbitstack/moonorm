@@ -29,7 +29,7 @@ pub(all) enum Value {
   Double(Double)
   Text(String)
   Blob(Bytes)
-} derive(Eq)
+} derive(Eq, Debug)
 
 ///|
 /// The name of a value's variant (`"Null"`, `"Int"`, `"Blob"`, …). Used to build
@@ -74,6 +74,9 @@ pub impl Show for Value with fn output(self : Value, logger : &Logger) -> Unit {
 
 ///|
 pub extend Value with Eq::{not_equal, equal}
+
+///|
+pub extend Value with Debug::{to_repr}
 
 ///|
 pub extend Value with Show::{to_string, output}

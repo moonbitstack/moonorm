@@ -54,6 +54,7 @@ moon add moonbitstack/moondb
 |---|---|---|
 | [`Value`](#value) | one dialect-neutral cell — the unit crossing the boundary both ways | Go `driver.Value`, DB-API type objects |
 | [`Row`](#row) | one result row: aligned column names + `Value`s, with typed accessors | `sql.Rows` / DB-API row tuple |
+| [`ToValue`, `FromValue`](#your-own-types) | how a MoonBit value binds as a parameter and reads back from a cell; `Row::read` reads any `FromValue` | Go `driver.Valuer` / `sql.Scanner`, Diesel `ToSql` / `FromSql` |
 | [`ExecResult`](#execresult) | outcome of a non-query: rows affected + last insert id | Go `sql.Result`, DB-API `rowcount`/`lastrowid` |
 | [`DbError`](#dberror) | the one error every operation raises | DB-API exception hierarchy (flattened) |
 | [`Driver`](#driver) | the trait a backend implements / a query layer targets (with a default `ping` health probe) | Go `driver.Conn`+`Execer`+`Queryer`+`Pinger` |
@@ -93,6 +94,37 @@ test "round-trip through the interface" {
 
 Swap `MockDriver` for `moonsqlite` / `moonpostgres` / `moonmysql` and the same code runs against a real database — that substitutability *is* the point of the package.
 
+## Your own types
+
+`ToValue` and `FromValue` convert between a MoonBit value and a `Value`. They are implemented for the type behind each case (`Bool`, `Int`, `Int64`, `Double`, `String`, `Bytes`), for `Value` itself, and for `T?`, where `None` is `NULL`. `Row::read` and `Row::read_by` read a cell as any `FromValue` type, so a nullable column reads straight into an option:
+
+```moonbit
+test "read a nullable column as an option" {
+  let row : @moondb.Row = { columns: ["id", "age"], values: [Int(1), Null] }
+  let id : Int64 = row.read(0)
+  let age : Int? = row.read_by("age")
+  assert_eq((id, age), (1L, None))
+}
+```
+
+A type of the program's own implements both traits to be stored as one of the cases. A refusal is a `TypeError` whose message reads after "column N is":
+
+```moonbit
+struct Email(String)
+
+impl @moondb.ToValue for Email with fn to_value(self) {
+  let Email(s) = self
+  Text(s)
+}
+
+impl @moondb.FromValue for Email with fn from_value(v) {
+  match v {
+    Text(s) if s.contains("@") => Email(s)
+    other => raise TypeError(other.kind() + ", not Email")
+  }
+}
+```
+
 ## Implementing a driver
 
 A backend implements the six-method `Driver` trait. `DbError` is `pub(all)`, so a driver in its own package can construct and raise every case:
@@ -110,7 +142,7 @@ pub impl @moondb.Driver for MyConn with execute(self, sql, params) {
 ## Design notes
 
 - **Why raise, not `Result`.** Typed accessors and driver calls `raise DbError` rather than returning `Result[_, DbError]`, so a decode bug or a dropped connection surfaces at the call site instead of being silently swallowed. A caller opts into recovery with `try`/`catch`.
-- **Typed accessors are strict.** `row.int(i)` raises `TypeError` if the cell is not an integer — including when it is `NULL`. Guard nullable columns with `is_null` first. Integer→integer and integer→double conversions are allowed and lossless; `int` narrows an `Int64` and says so.
+- **Typed accessors are strict.** `row.int(i)` raises `TypeError` if the cell is not an integer — including when it is `NULL`. Read a nullable column as `T?` with `read`, or guard it with `is_null` first. Integer→integer and integer→double conversions are allowed and lossless; `int` narrows an `Int64` and says so.
 - **`DbError` is `pub(all)`.** A plain `pub suberror` can be *caught* from another package but not *constructed* — which would stop out-of-tree drivers from raising it. `pub(all)` opens the constructors.
 - **There are two driver traits, on purpose.** `Driver` is synchronous, which is right for a backend whose calls block in C (moonsqlite steps a prepared statement and returns). A backend reached over TCP cannot be written that way: MoonBit's only socket stack is async-only, and an `async fn` cannot be called from a synchronous one. A wire driver forced to conform to `Driver` can do nothing but raise from every method — and because `ping` is a *defaulted* method built on `query`, it swallows that raise into `false`, so a `Pool` with `pre_ping` judges every one of its connections permanently unhealthy. `AsyncDriver` is the seam for those backends: the same eight operations, each awaited. It is a peer of `Driver`, not a replacement — a synchronous backend keeps implementing `Driver` and never becomes async. Declaring async methods pulls in no async runtime, so moondb stays dependency-free and still compiles on every backend; only a driver that implements the trait, and a caller that runs it in an event loop, need one.
 

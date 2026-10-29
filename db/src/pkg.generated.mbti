@@ -1,6 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "moonbitstack/moondb"
 
+import {
+  "moonbitlang/core/debug",
+}
+
 // Values
 pub fn drain(&Cursor) -> Array[Row] raise DbError
 
@@ -66,7 +70,7 @@ pub impl Driver for MockDriver
 pub(all) struct Row {
   columns : Array[String]
   values : Array[Value]
-}
+} derive(Eq, @debug.Debug)
 pub fn Row::blob(Self, Int32) -> Bytes raise DbError
 pub fn Row::blob_by(Self, String) -> Bytes raise DbError
 pub fn Row::bool(Self, Int32) -> Bool raise DbError
@@ -74,6 +78,7 @@ pub fn Row::bool_by(Self, String) -> Bool raise DbError
 pub fn Row::by_name(Self, String) -> Value?
 pub fn Row::double(Self, Int32) -> Double raise DbError
 pub fn Row::double_by(Self, String) -> Double raise DbError
+pub fn Row::equal(Self, Self) -> Bool
 pub fn Row::get(Self, Int32) -> Value raise DbError
 pub fn Row::index_of(Self, String) -> Int32 raise DbError
 pub fn Row::int(Self, Int32) -> Int32 raise DbError
@@ -82,8 +87,12 @@ pub fn Row::int64_by(Self, String) -> Int64 raise DbError
 pub fn Row::int_by(Self, String) -> Int32 raise DbError
 pub fn Row::is_null(Self, Int32) -> Bool raise DbError
 pub fn Row::is_null_by(Self, String) -> Bool raise DbError
+pub fn Row::not_equal(Self, Self) -> Bool
+pub fn[T : FromValue] Row::read(Self, Int32) -> T raise DbError
+pub fn[T : FromValue] Row::read_by(Self, String) -> T raise DbError
 pub fn Row::text(Self, Int32) -> String raise DbError
 pub fn Row::text_by(Self, String) -> String raise DbError
+pub fn Row::to_repr(Self) -> @debug.Repr
 pub fn Row::width(Self) -> Int32
 
 pub(all) enum Value {
@@ -94,14 +103,19 @@ pub(all) enum Value {
   Double(Double)
   Text(String)
   Blob(Bytes)
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub fn Value::equal(Self, Self) -> Bool
+pub fn Value::from_value(Self) -> Self raise DbError
 pub fn Value::is_null(Self) -> Bool
 pub fn Value::kind(Self) -> String
 pub fn Value::not_equal(Self, Self) -> Bool
 pub fn Value::output(Self, &Logger) -> Unit
+pub fn Value::to_repr(Self) -> @debug.Repr
 pub fn Value::to_string(Self) -> String
+pub fn Value::to_value(Self) -> Self
 pub impl Show for Value
+pub impl FromValue for Value
+pub impl ToValue for Value
 
 // Type aliases
 
@@ -137,3 +151,25 @@ pub(open) trait Driver {
   fn close(Self) -> Unit
   fn ping(Self) -> Bool = _
 }
+
+pub(open) trait FromValue {
+  fn from_value(Value) -> Self raise DbError
+}
+pub impl FromValue for Bool
+pub impl FromValue for Int32
+pub impl FromValue for Int64
+pub impl FromValue for Double
+pub impl FromValue for String
+pub impl[T : FromValue] FromValue for T?
+pub impl FromValue for Bytes
+
+pub(open) trait ToValue {
+  fn to_value(Self) -> Value
+}
+pub impl ToValue for Bool
+pub impl ToValue for Int32
+pub impl ToValue for Int64
+pub impl ToValue for Double
+pub impl ToValue for String
+pub impl[T : ToValue] ToValue for T?
+pub impl ToValue for Bytes

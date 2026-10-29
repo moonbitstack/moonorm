@@ -14,6 +14,8 @@ SECTIONS = [
      "The single error type every fallible operation raises."),
     ("Row & ExecResult", "row.mbt",
      "A result row with typed accessors, and the outcome of a non-query statement."),
+    ("Conversions", "convert.mbt",
+     "How a MoonBit value binds as a parameter and reads back from a cell; a type of the program's own implements the two traits."),
     ("Driver", "driver.mbt",
      "The contract a backend implements and a query layer targets — the seam moondb exists to define."),
     ("MockDriver", "mock.mbt",
