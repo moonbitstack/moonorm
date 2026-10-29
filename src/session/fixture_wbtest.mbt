@@ -10,12 +10,12 @@ fn book_model() -> @schema.Model[Book] {
   @schema.Model::from_fields(
     "books",
     [
-      @schema.field("id", IntType, b => Int(b.id), primary_key=true),
-      @schema.field("title", TextType, b => Text(b.title), nullable=false),
+      @schema.field("id", IntType, b => b.id, primary_key=true),
+      @schema.field("title", TextType, b => b.title, nullable=false),
       @schema.field(
         "author_id",
         IntType,
-        b => Int(b.author_id),
+        b => b.author_id,
         references=("authors", "id"),
       ),
     ],

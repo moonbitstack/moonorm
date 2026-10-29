@@ -16,7 +16,7 @@
 
 `moonorm` owns **no driver contract of its own**. It is written entirely against the [`moondb`](https://github.com/moonbitstack/moonorm/tree/master/db) interface — the standard database-access seam for MoonBit — so it is **pure MoonBit with zero C** and compiles on every backend (`wasm` / `wasm-gc` / `js` / `native`). A concrete backend is a separate package you supply: the native SQLite driver lives in [`moonsqlite`](https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite), and a `Session` drives any `@moondb.Driver` — including the dependency-free `@moondb.MockDriver` for tests.
 
-> **Imports.** Bound-value constructors (`Int`, `Text`, `Null`, …) are moondb's: the `Value` type is re-exported by moonorm, but you construct values as `@moondb.Int` / `@moondb.Text` (add `moon add moonbitstack/moondb`). The examples below import the SQLite driver under a short alias, `"moonbitstack/moonsqlite" @sqlite` in `moon.pkg`.
+> **Imports.** Bound-value constructors (`Int`, `Text`, `Null`, …) are moondb's: the `Value` type is re-exported by moonorm, but you construct values as `@moondb.Int` / `@moondb.Text` (add `moon add moonbitstack/moondb`). A model field needs none of them: `field` binds the attribute itself, and `Row::read` reads a cell as the field's type. The examples below import the SQLite driver under a short alias, `"moonbitstack/moonsqlite" @sqlite` in `moon.pkg`.
 
 ## Packages
 
@@ -28,6 +28,7 @@ Each layer is its own subpackage, mirroring SQLAlchemy's: Core, table mapping, t
 | `moonorm/schema` | `ColumnType`, `Column`, `Field`, `Model`, `Relation`, `ManyToMany` | `query`, moondb |
 | `moonorm/session` | `Session`, row streams, transactions and savepoints, the unit of work, pooled sessions | `schema`, `query`, moondb |
 | `moonorm/migrate` | `Migration`, `Migrator`, schema diffs | `session`, `schema`, `query` |
+| `moonorm/cmd/orm` | the generator behind `#orm.table`, `#orm.column` and `#orm.skip` | moonast |
 
 A program that only renders SQL imports `query` and nothing else.
 
@@ -161,21 +162,92 @@ one-line projection that reads it off a record — and it derives the column lis
 `CREATE TABLE` DDL, the `SELECT` projection, and the `INSERT` binding. You still supply
 `from_row`, because turning a fetched row back into a `T` needs the record constructor,
 and MoonBit — with no reflection — cannot synthesise it; that one closure is the
-irreducible core of the mapping. This is exactly the shape `moonctl`'s `model` generator
-emits from an `#orm`-annotated struct — a `[field(...)]` array and a `from_row`:
+irreducible core of the mapping. A field binds anything that converts to a `Value`
+(moondb's `ToValue`), so the projection is the attribute itself and `T?` binds `None` as
+`NULL`; `Row::read` reads each cell back as the field's type:
 
 ```moonbit
 let heroes : @moonorm.Model[Hero] = @moonorm.Model::from_fields(
   "heroes",
   [
-    @moonorm.field("id", IntType, (h : Hero) => @moondb.Int(h.id), primary_key=true),
-    @moonorm.field("name", TextType, (h : Hero) => @moondb.Text(h.name), nullable=false),
-    @moonorm.field("team_id", IntType, (h : Hero) => @moondb.Int(h.team_id),
-                   references=("teams", "id")),
+    @moonorm.field("id", IntType, h => h.id, primary_key=true),
+    @moonorm.field("name", TextType, h => h.name, nullable=false),
+    @moonorm.field("team_id", IntType, h => h.team_id, references=("teams", "id")),
   ],
-  (r) => { id: r.int(0), name: r.text(1), team_id: r.int(2) },   // the one closure that stays
+  r => { id: r.read(0), name: r.read(1), team_id: r.read(2) },
 )
 ```
+
+An autoincrement key that is still `None` is left out of the `INSERT`, so the database
+assigns it.
+
+### Annotations
+
+`#orm` annotations write that model for you. The generator reads a struct and emits
+`T::model()`, the same `from_fields` call as above:
+
+```moonbit
+#orm.table(name="heroes")
+pub struct Hero {
+  #orm.column(primary_key=true, autoincrement=true)
+  id : Int64?
+  name : String
+  #orm.column(name="secret_name", unique=true)
+  secret : String
+  #orm.column(check="age >= 0")
+  age : Int?
+  #orm.column(references="teams.id", on_delete="SET NULL")
+  team_id : Int64?
+  #orm.skip
+  visits : Int
+}
+
+let hero = Hero::model()   // @moonorm.Model[Hero]
+```
+
+A field without annotations is a column named after it, `NOT NULL` unless its type is
+`T?`. The table is named `name=`, or the struct's name in snake case.
+
+| Field type | Column type |
+|:--:|:--:|
+| `Int` | `IntType` |
+| `Int64` | `BigIntType` |
+| `Double` | `RealType` |
+| `String` | `TextType` |
+| `Bytes` | `BlobType` |
+| `Bool` | `BoolType` |
+
+| `#orm.column` argument | Meaning |
+|:--:|:--|
+| `name` | the column's name |
+| `kind` | the column type by its SQL name: `int`, `bigint`, `text`, `real`, `blob`, `bool`, `varchar(N)`, `numeric`, `datetime`, `date`, `time`, `uuid`, `json` |
+| `primary_key`, `unique` | the constraints |
+| `autoincrement` | on an integer primary key of type `T?`; `None` until the database assigns it |
+| `default` | the SQL default, written as SQL |
+| `check` | a `CHECK` constraint; repeat it for several |
+| `references` | a foreign key, `"table.column"`, with `on_delete` and `on_update` |
+
+`#orm.skip` keeps a field out of the table and fills it from `Default` when a row is
+read. A field of a type of the program's own names its column type with `kind=` and
+implements `@moonorm.ToValue` and `@moonorm.FromValue`; see
+[`22-annotations`](src/examples/22-annotations/), which also checks the generated model
+against the same model written by hand.
+
+Wire the generator into the build once. In `moon.mod`:
+
+```
+rule(name: "orm", command: "moonx moonbitstack/moonorm/cmd/orm@0.11.1 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+```
+
+and in the `moon.pkg` of the package holding the structs:
+
+```
+dev_build(rule: "orm", input: "models.mbt", output: "models.g.mbt")
+formatter(ignore: [ "models.g.mbt" ])
+```
+
+`moon check`, `moon build` and `moon run` regenerate `models.g.mbt` whenever
+`models.mbt` changes; `--check` reports a stale file instead of writing it.
 
 ### Batch loading (avoiding N+1)
 
@@ -288,7 +360,7 @@ Verified across all backends (`wasm`, `wasm-gc`, `js`, `native`) in CI, 0 warnin
 
 ## Roadmap (transliterating SQLAlchemy)
 
-`select` / `insert` / `update` / `delete` with WHERE / ORDER BY / LIMIT / OFFSET, inner/left `JOIN`, `GROUP BY` / `HAVING`, aggregate columns (`count()` / `raw()`), `WITH` CTEs, `IN (subquery)` and `IN (values)` predicates, window functions (`OVER (PARTITION BY … ORDER BY …)`), dialect-aware `RETURNING` and upsert (`ON CONFLICT … DO UPDATE` / `ON DUPLICATE KEY UPDATE`), and a `Table` descriptor are all here — and they **execute** against any `@moondb.Driver` via an explicit `Session` (`add` / `fetch` / `modify` / `remove` / `commit` / `rollback`, optimistic-locked updates, isolation-level and read-only transactions via `begin_with`, depth-tracked nested savepoints via `begin_nested`, plus declarative models — hand-built or `from_fields` from `moonctl`-generated metadata — eager-loaded relationships with N+1-avoiding batch loading, and versioned migrations). Connection pooling lives in [`moondb/pool`](https://github.com/moonbitstack/moonorm/tree/master/db) as `@pool.Pool[D]`, with its counting done by [`moonpool`](https://github.com/moonbitstack/moonpool): idle reuse, a size ceiling, a `pre_ping` health probe that evicts dead connections on acquire, `max_lifetime` recycling, a non-blocking `try_acquire`, and close-all. The native SQLite backend is [`moonsqlite`](https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite); Postgres and MySQL/MariaDB backends live in [`moonpostgres`](https://github.com/moonbitstack/moonorm/tree/master/drivers/postgres) and [`moonmysql`](https://github.com/moonbitstack/moonorm/tree/master/drivers/mysql). Still to come: Alembic-style schema-diff migrations reflected from a live database, and multiple-inheritance / polymorphic mapping.
+`select` / `insert` / `update` / `delete` with WHERE / ORDER BY / LIMIT / OFFSET, inner/left `JOIN`, `GROUP BY` / `HAVING`, aggregate columns (`count()` / `raw()`), `WITH` CTEs, `IN (subquery)` and `IN (values)` predicates, window functions (`OVER (PARTITION BY … ORDER BY …)`), dialect-aware `RETURNING` and upsert (`ON CONFLICT … DO UPDATE` / `ON DUPLICATE KEY UPDATE`), and a `Table` descriptor are all here — and they **execute** against any `@moondb.Driver` via an explicit `Session` (`add` / `fetch` / `modify` / `remove` / `commit` / `rollback`, optimistic-locked updates, isolation-level and read-only transactions via `begin_with`, depth-tracked nested savepoints via `begin_nested`, plus declarative models — hand-built, `from_fields`, or generated from `#orm` annotations — eager-loaded relationships with N+1-avoiding batch loading, and versioned migrations). Connection pooling lives in [`moondb/pool`](https://github.com/moonbitstack/moonorm/tree/master/db) as `@pool.Pool[D]`, with its counting done by [`moonpool`](https://github.com/moonbitstack/moonpool): idle reuse, a size ceiling, a `pre_ping` health probe that evicts dead connections on acquire, `max_lifetime` recycling, a non-blocking `try_acquire`, and close-all. The native SQLite backend is [`moonsqlite`](https://github.com/moonbitstack/moonorm/tree/master/drivers/sqlite); Postgres and MySQL/MariaDB backends live in [`moonpostgres`](https://github.com/moonbitstack/moonorm/tree/master/drivers/postgres) and [`moonmysql`](https://github.com/moonbitstack/moonorm/tree/master/drivers/mysql). Still to come: Alembic-style schema-diff migrations reflected from a live database, and multiple-inheritance / polymorphic mapping.
 
 ## License
 

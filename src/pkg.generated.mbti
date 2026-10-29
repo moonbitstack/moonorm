@@ -20,9 +20,9 @@ pub fn column(String, @schema.ColumnType, primary_key? : Bool, autoincrement? : 
 
 pub fn delete(String) -> @query.Delete
 
-pub fn diff_schema(Array[@schema.Column], Array[@schema.Column]) -> Array[@migrate.ColumnDiff]
+pub fn diff_schema(Array[@schema.Column], Array[@schema.Column], dialect? : @query.Dialect) -> Array[@migrate.ColumnDiff]
 
-pub fn[T] field(String, @schema.ColumnType, (T) -> @moondb.Value, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> @schema.Field[T]
+pub fn[T, V : @moondb.ToValue] field(String, @schema.ColumnType, (T) -> V, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> @schema.Field[T]
 
 pub fn func(String, Array[String]) -> String
 
@@ -110,5 +110,9 @@ pub using @query {type Update}
 pub using @moondb {type Value}
 
 pub using @query {trait AsSource}
+
+pub using @moondb {trait FromValue}
+
+pub using @moondb {trait ToValue}
 
 // Traits

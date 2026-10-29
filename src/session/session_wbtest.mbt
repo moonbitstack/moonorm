@@ -82,8 +82,8 @@ fn author_model() -> @schema.Model[Author] {
   @schema.Model::from_fields(
     "authors",
     [
-      @schema.field("id", IntType, a => Int(a.id), primary_key=true),
-      @schema.field("name", TextType, a => Text(a.name), nullable=false),
+      @schema.field("id", IntType, a => a.id, primary_key=true),
+      @schema.field("name", TextType, a => a.name, nullable=false),
     ],
     r => { id: r.int(0), name: r.text(1), },
   )

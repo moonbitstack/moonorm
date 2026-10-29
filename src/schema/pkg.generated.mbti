@@ -11,7 +11,7 @@ pub fn[S, T] belongs_to(Model[T], String, (S) -> @moondb.Value) -> Relation[S, T
 
 pub fn column(String, ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Column
 
-pub fn[T] field(String, ColumnType, (T) -> @moondb.Value, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Field[T]
+pub fn[T, V : @moondb.ToValue] field(String, ColumnType, (T) -> V, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Field[T]
 
 pub fn[S, T] has_many(Model[T], String, (S) -> @moondb.Value) -> Relation[S, T]
 
@@ -38,6 +38,7 @@ pub fn Column::ddl_for(Self, @query.Dialect, inline_pk? : Bool) -> String
 
 pub(all) enum ColumnType {
   IntType
+  BigIntType
   TextType
   RealType
   BlobType

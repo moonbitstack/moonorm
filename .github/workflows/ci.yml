@@ -65,6 +65,10 @@ jobs:
             fi
           done
 
+      - name: generated annotations are fresh
+        if: matrix.module.dir == '.'
+        run: moon run src/cmd/orm --target native -- -C . src/examples/22-annotations/models.mbt -o src/examples/22-annotations/models.g.mbt --check
+
       - name: lint (fmt is clean)
         run: |
           moon fmt && git diff --exit-code

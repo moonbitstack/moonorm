@@ -5,6 +5,8 @@
 /// declared type so DDL reads intently, but binds and reads as an integer `0`/`1`.
 pub(all) enum ColumnType {
   IntType
+  // A 64-bit integer: `Int64` fields. SQLite's INTEGER is already 64-bit.
+  BigIntType
   TextType
   RealType
   BlobType
@@ -26,6 +28,7 @@ pub(all) enum ColumnType {
 fn ColumnType::sql(self : ColumnType) -> String {
   match self {
     IntType => "INTEGER"
+    BigIntType => "INTEGER"
     BoolType => "INTEGER"
     TextType => "TEXT"
     RealType => "REAL"
@@ -158,6 +161,8 @@ pub fn ColumnType::sql_for(
   match (self, dialect) {
     (IntType, Mysql) => "INT"
     (IntType, _) => "INTEGER"
+    (BigIntType, Sqlite) => "INTEGER"
+    (BigIntType, _) => "BIGINT"
     (BoolType, Postgres) => "BOOLEAN"
     (BoolType, Mysql) => "TINYINT(1)"
     (BoolType, _) => "INTEGER"
@@ -185,7 +190,8 @@ pub fn ColumnType::sql_for(
 ///|
 /// A column definition rendered for a specific `Dialect`. An autoincrement primary
 /// key takes each engine's idiom: SQLite `INTEGER PRIMARY KEY AUTOINCREMENT`,
-/// PostgreSQL `SERIAL PRIMARY KEY`, MySQL `INT AUTO_INCREMENT PRIMARY KEY`. Otherwise
+/// PostgreSQL `SERIAL PRIMARY KEY` (`BIGSERIAL` for `BigIntType`), MySQL
+/// `INT AUTO_INCREMENT PRIMARY KEY` (`BIGINT` for `BigIntType`). Otherwise
 /// it is `sql_for` plus the same constraint clauses as `ddl`.
 pub fn Column::ddl_for(
   self : Column,
@@ -193,8 +199,11 @@ pub fn Column::ddl_for(
   inline_pk~ : Bool = true,
 ) -> String {
   let mut s = if self.primary_key && inline_pk && self.autoincrement {
+    let big = self.col_type is BigIntType
     match dialect {
+      Postgres if big => self.name + " BIGSERIAL PRIMARY KEY"
       Postgres => self.name + " SERIAL PRIMARY KEY"
+      Mysql if big => self.name + " BIGINT AUTO_INCREMENT PRIMARY KEY"
       Mysql => self.name + " INT AUTO_INCREMENT PRIMARY KEY"
       Sqlite => self.name + " INTEGER PRIMARY KEY AUTOINCREMENT"
     }

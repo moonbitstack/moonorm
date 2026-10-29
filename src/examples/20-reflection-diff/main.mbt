@@ -8,10 +8,11 @@
 /// `TypeChanged`), and `index_ddl` renders a secondary index. The reflection rows are
 /// built here so the whole example stays backend-free and compiles on every target.
 ///
-///     moon run examples/20-reflection-diff
+///     moon run src/examples/20-reflection-diff
 fn type_name(t : @moonorm.ColumnType) -> String {
   match t {
     IntType => "int"
+    BigIntType => "bigint"
     TextType => "text"
     RealType => "real"
     BlobType => "blob"

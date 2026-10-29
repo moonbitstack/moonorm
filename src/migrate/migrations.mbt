@@ -285,15 +285,26 @@ fn find_col(cols : Array[@schema.Column], name : String) -> @schema.Column? {
 /// same granularity to avoid spurious diffs — a `Bool` stored as `INTEGER` reflects as
 /// `Int`, `Uuid`/`Json` stored as `TEXT` reflect as `Text`. And the diff reports
 /// add/remove/type only, not nullable / default / unique / PK / FK changes.
+///
+/// With `dialect` the types compare as that engine writes them, so a `BigIntType`
+/// declared against SQLite, where every integer is `INTEGER`, is no change; without
+/// it they compare as declared.
 pub fn diff_schema(
   declared : Array[@schema.Column],
   reflected : Array[@schema.Column],
+  dialect? : @query.Dialect,
 ) -> Array[ColumnDiff] {
   let out : Array[ColumnDiff] = []
+  let differ = (a : @schema.ColumnType, b : @schema.ColumnType) => {
+    match dialect {
+      Some(d) => a.sql_for(d) != b.sql_for(d)
+      None => a != b
+    }
+  }
   for d in declared {
     match find_col(reflected, d.name) {
       Some(r) =>
-        if d.col_type != r.col_type {
+        if differ(d.col_type, r.col_type) {
           out.push(TypeChanged(name=d.name, from=r.col_type, to=d.col_type))
         }
       None => out.push(Added(name=d.name, col_type=d.col_type))
@@ -326,7 +337,8 @@ pub fn index_ddl(
 /// Map a PostgreSQL `information_schema.columns.data_type` back to a `ColumnType`.
 fn coltype_of_pg(ty : String) -> @schema.ColumnType {
   match ty {
-    "integer" | "bigint" | "smallint" => IntType
+    "integer" | "smallint" => IntType
+    "bigint" => BigIntType
     "boolean" => BoolType
     "double precision" | "real" => RealType
     "bytea" => BlobType
@@ -347,8 +359,9 @@ fn coltype_of_pg(ty : String) -> @schema.ColumnType {
 fn coltype_of_mysql(ty : String) -> @schema.ColumnType {
   if ty.has_prefix("tinyint(1)") {
     BoolType
+  } else if ty.has_prefix("bigint") {
+    BigIntType
   } else if ty.has_prefix("int") ||
-    ty.has_prefix("bigint") ||
     ty.has_prefix("smallint") ||
     ty.has_prefix("tinyint") {
     IntType

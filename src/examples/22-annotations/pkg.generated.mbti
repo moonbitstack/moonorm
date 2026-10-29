@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonorm/examples/22-annotations"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitstack/moonorm/schema",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+pub struct Email(String) derive(Eq, @debug.Debug)
+
+pub struct Hero {
+  id : Int64?
+  name : String
+  secret : String
+  age : Int32?
+  power : Double
+  team_id : Int64?
+  email : Email
+  visits : Int32
+}
+pub fn Hero::model() -> @schema.Model[Self]
+
+pub struct Team {
+  id : Int64?
+  name : String
+}
+pub fn Team::model() -> @schema.Model[Self]
+
+// Type aliases
+
+// Traits

@@ -1,0 +1,11 @@
+// Models written as `#orm` annotations, checked against the same model written
+// by hand. `models.g.mbt` comes from `cmd/orm`; a project wires it as a
+// dev_build rule.
+import {
+  "moonbitstack/moonorm",
+  "moonbitstack/moondb",
+}
+
+pkgtype(kind: "executable")
+
+formatter(ignore: [ "models.g.mbt" ])

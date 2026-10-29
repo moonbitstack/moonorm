@@ -76,3 +76,24 @@ test "extended column types render their declared SQL type" {
   assert_eq(column("uid", UuidType).ddl(), "uid TEXT")
   assert_eq(column("doc", JsonType).ddl(), "doc TEXT")
 }
+
+///|
+test "BigIntType renders BIGINT except on SQLite" {
+  assert_eq(BigIntType.sql_for(Postgres), "BIGINT")
+  assert_eq(BigIntType.sql_for(Mysql), "BIGINT")
+  assert_eq(BigIntType.sql_for(Sqlite), "INTEGER")
+  assert_eq(IntType.sql_for(Postgres), "INTEGER")
+  assert_eq(column("n", BigIntType).ddl(), "n INTEGER")
+  assert_eq(column("n", BigIntType).ddl_for(Postgres), "n BIGINT")
+}
+
+///|
+test "BigIntType autoincrement takes each engine's 64-bit idiom" {
+  let id = column("id", BigIntType, primary_key=true, autoincrement=true)
+  assert_eq(id.ddl_for(Postgres), "id BIGSERIAL PRIMARY KEY")
+  assert_eq(id.ddl_for(Mysql), "id BIGINT AUTO_INCREMENT PRIMARY KEY")
+  assert_eq(id.ddl_for(Sqlite), "id INTEGER PRIMARY KEY AUTOINCREMENT")
+  let small = column("id", IntType, primary_key=true, autoincrement=true)
+  assert_eq(small.ddl_for(Postgres), "id SERIAL PRIMARY KEY")
+  assert_eq(small.ddl_for(Mysql), "id INT AUTO_INCREMENT PRIMARY KEY")
+}

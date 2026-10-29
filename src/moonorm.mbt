@@ -67,4 +67,4 @@ pub using @migrate {
 }
 
 ///|
-pub using @moondb {type Value}
+pub using @moondb {type Value, trait ToValue, trait FromValue}

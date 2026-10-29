@@ -9,7 +9,7 @@ import {
 }
 
 // Values
-pub fn diff_schema(Array[@schema.Column], Array[@schema.Column]) -> Array[ColumnDiff]
+pub fn diff_schema(Array[@schema.Column], Array[@schema.Column], dialect? : @query.Dialect) -> Array[ColumnDiff]
 
 pub fn index_ddl(String, String, Array[String], unique? : Bool) -> String
 

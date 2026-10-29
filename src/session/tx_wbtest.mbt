@@ -3,7 +3,7 @@ test "from_fields: a fetched row maps back into the record via from_row" {
   let books = book_model()
   let rec = books.map_row(book_row(1, "It", 2))
   assert_eq(rec, { id: 1, title: "It", author_id: 2, })
-  assert_eq(@schema.field("id", IntType, (b : Book) => Int(b.id)).name(), "id")
+  assert_eq(@schema.field("id", IntType, (b : Book) => b.id).name(), "id")
 }
 
 // --- IN (values) predicate ------------------------------------------------------

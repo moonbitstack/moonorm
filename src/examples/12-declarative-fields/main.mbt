@@ -1,12 +1,13 @@
 ///|
 /// The field-based declarative path: `Model::from_fields` derives the column list, the
 /// `CREATE TABLE` DDL, and the `INSERT` binding from a `[Field]` array — each `field`
-/// pairs column metadata with the encoder that pulls its value out of a record. You
-/// supply only the `from_row` decoder (the record constructor MoonBit cannot synthesise
-/// without reflection). This is the shape moonctl's model generator emits. `Field::name`
-/// exposes the per-field metadata; then a `Session` round trip over `@moondb.MockDriver`.
+/// pairs column metadata with the attribute it binds. You supply only the `from_row`
+/// decoder (the record constructor MoonBit cannot synthesise without reflection), and
+/// `Row::read` reads each cell as the field's type. `#orm` annotations generate exactly
+/// this; see `22-annotations`. `Field::name` exposes the per-field metadata; then a
+/// `Session` round trip over `@moondb.MockDriver`.
 ///
-///     moon run examples/12-declarative-fields
+///     moon run src/examples/12-declarative-fields
 struct Hero {
   id : Int32
   name : String
@@ -17,11 +18,11 @@ struct Hero {
 let heroes : @moonorm.Model[Hero] = @moonorm.Model::from_fields(
   "heroes",
   [
-    @moonorm.field("id", IntType, h => @moondb.Int(h.id), primary_key=true),
-    @moonorm.field("name", TextType, h => @moondb.Text(h.name), nullable=false),
-    @moonorm.field("power", IntType, h => @moondb.Int(h.power)),
+    @moonorm.field("id", IntType, h => h.id, primary_key=true),
+    @moonorm.field("name", TextType, h => h.name, nullable=false),
+    @moonorm.field("power", IntType, h => h.power),
   ],
-  r => { id: r.int(0), name: r.text(1), power: r.int(2), },
+  r => { id: r.read(0), name: r.read(1), power: r.read(2), },
 )
 
 ///|
@@ -62,7 +63,7 @@ fn main {
   let email : @moonorm.Field[Hero] = @moonorm.field(
     "email",
     TextType,
-    h => @moondb.Text(h.name),
+    h => h.name,
     unique=true,
   )
   println("")

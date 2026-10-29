@@ -29,14 +29,14 @@ pub struct Field[T] {
 
 ///|
 /// Declare a model field: its column metadata and the projection `encode` that
-/// pulls this field's [`Value`] out of a record. The column knobs (`primary_key`,
-/// `nullable`, `references`) mirror [`column`]; `encode` is the one-liner that
-/// binds the attribute, e.g. `field("id", IntType, primary_key=true, h =>
-/// Int(h.id))`.
-pub fn[T] field(
+/// reads the field out of a record. The column knobs (`primary_key`, `nullable`,
+/// `references`) mirror [`column`]. `encode` returns anything that binds as a
+/// parameter, so it is usually the attribute itself, `h => h.id`, and `T?` binds
+/// `None` as `NULL`; a [`Value`] binds as itself.
+pub fn[T, V : @moondb.ToValue] field(
   name : String,
   col_type : ColumnType,
-  encode : (T) -> @moondb.Value,
+  encode : (T) -> V,
   primary_key~ : Bool = false,
   autoincrement~ : Bool = false,
   nullable~ : Bool = true,
@@ -61,7 +61,7 @@ pub fn[T] field(
       on_delete,
       on_update,
     },
-    encode,
+    encode: x => encode(x).to_value(),
   }
 }
 
@@ -117,9 +117,10 @@ pub fn[T] Model::new(
 /// declarative path that removes the hand-written `to_columns`. The columns and the
 /// binding projection are both derived from `fields`: `columns` is each field's
 /// declared column, and `to_columns` maps a record to `(name, field.encode(record))`
-/// pairs. You still supply `from_row`, because reconstructing a `T` from a fetched
-/// row needs the record constructor, and MoonBit — lacking reflection — cannot
-/// synthesise it; that one closure is the irreducible core of the mapping.
+/// pairs, leaving out an autoincrement key that encodes as `NULL` so the database
+/// assigns it. You still supply `from_row`, because reconstructing a `T` from a
+/// fetched row needs the record constructor, and MoonBit — lacking reflection —
+/// cannot synthesise it; that one closure is the irreducible core of the mapping.
 ///
 /// This is the constructor moonctl-generated model metadata targets: the generator
 /// emits the `[Field]` array and the `from_row` decoder, and `from_fields` turns
@@ -129,10 +130,10 @@ pub fn[T] Model::new(
 /// Model::from_fields(
 ///   "hero",
 ///   [
-///     field("id", IntType, primary_key=true, h => Int(h.id)),
-///     field("name", TextType, nullable=false, h => Text(h.name)),
+///     field("id", IntType, primary_key=true, h => h.id),
+///     field("name", TextType, nullable=false, h => h.name),
 ///   ],
-///   r => { id: r.int(0), name: r.text(1) },
+///   r => { id: r.read(0), name: r.read(1) },
 /// )
 /// ```
 pub fn[T] Model::from_fields(
@@ -147,7 +148,10 @@ pub fn[T] Model::from_fields(
   let to_columns = fn(record : T) -> Array[(String, @moondb.Value)] {
     let out : Array[(String, @moondb.Value)] = []
     for f in fields {
-      out.push((f.column.name, (f.encode)(record)))
+      let v = (f.encode)(record)
+      if !(f.column.autoincrement && v is Null) {
+        out.push((f.column.name, v))
+      }
     }
     out
   }

@@ -360,3 +360,30 @@ test "reflect_columns parses PRAGMA table_info into declared columns" {
   assert_eq(cols[2].nullable, true)
   assert_eq(cols[2].col_type == RealType, true)
 }
+
+///|
+test "reflection maps bigint to BigIntType on PostgreSQL and MySQL" {
+  let pg = reflect_columns_pg([
+    pg_row("id", "bigint", "NO"),
+    pg_row("n", "integer", "NO"),
+  ])
+  assert_eq(pg[0].col_type == BigIntType, true)
+  assert_eq(pg[1].col_type == IntType, true)
+  let my = reflect_columns_mysql([
+    my_row("id", "bigint(20)", "NO", "PRI", "auto_increment"),
+    my_row("n", "int(11)", "NO", "", ""),
+  ])
+  assert_eq(my[0].col_type == BigIntType, true)
+  assert_eq(my[1].col_type == IntType, true)
+}
+
+///|
+test "diff_schema compares as the dialect writes types when one is given" {
+  let declared = [@schema.column("id", BigIntType, primary_key=true)]
+  let reflected = [@schema.column("id", IntType, primary_key=true)]
+  assert_eq(diff_schema(declared, reflected).length(), 1)
+  assert_eq(diff_schema(declared, reflected, dialect=Sqlite).length(), 0)
+  let d = diff_schema(declared, reflected, dialect=Postgres)
+  assert_eq(d.length(), 1)
+  assert_eq(d[0] == TypeChanged(name="id", from=IntType, to=BigIntType), true)
+}
