@@ -252,7 +252,7 @@
 .side .grp { color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; margin-top: var(--s3); }
 
 /* ---- footer ---- */
-.foot { border-top: 1px solid var(--hair); padding: var(--s5) 0; color: var(--ink-faint); font-family: var(--font-mono); font-size: 12px; display: flex; flex-wrap: wrap; gap: var(--s3); justify-content: space-between; }
+.foot { border-top: 1px solid var(--hair); padding-block: var(--s5); color: var(--ink-faint); font-family: var(--font-mono); font-size: 12px; display: flex; flex-wrap: wrap; gap: var(--s3); justify-content: space-between; }
 .foot a { color: var(--ink-soft); border: 0; }
 .foot .cross { color: var(--ink-faint); }
 .foot .cross a { color: var(--ink-soft); }
