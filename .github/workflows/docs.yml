@@ -21,13 +21,15 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
 
       - name: Install MoonBit
+        # pinned: the API page is generated from what this toolchain emits, and the
+        # drift check below only means something if the emitter is fixed
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s -- 0.1.20261023
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
 
       - name: Generate .mbti for the core packages
@@ -36,33 +38,37 @@ jobs:
             moon info --target js "$p"
           done
 
-      - name: Build the showcase engine (real compiled library, not hand-written JS)
+      - name: Build the showcase engine
+        # the pages run this file: the library compiled to JavaScript, not a
+        # hand-written re-implementation of its SQL rendering
         run: |
           moon build --target js src/examples/browser/showcase
           mkdir -p docs/engine
           cp _build/js/debug/build/examples/browser/showcase/showcase.js docs/engine/moonorm.js
 
-      - name: Generate the API page from pkg.generated.mbti
-        # The API page is regenerated on every docs build so it can never drift
-        # from the code. Run `python3 scripts/gen_api.py --check` locally to verify
-        # docs/api.html is in sync before committing.
+      - name: Generate the API page
         run: python3 scripts/gen_api.py
 
+      - name: Check the generated page is what is committed
+        run: git diff --exit-code -- docs/api.html
+
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
+        with:
+          enablement: true
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: docs
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
