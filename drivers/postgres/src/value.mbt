@@ -6,24 +6,31 @@
 // round (README roadmap). PostgreSQL type OIDs are stable, well-known integers.
 
 ///|
+/// The `pg_type` OID of `bool`, as a column description reports it.
 pub const OID_BOOL : Int32 = 16
 
 ///|
+/// The `pg_type` OID of `bytea`, as a column description reports it.
 pub const OID_BYTEA : Int32 = 17
 
 ///|
+/// The `pg_type` OID of `int8`, as a column description reports it.
 pub const OID_INT8 : Int32 = 20
 
 ///|
+/// The `pg_type` OID of `int2`, as a column description reports it.
 pub const OID_INT2 : Int32 = 21
 
 ///|
+/// The `pg_type` OID of `int4`, as a column description reports it.
 pub const OID_INT4 : Int32 = 23
 
 ///|
+/// The `pg_type` OID of `float4`, as a column description reports it.
 pub const OID_FLOAT4 : Int32 = 700
 
 ///|
+/// The `pg_type` OID of `float8`, as a column description reports it.
 pub const OID_FLOAT8 : Int32 = 701
 
 ///|

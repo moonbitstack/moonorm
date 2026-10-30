@@ -65,7 +65,7 @@
 
   function renderDdl(d) {
     if (!demo || !demo.userDdl) return;
-    genSql.textContent = demo.userDdl(d);
+    moonormSql.show(genSql, demo.userDdl(d));
   }
 
   // ---- state ----

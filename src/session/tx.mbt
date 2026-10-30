@@ -40,8 +40,8 @@ pub fn Savepoint::release(self : Savepoint) -> Unit raise @moondb.DbError {
 }
 
 ///|
-/// SQLAlchemy spells "keep the nested work" as `commit()`; this is the alias for
-/// [`release`].
+/// The same as [`release`]: keeps the nested work, under the name a reader
+/// coming from `COMMIT` looks for.
 pub fn Savepoint::commit(self : Savepoint) -> Unit raise @moondb.DbError {
   self.release()
 }

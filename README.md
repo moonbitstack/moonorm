@@ -23,7 +23,7 @@ over the text protocol (see its README), so there the safety rests on the escape
 matching the server's `sql_mode`.
 
 `moonorm` owns **no driver contract of its own**. It is written entirely against
-the [`moondb`](https://moonbitstack.github.io/moondb/) interface, so it is pure
+the [`moondb`](https://moonbitstack.github.io/moonorm/moondb/) interface, so it is pure
 MoonBit with zero C and compiles on every backend (`wasm` / `wasm-gc` / `js` /
 `native`). A backend is a separate package you supply: the native SQLite driver
 lives in [`moonsqlite`](drivers/sqlite), the PostgreSQL and MySQL/MariaDB

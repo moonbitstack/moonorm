@@ -181,6 +181,11 @@
   padding: var(--s2) var(--s3); color: var(--ink); white-space: pre; overflow: auto;
 }
 .gen-sql.err { border-left-color: var(--broken); color: var(--broken); }
+/* the SQL side keeps its ochre: keywords in it, bound values in the pointer's
+   orange, literals in the colour of a mapping that holds */
+.gen-sql .sql-kw { color: var(--relation); font-weight: 600; }
+.gen-sql .sql-arg { color: var(--pointer); }
+.gen-sql .sql-str { color: var(--mapped); }
 
 /* ---- feature cards (the four acts) ---- */
 .acts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--hair); border: 1px solid var(--hair); }
@@ -295,4 +300,22 @@
   .nav { order: 3; width: 100%; margin-left: 0; justify-content: space-between; gap: var(--s2); }
   .nav a { flex: none; padding: 4px 0; }
   .theme-toggle { margin-left: auto; }
+}
+
+/* ---- scroll bars: the page's shows while it moves or under the pointer and
+   hides a moment after, keeping its place; a box's is thin, faint at rest and
+   darker under the pointer ---- */
+@supports selector(::-webkit-scrollbar) {
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+  ::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 99px; background: color-mix(in srgb, var(--ink) 16%, transparent) padding-box; }
+  *:hover::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--ink) 32%, transparent) padding-box; }
+  html::-webkit-scrollbar { width: 10px; }
+  html::-webkit-scrollbar-thumb { border-width: 3px; background: color-mix(in srgb, var(--ink) 26%, transparent) padding-box; }
+  html::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--ink) 40%, transparent) padding-box; }
+  html:not(.scrolling)::-webkit-scrollbar-thumb { background: transparent; border-color: transparent; }
+}
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 22%, transparent) transparent; }
+  html:not(.scrolling) { scrollbar-color: transparent transparent; }
 }

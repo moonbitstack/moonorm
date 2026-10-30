@@ -7,24 +7,31 @@
 // classic EOF packets the text-protocol decoder keys off.
 
 ///|
+/// The `CLIENT_LONG_PASSWORD` capability flag of the connection handshake.
 pub let client_long_password : Int32 = 0x00000001
 
 ///|
+/// The `CLIENT_LONG_FLAG` capability flag of the connection handshake.
 pub let client_long_flag : Int32 = 0x00000004
 
 ///|
+/// The `CLIENT_CONNECT_WITH_DB` capability flag of the connection handshake.
 pub let client_connect_with_db : Int32 = 0x00000008
 
 ///|
+/// The `CLIENT_PROTOCOL_41` capability flag of the connection handshake.
 pub let client_protocol_41 : Int32 = 0x00000200
 
 ///|
+/// The `CLIENT_TRANSACTIONS` capability flag of the connection handshake.
 pub let client_transactions : Int32 = 0x00002000
 
 ///|
+/// The `CLIENT_SECURE_CONNECTION` capability flag of the connection handshake.
 pub let client_secure_connection : Int32 = 0x00008000
 
 ///|
+/// The `CLIENT_PLUGIN_AUTH` capability flag of the connection handshake.
 pub let client_plugin_auth : Int32 = 0x00080000
 
 // MariaDB's extended server capabilities occupy the 4 bytes MySQL leaves reserved
@@ -34,18 +41,23 @@ pub let client_plugin_auth : Int32 = 0x00080000
 // named here for the record and future use.
 
 ///|
+/// MariaDB's `MARIADB_CLIENT_PROGRESS` capability flag of the connection handshake.
 pub let mariadb_client_progress : Int32 = 0x00000001
 
 ///|
+/// MariaDB's `MARIADB_CLIENT_COM_MULTI` capability flag of the connection handshake.
 pub let mariadb_client_com_multi : Int32 = 0x00000002
 
 ///|
+/// MariaDB's `MARIADB_CLIENT_STMT_BULK_OPERATIONS` capability flag of the connection handshake.
 pub let mariadb_client_stmt_bulk_operations : Int32 = 0x00000004
 
 ///|
+/// MariaDB's `MARIADB_CLIENT_EXTENDED_METADATA` capability flag of the connection handshake.
 pub let mariadb_client_extended_metadata : Int32 = 0x00000008
 
 ///|
+/// MariaDB's `MARIADB_CLIENT_CACHE_METADATA` capability flag of the connection handshake.
 pub let mariadb_client_cache_metadata : Int32 = 0x00000010
 
 ///|

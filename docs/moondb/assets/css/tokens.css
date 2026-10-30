@@ -1,0 +1,182 @@
+/* ============================================================================
+   moondb · design tokens — "Moon-Phase Contract · Light/Dark Twin"
+   A printed constitution. Trait signatures are the law; drivers are ratified
+   implementations. Nearly colorless on purpose: ink + silver, with two small
+   signals — green (covered) and gray (not covered) — and one pointer (orange).
+   Radius is 0. Structure is rule and margin, not fill.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* ---- surfaces ("契约纸" — fine contract paper) ---- */
+  --paper:   #FBFAF5;
+  --paper-2: #F2F0E8;   /* sunken clause box */
+  --paper-3: #E9E6DB;   /* deeper well */
+  --ink:     #15171C;   /* the ink of the constitution */
+  --ink-soft:#565A63;
+  --ink-faint:#9498A1;
+  --hair:    #D8D4C8;   /* silver hairline */
+  --hair-strong:#C2BDAD;
+
+  /* ---- the moon: lit is ink on paper, unlit is bare paper ---- */
+  --moon-lit:    #2A2D34;
+  --moon-unlit:  #EFF0F3;
+  --silver:      #C9CDD6;
+
+  /* ---- the only two signals + the pointer ---- */
+  --dot-green: #3A8F5F;   /* ratified / covered */
+  --dot-gray:  #B7B3A8;   /* not yet covered */
+  --pointer:   #CF5B23;   /* current operation / cursor */
+
+  /* ---- type: a constitution is set in serif; signatures in mono ---- */
+  --font-body: "Source Serif 4", "Source Han Serif SC", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* ---- spacing · 8pt grid ---- */
+  --s1: 8px;  --s2: 16px; --s3: 24px; --s4: 32px;
+  --s5: 48px; --s6: 64px; --s7: 96px; --s8: 128px;
+
+  /* ---- motion: exactly three, only for real meaning ---- */
+  --t1: 160ms; --t2: 320ms; --t3: 600ms;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  --maxw: 1040px;  /* narrower column: a booklet, not a broadsheet */
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper:   #0E1014;
+  --paper-2: #14171D;
+  --paper-3: #1B1F27;
+  --ink:     #E9E6DD;
+  --ink-soft:#9097A1;
+  --ink-faint:#616873;
+  --hair:    #23272F;
+  --hair-strong:#323843;
+
+  /* in the dark room the moon emits instead of absorbing */
+  --moon-lit:    #E7E5DD;
+  --moon-unlit:  #1A1E25;
+  --silver:      #5C636F;
+
+  --dot-green: #57B789;
+  --dot-gray:  #4A4E57;
+  --pointer:   #F2732E;
+}
+
+/* ---- reset discipline: radius is always 0 ---- */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+button, input, textarea, select { font: inherit; color: inherit; }
+html, button, input, textarea, select {
+  font-variant-ligatures: no-contextual;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.72;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---- selection ---- */
+::selection { background: color-mix(in srgb, var(--pointer) 22%, transparent); }
+
+/* ---- links: hairline underline that grows on hover (animation #2) ---- */
+a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--hair-strong); border-bottom-color: color-mix(in srgb, var(--ink) 30%, transparent); }
+a:hover { border-bottom-color: var(--pointer); }
+
+/* ---- headings: serif, set like a title page ---- */
+h1, h2, h3 { font-family: var(--font-body); font-weight: 600; line-height: 1.14; letter-spacing: -0.012em; color: var(--ink); }
+h1 { font-size: clamp(38px, 5.4vw, 66px); margin: 0; font-weight: 600; }
+h2 { font-size: clamp(24px, 3vw, 34px); margin: var(--s6) 0 var(--s3); }
+h3 { font-size: 21px; margin: var(--s4) 0 var(--s2); }
+
+/* ---- the small-caps section / folio label ---- */
+.folio { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-faint); }
+
+/* ---- code & signatures ---- */
+code, pre, .mono { font-family: var(--font-mono); font-variant-ligatures: no-contextual; }
+code.inline {
+  background: var(--paper-2); padding: 0.08em 0.4em; border: 1px solid var(--hair);
+  overflow-wrap: anywhere;
+}
+pre {
+  margin: 0; background: var(--paper-2); border: 1px solid var(--hair);
+  padding: var(--s3); overflow: auto; font-size: 13.5px; line-height: 1.75;
+  white-space: pre;
+}
+
+/* ---- layout helpers ---- */
+.wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--s3); }
+.section { padding: var(--s7) 0; border-top: 1px solid var(--hair); }
+.muted { color: var(--ink-soft); }
+.faint { color: var(--ink-faint); }
+
+/* ---- a "clause": the constitution speaks in numbered articles ---- */
+.article { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: var(--s3); padding: var(--s3) 0; border-bottom: 1px solid var(--hair); }
+.article .num { font-family: var(--font-mono); font-size: 13px; color: var(--ink-faint); padding-top: 4px; }
+.article .body { }
+.article .body p:first-child { margin-top: 0; }
+.article h3 { margin-top: 0; }
+
+/* ---- status dots (the only color that breathes) ---- */
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 99px; margin-right: 6px; vertical-align: middle; }
+.dot.green { background: var(--dot-green); }
+.dot.gray  { background: var(--dot-gray); }
+
+/* ---- custom scrollbars: the page, and every region inside it ---- */
+@supports selector(::-webkit-scrollbar) {
+  html::-webkit-scrollbar,
+  pre::-webkit-scrollbar,
+  .tbl::-webkit-scrollbar,
+  .side::-webkit-scrollbar,
+  .code::-webkit-scrollbar { width: 10px; height: 10px; }
+  html::-webkit-scrollbar-track,
+  pre::-webkit-scrollbar-track,
+  .tbl::-webkit-scrollbar-track,
+  .side::-webkit-scrollbar-track,
+  .code::-webkit-scrollbar-track { background: transparent; }
+  html::-webkit-scrollbar-thumb,
+  pre::-webkit-scrollbar-thumb,
+  .tbl::-webkit-scrollbar-thumb,
+  .side::-webkit-scrollbar-thumb,
+  .code::-webkit-scrollbar-thumb {
+    border-radius: 99px; border: 3px solid transparent; background-clip: content-box;
+    background-color: color-mix(in srgb, var(--ink) 22%, transparent);
+  }
+  html.at-top::-webkit-scrollbar-thumb { background-color: transparent; }
+}
+@supports not selector(::-webkit-scrollbar) {
+  html { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 24%, transparent) transparent; }
+  html.at-top { scrollbar-color: transparent transparent; }
+  pre, .tbl, .side, .code { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 24%, transparent) transparent; }
+}
+
+/* ---- reduced motion: the contract does not dance ---- */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+/* ---- responsive collapse ---- */
+@media (width <= 860px) {
+  .wrap { padding: 0 var(--s2); }
+  .section { padding: var(--s5) 0; }
+  .article { grid-template-columns: minmax(0, 1fr); gap: var(--s1); }
+  * { min-width: 0; }
+}
+img, svg, table, pre { max-width: 100%; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: var(--s1) var(--s2); border-bottom: 1px solid var(--hair); vertical-align: top; overflow-wrap: anywhere; }
+th { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+
+/* a wide table scrolls inside its own frame, never the page */
+.tbl { overflow-x: auto; border: 1px solid var(--hair); }
+.tbl table { border-bottom: 0; }
+.tbl th:first-child, .tbl td:first-child { padding-left: var(--s3); }
+.tbl th:last-child, .tbl td:last-child { padding-right: var(--s3); }

@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/moonorm.css">
+  <script type="module" src="assets/js/scrollbar.js"></script>
   <script>try{var t=localStorage.getItem("moonorm-theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
@@ -57,7 +58,7 @@
         <p>Add the toolkit and its driver contract:</p>
         <pre><code>moon add moonbitstack/moonorm
 moon add moonbitstack/moondb</code></pre>
-        <p class="faint">moonorm builds the query and schema layer; <a href="https://moonbitstack.github.io/moondb/"><code class="inline">moondb</code></a> is the contract a backend (SQLite, PostgreSQL, MySQL) implements. Values cross that boundary as <code class="inline">Value</code>, never as SQL text.</p>
+        <p class="faint">moonorm builds the query and schema layer; <a href="moondb/"><code class="inline">moondb</code></a> is the contract a backend (SQLite, PostgreSQL, MySQL) implements. Values cross that boundary as <code class="inline">Value</code>, never as SQL text.</p>
 
         <h2 id="model">2 · Declare a model</h2>
         <p>A model is a MoonBit struct, the columns that store it, and the two directions of the mapping. Declare the columns once and keep them — the migration section reuses them.</p>
@@ -203,7 +204,7 @@ fn account() -&gt; @moonorm.Model[Account] {
   <footer class="wrap foot">
     <span>moonorm · Apache-2.0 · MoonBit</span>
     <span><a href="https://github.com/moonbitstack/moonorm">github.com/moonbitstack/moonorm</a></span>
-    <span class="cross">driver contract: <a href="https://moonbitstack.github.io/moondb/">moondb</a></span>
+    <span class="cross">driver contract: <a href="moondb/">moondb</a></span>
   </footer>
 
   <script src="assets/js/theme.js"></script>

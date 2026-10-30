@@ -23,7 +23,9 @@ jobs:
   build:
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Install MoonBit
         # the versioned download paths are not served, so take latest and record
@@ -38,10 +40,13 @@ jobs:
           moon version --all
           moon update
 
-      - name: Generate .mbti for the core packages
+      - name: Generate .mbti for every package the two API pages list
         run: |
           for p in src src/schema src/query src/session src/migrate; do
             moon info --target js "$p"
+          done
+          for m in db drivers/sqlite drivers/postgres drivers/mysql; do
+            (cd "$m" && moon update && moon info --target js)
           done
 
       - name: Build the showcase engine
@@ -55,8 +60,8 @@ jobs:
       - name: Generate the API page
         run: python3 scripts/gen_api.py
 
-      - name: Check the generated page is what is committed
-        run: git diff --exit-code -- docs/api.html
+      - name: Check the generated pages are what is committed
+        run: git diff --exit-code -- docs/api.html docs/moondb/api.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

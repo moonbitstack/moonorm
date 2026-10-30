@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/moonorm.css">
+  <script type="module" src="assets/js/scrollbar.js"></script>
   <script>try{var t=localStorage.getItem("moonorm-theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
@@ -43,7 +44,7 @@
         <section class="hero compact" style="padding-top:var(--s5)">
           <p class="eyebrow">API · generated</p>
           <h1 style="font-size:clamp(30px,4vw,46px)">Public surface</h1>
-          <p class="lede">212 declarations across five packages, read out of <code class="inline">pkg.generated.mbti</code> and described from the <code class="inline">///</code> docs in the sources.</p>
+          <p class="lede">212 declarations across 5 packages, read out of <code class="inline">pkg.generated.mbti</code> and described from the <code class="inline">///</code> docs in the sources.</p>
         </section>
 <section class="section first" id="moonorm">
 <p class="eyebrow">moonbitstack/moonorm</p>
@@ -300,7 +301,7 @@
 <div class="entry"><pre class="signature">pub fn Select::window(Self, String, partition_by? : Array[String], order_by? : Array[(String, Order)], as_? : String) -&gt; Self</pre><div class="doc"><p>Project a window function: <code class="inline">&lt;expr&gt; OVER (PARTITION BY … ORDER BY …)</code>, optionally aliased. Window functions compute over a frame of rows without collapsing them (<code class="inline">ROW_NUMBER()</code>, <code class="inline">RANK()</code>, a running <code class="inline">SUM(x)</code>), so this adds one more projected column rather than grouping. <code class="inline">expr</code> is the function call (<code class="inline">"ROW_NUMBER()"</code>, <code class="inline">"SUM(amount)"</code>), <code class="inline">partition_by</code> splits the rows into independent windows, and <code class="inline">order_by</code> ranks within each. All three are identifier-level SQL (they name columns and functions, never bound values), so they render verbatim like <code class="inline">raw</code> and carry no parameters. An empty <code class="inline">partition_by</code> and <code class="inline">order_by</code> yields the whole result as one unordered window, <code class="inline">&lt;expr&gt; OVER ()</code>.</p></div></div>
 <div class="entry"><pre class="signature">pub fn Select::with_cte(Self, String, Self) -&gt; Self</pre><div class="doc"><p>Attach a common table expression: <code class="inline">WITH name AS (sub)</code>. Repeatable — several CTEs render comma-separated in one leading <code class="inline">WITH</code>. The subquery is parameterised like any other statement; its bound values lead the final params list because the <code class="inline">WITH</code> clause leads the SQL text. <code class="inline">name</code> is a trusted identifier declared in code, never a bound value.</p></div></div>
 <div class="entry"><pre class="signature">pub fn Select::with_recursive(Self, String, Self, Self, all? : Bool) -&gt; Self</pre><div class="doc"><p><code class="inline">anchor</code> is the base term and <code class="inline">step</code> the term that refers back to <code class="inline">name</code> in its own <code class="inline">FROM</code> — the CTE name is a trusted identifier referenceable in <code class="inline">step</code> and in this query's own <code class="inline">FROM</code>, so the usual shape is <code class="inline">select(name).with_recursive(name, anchor, step)</code>. <code class="inline">all</code> picks <code class="inline">UNION ALL</code> (keep duplicates, the common tree/graph walk) over the default <code class="inline">UNION</code>. The two terms compose through the existing <code class="inline">union</code> / <code class="inline">union_all</code> builders, so their bound values thread through in text order like any CTE.</p></div></div>
-<div class="entry"><pre class="signature">pub fn Source::to_source(Self) -&gt; Self</pre></div>
+<div class="entry"><pre class="signature">pub fn Source::to_source(Self) -&gt; Self</pre><div class="doc"><p><code class="inline">AsSource</code>'s <code class="inline">to_source</code>, callable on the value directly.</p></div></div>
 <div class="entry"><pre class="signature">pub fn Table::select(Self) -&gt; Select</pre><div class="doc"><p>Start a SELECT over this table with all of its declared <code class="inline">columns</code> projected (an empty <code class="inline">columns</code> yields <code class="inline">SELECT *</code>, matching <code class="inline">select(name)</code>).</p></div></div>
 <div class="entry"><pre class="signature">pub fn update(String) -&gt; Update</pre><div class="doc"><p>Start an UPDATE of <code class="inline">table</code>. Without a <code class="inline">where_</code> it rewrites every row, which is what SQL does and what the caller asked for.</p></div></div>
 <div class="entry"><pre class="signature">pub fn Update::build(Self) -&gt; (String, Array[@moondb.Value])</pre><div class="doc"><p>Render <code class="inline">(sql, params)</code> for the SQLite/PostgreSQL dialect. The SET values come first and the WHERE values after, in the order the placeholders appear, which is the order every driver binds in.</p></div></div>
@@ -355,7 +356,7 @@
 <div class="entry"><pre class="signature">pub fn IsolationLevel::keyword(Self) -&gt; String</pre><div class="doc"><p>The ANSI keyword for an isolation level (<code class="inline">"READ COMMITTED"</code>, <code class="inline">"SERIALIZABLE"</code>, …).</p></div></div>
 <div class="entry"><pre class="signature">pub fn[T] RowStream::close(Self[T]) -&gt; Unit</pre><div class="doc"><p>Release the underlying cursor early.</p></div></div>
 <div class="entry"><pre class="signature">pub fn[T] RowStream::next(Self[T]) -&gt; T? raise @moondb.DbError</pre><div class="doc"><p>The next decoded record, or <code class="inline">None</code> once the result is exhausted.</p></div></div>
-<div class="entry"><pre class="signature">pub fn Savepoint::commit(Self) -&gt; Unit raise @moondb.DbError</pre></div>
+<div class="entry"><pre class="signature">pub fn Savepoint::commit(Self) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>The same as [<code class="inline">release</code>]: keeps the nested work, under the name a reader coming from <code class="inline">COMMIT</code> looks for.</p></div></div>
 <div class="entry"><pre class="signature">pub fn Savepoint::depth(Self) -&gt; Int32</pre><div class="doc"><p>This savepoint's nesting depth (1 for the outermost <code class="inline">begin_nested</code>, 2 for one opened inside it, and so on).</p></div></div>
 <div class="entry"><pre class="signature">pub fn Savepoint::name(Self) -&gt; String</pre><div class="doc"><p>The generated SQL name of this savepoint.</p></div></div>
 <div class="entry"><pre class="signature">pub fn Savepoint::release(Self) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>Release this savepoint (<code class="inline">RELEASE SAVEPOINT &lt;name&gt;</code>), keeping the work done since it opened and merging it into the enclosing transaction. Terminal and idempotent.</p></div></div>
@@ -449,7 +450,7 @@
   <footer class="wrap foot">
     <span>moonorm · Apache-2.0 · MoonBit ORM &amp; SQL toolkit</span>
     <span><a href="https://github.com/moonbitstack/moonorm" rel="noopener">github.com/moonbitstack/moonorm</a></span>
-    <span class="cross">driver contract: <a href="https://moonbitstack.github.io/moondb/">moondb</a></span>
+    <span class="cross">driver contract: <a href="moondb/">moondb</a></span>
   </footer>
 
   <script src="assets/js/theme.js"></script>

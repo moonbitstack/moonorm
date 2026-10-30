@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/moonorm.css">
+  <script type="module" src="assets/js/scrollbar.js"></script>
   <script>try{var t=localStorage.getItem("moonorm-theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
@@ -150,11 +151,12 @@ level   → integer, checked >= 0</pre>
   <footer class="wrap foot">
     <span>moonorm · Apache-2.0 · MoonBit ORM &amp; SQL toolkit</span>
     <span><a href="https://github.com/moonbitstack/moonorm" rel="noopener">github.com/moonbitstack/moonorm</a></span>
-    <span class="cross">driver contract: <a href="https://moonbitstack.github.io/moondb/">moondb</a></span>
+    <span class="cross">driver contract: <a href="moondb/">moondb</a></span>
   </footer>
 
   <!-- The real engine: sets globalThis.moonormDemo on load. -->
   <script src="engine/moonorm.js"></script>
+  <script src="assets/js/sql.js"></script>
   <script>
     (function () {
       var demo = globalThis.moonormDemo;
@@ -175,12 +177,12 @@ level   → integer, checked >= 0</pre>
         tabs.forEach(function (t) {
           t.classList.toggle("active", t.getAttribute("data-dialect") === String(idx));
         });
-        ddlEl.textContent = demo.ddl(idx);
+        moonormSql.show(ddlEl, demo.ddl(idx));
       };
       window.renderQuery = function () {
         var w = document.getElementById("q-where").checked;
         var l = document.getElementById("q-limit").checked;
-        queryEl.textContent = demo.query(w, l);
+        moonormSql.show(queryEl, demo.query(w, l));
       };
       // initial paint
       setDialect(0);

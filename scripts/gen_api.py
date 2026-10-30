@@ -2,14 +2,16 @@
 # Copyright 2026 Leo Cheng
 # SPDX-License-Identifier: Apache-2.0
 #
-# Generate docs/api.html from the moonorm packages: the public surface comes from
-# `pkg.generated.mbti` (so nothing public can be missed, type parameters included),
-# and the prose comes from the `///` comments in the package sources, which the
-# mbti format does not carry.
+# Generate the two API pages: docs/api.html from the moonorm packages, and
+# docs/moondb/api.html from moondb and its three drivers. The public surface
+# comes from `pkg.generated.mbti` (so nothing public can be missed, type
+# parameters included), the prose from the `///` comments in the sources, which
+# the mbti format does not carry, and each page's shell from the
+# `api.template.html` beside it.
 #
-#   moon info --target js src src/schema src/query src/session src/migrate
-#   python3 scripts/gen_api.py            # write docs/api.html
-#   python3 scripts/gen_api.py --check    # exit 1 if docs/api.html is stale
+#   moon info --target js                  # in the root, db/ and each drivers/*
+#   python3 scripts/gen_api.py            # write both pages
+#   python3 scripts/gen_api.py --check    # exit 1 if either page is stale
 
 import glob
 import os
@@ -19,15 +21,40 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # (package dir, full package name, display label, anchor)
-PACKAGES = [
-    ("src", "moonbitstack/moonorm", "moonorm", "moonorm"),
-    ("src/schema", "moonbitstack/moonorm/schema", "schema", "schema"),
-    ("src/query", "moonbitstack/moonorm/query", "query", "query"),
-    ("src/session", "moonbitstack/moonorm/session", "session", "session"),
-    ("src/migrate", "moonbitstack/moonorm/migrate", "migrate", "migrate"),
+# Each site: the page it writes, the shell it fills, the class its package
+# labels take, and the packages it lists in order.
+SITES = [
+    {
+        "out": "docs/api.html",
+        "template": "docs/api.template.html",
+        "eyebrow": "eyebrow",
+        "packages": [
+            ("src", "moonbitstack/moonorm", "moonorm", "moonorm"),
+            ("src/schema", "moonbitstack/moonorm/schema", "schema", "schema"),
+            ("src/query", "moonbitstack/moonorm/query", "query", "query"),
+            ("src/session", "moonbitstack/moonorm/session", "session", "session"),
+            ("src/migrate", "moonbitstack/moonorm/migrate", "migrate", "migrate"),
+        ],
+    },
+    {
+        "out": "docs/moondb/api.html",
+        "template": "docs/moondb/api.template.html",
+        "eyebrow": "folio",
+        "packages": [
+            ("db/src", "moonbitstack/moondb", "moondb", "moondb"),
+            ("db/src/pool", "moonbitstack/moondb/pool", "pool", "pool"),
+            ("drivers/sqlite/src", "moonbitstack/moonsqlite", "moonsqlite", "moonsqlite"),
+            ("drivers/postgres/src", "moonbitstack/moonpostgres", "moonpostgres", "moonpostgres"),
+            ("drivers/mysql/src", "moonbitstack/moonmysql", "moonmysql", "moonmysql"),
+            ("drivers/mysql/src/client", "moonbitstack/moonmysql/client", "client", "moonmysql-client"),
+        ],
+    },
 ]
 
 TYPE_KINDS = {"struct", "enum", "trait", "suberror", "type"}
+
+EXTEND_RE = re.compile(r"^pub extend ([A-Za-z_]\w*) with ([@\w.]+)::\{([^}]*)\}", re.M)
+PLUMBING = {"Eq", "Debug", "Show", "Hash", "Compare", "Default"}
 
 # Members a `derive(...)` synthesises carry no documentation and are not part of
 # the surface a reader looks up here; they are dropped unless someone wrote a
@@ -106,6 +133,12 @@ def parse_docs(pkg_dir):
             continue
         pending = []
         with open(path, encoding="utf-8") as fh:
+            lines = fh.readlines()
+        for m in EXTEND_RE.finditer("".join(lines)):
+            if m.group(2) not in PLUMBING:
+                for method in (s.strip() for s in m.group(3).split(",")):
+                    docs.setdefault(f"{m.group(1)}::{method}", f"`{m.group(2)}`'s `{method}`, callable on the value directly.")
+        with open(path, encoding="utf-8") as fh:
             for raw in fh:
                 line = raw.rstrip("\n")
                 s = line.strip()
@@ -169,12 +202,12 @@ def render_entry(kind, sig, doc):
     return "".join(out)
 
 
-def section(full_name, label, anchor, entries, docs, first):
+def section(full_name, label, anchor, entries, docs, first, eyebrow):
     types = sorted([e for e in entries if e[0] in TYPE_KINDS], key=lambda e: e[1].lower())
     fns = sorted([e for e in entries if e[0] not in TYPE_KINDS], key=lambda e: e[1].lower())
     cls = "section first" if first else "section"
     out = [f'<section class="{cls}" id="{anchor}">']
-    out.append(f'<p class="eyebrow">{_esc(full_name)}</p>')
+    out.append(f'<p class="{eyebrow}">{_esc(full_name)}</p>')
     out.append(f"<h2>{_esc(label)}</h2>")
     for title, group in (("Types", types), ("Functions &amp; methods", fns)):
         if not group:
@@ -186,17 +219,17 @@ def section(full_name, label, anchor, entries, docs, first):
     return "\n".join(out)
 
 
-def build():
+def build(site):
     sections, nav, total = [], [], 0
     first = True
     # the façade re-exports its members, so a name documented in `schema` must be
     # documented on the façade page too: one map for the whole repository
     docs = {}
-    for pkg_dir, _full, _label, _anchor in PACKAGES:
+    for pkg_dir, _full, _label, _anchor in site["packages"]:
         for key, text in parse_docs(os.path.join(ROOT, pkg_dir)).items():
             docs.setdefault(key, text)
 
-    for pkg_dir, full, label, anchor in PACKAGES:
+    for pkg_dir, full, label, anchor in site["packages"]:
         mbti = os.path.join(ROOT, pkg_dir, "pkg.generated.mbti")
         if not os.path.exists(mbti):
             sys.stderr.write(f"warn: missing {pkg_dir}/pkg.generated.mbti, skipping\n")
@@ -204,94 +237,40 @@ def build():
         entries = [e for e in parse_mbti(mbti)
                    if not (e[1].split("::")[-1] in DERIVED and not docs.get(e[1]))]
         total += len(entries)
-        sections.append(section(full, label, anchor, entries, docs, first))
+        sections.append(section(full, label, anchor, entries, docs, first, site["eyebrow"]))
         first = False
         nav.append(f'<a href="#{anchor}">{label}<span class="n">{len(entries)}</span></a>')
-    return "\n".join(nav), "\n".join(sections), total
+    return "\n".join(nav), "\n".join(sections), total, len(nav)
 
 
-HTML = """<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>moonorm — API</title>
-  <meta name="description" content="moonorm public API reference, generated from pkg.generated.mbti and the /// docs.">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/tokens.css">
-  <link rel="stylesheet" href="assets/css/moonorm.css">
-  <script>try{var t=localStorage.getItem("moonorm-theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
-</head>
-<body>
-  <header class="topbar">
-    <a class="brand" href="index.html" style="border:0">
-      <svg class="glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true"><line x1="16" y1="2" x2="16" y2="30" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="4" fill="var(--mapped)"/></svg>
-      moonorm
-    </a>
-    <nav class="nav">
-      <a href="index.html">Home</a>
-      <a href="guide.html">Guide</a>
-      <a href="api.html" aria-current="page">API</a>
-      <a href="showcase.html">Showcase</a>
-      <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
-    </nav>
-    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Colour theme"><button type="button" data-set-theme="light">Light</button><button type="button" data-set-theme="dark">Dark</button></div>
-  </header>
 
-  <main class="wrap">
-    <div class="doc-grid">
-      <aside class="side">
-        <div class="grp">Packages</div>
-        {NAV}
-      </aside>
-      <div>
-        <section class="hero compact" style="padding-top:var(--s5)">
-          <p class="eyebrow">API · generated</p>
-          <h1 style="font-size:clamp(30px,4vw,46px)">Public surface</h1>
-          <p class="lede">{TOTAL} declarations across five packages, read out of <code class="inline">pkg.generated.mbti</code> and described from the <code class="inline">///</code> docs in the sources.</p>
-        </section>
-{SECTIONS}
-        <div class="cta">
-          <a class="btn primary" href="guide.html">Read the guide</a>
-          <a class="btn" href="index.html">Back to the seam</a>
-        </div>
-      </div>
-    </div>
-  </main>
-
-  <footer class="wrap foot">
-    <span>moonorm · Apache-2.0 · MoonBit ORM &amp; SQL toolkit</span>
-    <span><a href="https://github.com/moonbitstack/moonorm" rel="noopener">github.com/moonbitstack/moonorm</a></span>
-    <span class="cross">driver contract: <a href="https://moonbitstack.github.io/moondb/">moondb</a></span>
-  </footer>
-
-  <script src="assets/js/theme.js"></script>
-</body>
-</html>
-"""
 
 
 def main():
     check = "--check" in sys.argv
-    nav, sections, total = build()
-    html = (HTML.replace("{NAV}", nav)
-                .replace("{SECTIONS}", sections)
-                .replace("{TOTAL}", f"{total}"))
-    out_path = os.path.join(ROOT, "docs", "api.html")
-    if check:
+    stale = []
+    for site in SITES:
+        nav, sections, total, count = build(site)
+        with open(os.path.join(ROOT, site["template"]), encoding="utf-8") as fh:
+            shell = fh.read()
+        html = (shell.replace("{NAV}", nav)
+                     .replace("{SECTIONS}", sections)
+                     .replace("{TOTAL}", f"{total}")
+                     .replace("{COUNT}", f"{count}"))
+        out_path = os.path.join(ROOT, site["out"])
         current = ""
         if os.path.exists(out_path):
             with open(out_path, encoding="utf-8") as fh:
                 current = fh.read()
-        if current != html:
-            sys.stderr.write("docs/api.html is stale; run python3 scripts/gen_api.py\n")
-            return 1
-        return 0
-    with open(out_path, "w", encoding="utf-8", newline="\n") as fh:
-        fh.write(html)
+        if current == html:
+            continue
+        stale.append(site["out"])
+        if not check:
+            with open(out_path, "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(html)
+    if check and stale:
+        sys.stderr.write(", ".join(stale) + " stale; run python3 scripts/gen_api.py\n")
+        return 1
     return 0
 
 
