@@ -53,6 +53,9 @@
 /* ---- driver cards (the ratified implementations) ---- */
 .drivers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--hair); border: 1px solid var(--hair); }
 .driver { background: var(--paper); padding: var(--s4); }
+/* a driver card is a link target: land it below the sticky bar */
+.driver { scroll-margin-top: 88px; }
+
 .driver .moon { width: 52px; height: 52px; margin-bottom: var(--s2); }
 .driver .moon svg { width: 100%; height: 100%; display: block; }
 .driver h3 { margin: 0 0 var(--s1); font-size: 19px; }

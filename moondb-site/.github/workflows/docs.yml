@@ -1,12 +1,8 @@
-# Handoff workflow for the moondb site (moonbitstack.github.io/moondb).
-# Place this file at .github/workflows/docs.yml in the dedicated moondb repo and
-# copy the moondb-site/ contents to its root. The site is static — no engine build.
-
 name: Docs
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
@@ -20,26 +16,31 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
 
+      - name: Drop the checkout metadata
+        # the site is the repository root, so the artifact is the whole tree
+        run: rm -rf .git
+
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
+        with:
+          enablement: true
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
-          # The moondb-site/ directory is the site root.
           path: .
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
