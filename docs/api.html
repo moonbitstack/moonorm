@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>API · moonorm</title>
-  <meta name="description" content="moonorm public API reference, generated from pkg.generated.mbti and /// docs.">
+  <title>moonorm — API</title>
+  <meta name="description" content="moonorm public API reference, generated from pkg.generated.mbti and the /// docs.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/moonorm.css">
+  <script>try{var t=localStorage.getItem("moonorm-theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
   <header class="topbar">
@@ -25,54 +26,54 @@
       <a href="showcase.html">Showcase</a>
       <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
     </nav>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">day</button>
+    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Colour theme"><button type="button" data-set-theme="light">Light</button><button type="button" data-set-theme="dark">Dark</button></div>
   </header>
 
   <main class="wrap">
     <div class="doc-grid">
       <aside class="side">
         <div class="grp">Packages</div>
-        <a href="#moonorm" aria-current="page">moonorm</a>
-<a href="#schema" aria-current="page">schema</a>
-<a href="#query" aria-current="page">query</a>
-<a href="#session" aria-current="page">session</a>
-<a href="#migrate" aria-current="page">migrate</a>
+        <a href="#moonorm">moonorm<span class="n">19</span></a>
+<a href="#schema">schema<span class="n">32</span></a>
+<a href="#query">query<span class="n">87</span></a>
+<a href="#session">session<span class="n">58</span></a>
+<a href="#migrate">migrate<span class="n">16</span></a>
       </aside>
       <div>
-        <section class="hero" style="padding-top:var(--s5)">
-          <p class="folio">API</p>
+        <section class="hero compact" style="padding-top:var(--s5)">
+          <p class="eyebrow">API · generated</p>
           <h1 style="font-size:clamp(30px,4vw,46px)">Public surface</h1>
-          <p class="lede">Generated from <code class="inline">pkg.generated.mbti</code> via <code class="inline">moon info</code>. This page is rebuilt by the docs workflow, so it never drifts from the code.</p>
+          <p class="lede">212 declarations across five packages, read out of <code class="inline">pkg.generated.mbti</code> and described from the <code class="inline">///</code> docs in the sources.</p>
         </section>
-<section class="section" id="moonorm">
-<p class="folio">moonbitstack/moonorm</p>
+<section class="section first" id="moonorm">
+<p class="eyebrow">moonbitstack/moonorm</p>
 <h2>moonorm</h2>
-<h3>Functions &amp; methods</h3>
-<pre class="signature">pub fn[S, T] belongs_to(@schema.Model[T], String, (S) -&gt; @moondb.Value) -&gt; @schema.Relation[S, T]</pre>
-<pre class="signature">pub fn case_(Array[(String, String)], else_? : String) -&gt; String</pre>
-<pre class="signature">pub fn cast(String, String) -&gt; String</pre>
-<pre class="signature">pub fn column(String, @schema.ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; @schema.Column</pre>
-<pre class="signature">pub fn delete(String) -&gt; @query.Delete</pre>
-<pre class="signature">pub fn diff_schema(Array[@schema.Column], Array[@schema.Column], dialect? : @query.Dialect) -&gt; Array[@migrate.ColumnDiff]</pre>
-<pre class="signature">pub fn[T, V : @moondb.ToValue] field(String, @schema.ColumnType, (T) -&gt; V, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; @schema.Field[T]</pre>
-<pre class="signature">pub fn func(String, Array[String]) -&gt; String</pre>
-<pre class="signature">pub fn[S, T] has_many(@schema.Model[T], String, (S) -&gt; @moondb.Value) -&gt; @schema.Relation[S, T]</pre>
-<pre class="signature">pub fn index_ddl(String, String, Array[String], unique? : Bool) -&gt; String</pre>
-<pre class="signature">pub fn insert(String) -&gt; @query.Insert</pre>
-<pre class="signature">pub fn[S, T] many_to_many(@schema.Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -&gt; @moondb.Value) -&gt; @schema.ManyToMany[S, T]</pre>
-<pre class="signature">pub fn reflect_columns(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
-<pre class="signature">pub fn reflect_columns_mysql(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
-<pre class="signature">pub fn reflect_columns_pg(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
-<pre class="signature">pub fn reflect_table(&amp;@moondb.Driver, String) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
-<pre class="signature">pub fn reflect_table_for(&amp;@moondb.Driver, String, @query.Dialect) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
-<pre class="signature">pub fn[S : @query.AsSource] select(S) -&gt; @query.Select</pre>
-<pre class="signature">pub fn update(String) -&gt; @query.Update</pre>
+<h3>Functions &amp; methods <span class="count">19</span></h3>
+<div class="entry"><pre class="signature">pub fn[S, T] belongs_to(@schema.Model[T], String, (S) -&gt; @moondb.Value) -&gt; @schema.Relation[S, T]</pre><div class="doc"><p>A N:1 relationship: <code class="inline">child</code> -&gt; its single parent in <code class="inline">target</code>, matched by the parent's <code class="inline">target_key</code> column (usually its primary key) equalling the foreign key extracted from the child by <code class="inline">child_key</code>. Load it with <code class="inline">Session::load_one</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn case_(Array[(String, String)], else_? : String) -&gt; String</pre><div class="doc"><p>A searched <code class="inline">CASE</code> expression: each <code class="inline">(condition, result)</code> pair becomes one <code class="inline">WHEN … THEN …</code>, and a non-empty <code class="inline">else_</code> the trailing <code class="inline">ELSE</code>. Identifier-level like <code class="inline">func</code>. With no branches there is nothing to test, so it folds to <code class="inline">else_</code> (or <code class="inline">NULL</code>), which is what an all-branchless <code class="inline">CASE</code> would evaluate to anyway.</p></div></div>
+<div class="entry"><pre class="signature">pub fn cast(String, String) -&gt; String</pre><div class="doc"><p>A type conversion: <code class="inline">cast("price", "NUMERIC(10,2)")</code> renders <code class="inline">CAST(price AS NUMERIC(10,2))</code>. Identifier-level like <code class="inline">func</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn column(String, @schema.ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; @schema.Column</pre><div class="doc"><p>Declare a <code class="inline">Column</code>. <code class="inline">primary_key</code> and <code class="inline">references</code> default off; a primary-key column is <code class="inline">NOT NULL</code> implicitly (SQLite treats INTEGER PRIMARY KEY as the rowid), and <code class="inline">nullable</code> defaults to <code class="inline">true</code> for every other column.</p></div></div>
+<div class="entry"><pre class="signature">pub fn delete(String) -&gt; @query.Delete</pre><div class="doc"><p>Start a DELETE from <code class="inline">table</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn diff_schema(Array[@schema.Column], Array[@schema.Column], dialect? : @query.Dialect) -&gt; Array[@migrate.ColumnDiff]</pre><div class="doc"><p>Diff a model's <code class="inline">declared</code> columns against the <code class="inline">reflected</code> ones from a live table: declared-only columns are <code class="inline">Added</code>, reflected-only are <code class="inline">Removed</code>, and a name in both with a different <code class="inline">col_type</code> is <code class="inline">TypeChanged</code>. An empty result means the table matches the model. This is the write half of autogenerate — feed the diff to DDL to synthesise the migration.</p><p>Scope: reflection recovers only a column's storage type, so declare a model at the same granularity to avoid spurious diffs — a <code class="inline">Bool</code> stored as <code class="inline">INTEGER</code> reflects as <code class="inline">Int</code>, <code class="inline">Uuid</code>/<code class="inline">Json</code> stored as <code class="inline">TEXT</code> reflect as <code class="inline">Text</code>. And the diff reports add/remove/type only, not nullable / default / unique / PK / FK changes.</p><p>With <code class="inline">dialect</code> the types compare as that engine writes them, so a <code class="inline">BigIntType</code> declared against SQLite, where every integer is <code class="inline">INTEGER</code>, is no change; without it they compare as declared.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T, V : @moondb.ToValue] field(String, @schema.ColumnType, (T) -&gt; V, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; @schema.Field[T]</pre><div class="doc"><p>Declare a model field: its column metadata and the projection <code class="inline">encode</code> that reads the field out of a record. The column knobs (<code class="inline">primary_key</code>, <code class="inline">nullable</code>, <code class="inline">references</code>) mirror [<code class="inline">column</code>]. <code class="inline">encode</code> returns anything that binds as a parameter, so it is usually the attribute itself, <code class="inline">h =&gt; h.id</code>, and <code class="inline">T?</code> binds <code class="inline">None</code> as <code class="inline">NULL</code>; a [<code class="inline">Value</code>] binds as itself.</p></div></div>
+<div class="entry"><pre class="signature">pub fn func(String, Array[String]) -&gt; String</pre><div class="doc"><p>A function call as a column expression: <code class="inline">func("coalesce", ["a", "b"])</code> renders <code class="inline">coalesce(a, b)</code>. The arguments are identifier-level SQL, rendered verbatim like <code class="inline">Select::raw</code>, so bind a value by placing a <code class="inline">?</code> and passing it through the surrounding clause.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] has_many(@schema.Model[T], String, (S) -&gt; @moondb.Value) -&gt; @schema.Relation[S, T]</pre><div class="doc"><p>A 1:N relationship: <code class="inline">parent</code> -&gt; its children in <code class="inline">target</code>, matched by the child's <code class="inline">foreign_key</code> column equalling the parent key extracted by <code class="inline">parent_key</code>. Load it with <code class="inline">Session::load</code>, which returns every matching child record.</p></div></div>
+<div class="entry"><pre class="signature">pub fn index_ddl(String, String, Array[String], unique? : Bool) -&gt; String</pre><div class="doc"><p>With <code class="inline">unique=true</code> it is a <code class="inline">CREATE UNIQUE INDEX</code>; multiple <code class="inline">columns</code> make a composite index. Names are trusted identifiers, never bound. Pair it with a <code class="inline">Migration</code>'s <code class="inline">up</code>, and a <code class="inline">DROP INDEX</code> in its <code class="inline">down</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn insert(String) -&gt; @query.Insert</pre><div class="doc"><p>Start an INSERT into <code class="inline">table</code>. Values are bound, never spliced, so a column holding a quote or a semicolon is a value and not syntax.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] many_to_many(@schema.Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -&gt; @moondb.Value) -&gt; @schema.ManyToMany[S, T]</pre><div class="doc"><p>Define a many-to-many relationship through <code class="inline">junction</code>. <code class="inline">source_fk</code> / <code class="inline">target_fk</code> are the junction columns pointing at the source key and the <code class="inline">target_key</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn reflect_columns(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre><div class="doc"><p>Parse <code class="inline">PRAGMA table_info</code> rows into <code class="inline">Column</code>s — the reflection core, testable without a live database. The pragma projects, in order, <code class="inline">cid, name, type, notnull, dflt_value, pk</code>; a non-zero <code class="inline">pk</code> marks the primary key and <code class="inline">notnull</code> its NOT NULL.</p></div></div>
+<div class="entry"><pre class="signature">pub fn reflect_columns_mysql(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre><div class="doc"><p>Parse MySQL <code class="inline">SHOW COLUMNS</code> rows (<code class="inline">Field</code>, <code class="inline">Type</code>, <code class="inline">Null</code>, <code class="inline">Key</code>, <code class="inline">Default</code>, <code class="inline">Extra</code>) into <code class="inline">Column</code>s, recovering the primary key (<code class="inline">Key == "PRI"</code>) and autoincrement (<code class="inline">Extra</code> contains <code class="inline">auto_increment</code>).</p></div></div>
+<div class="entry"><pre class="signature">pub fn reflect_columns_pg(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre><div class="doc"><p>Parse PostgreSQL <code class="inline">information_schema.columns</code> rows (<code class="inline">column_name</code>, <code class="inline">data_type</code>, <code class="inline">is_nullable</code>) into <code class="inline">Column</code>s — the PG counterpart of <code class="inline">reflect_columns</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn reflect_table(&amp;@moondb.Driver, String) -&gt; Array[@schema.Column] raise @moondb.DbError</pre><div class="doc"><p>Reflect a table's columns off a live connection: run <code class="inline">PRAGMA table_info</code> and parse it. The thin driver wrapper over <code class="inline">reflect_columns</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn reflect_table_for(&amp;@moondb.Driver, String, @query.Dialect) -&gt; Array[@schema.Column] raise @moondb.DbError</pre><div class="doc"><p>Reflect a table's columns off a live connection for a specific <code class="inline">Dialect</code>: SQLite via <code class="inline">PRAGMA table_info</code>, PostgreSQL via <code class="inline">information_schema.columns</code>, MySQL via <code class="inline">SHOW COLUMNS</code>. The multi-dialect counterpart of <code class="inline">reflect_table</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S : @query.AsSource] select(S) -&gt; @query.Select</pre><div class="doc"><p>Start a SELECT over <code class="inline">src</code> — a table name, or a <code class="inline">Source</code> for a derived table, an alias or a LATERAL.</p></div></div>
+<div class="entry"><pre class="signature">pub fn update(String) -&gt; @query.Update</pre><div class="doc"><p>Start an UPDATE of <code class="inline">table</code>. Without a <code class="inline">where_</code> it rewrites every row, which is what SQL does and what the caller asked for.</p></div></div>
 </section>
 <section class="section" id="schema">
-<p class="folio">moonbitstack/moonorm/schema</p>
+<p class="eyebrow">moonbitstack/moonorm/schema</p>
 <h2>schema</h2>
-<h3>Types</h3>
-<pre class="signature">pub(all) struct Column {
+<h3>Types <span class="count">6</span></h3>
+<div class="entry"><pre class="signature">pub(all) struct Column {
   name : String
   col_type : ColumnType
   primary_key : Bool
@@ -84,8 +85,8 @@
   references : (String, String)?
   on_delete : String?
   on_update : String?
-}</pre>
-<pre class="signature">pub(all) enum ColumnType {
+}</pre><div class="doc"><p>One declared column of a <code class="inline">Model</code>: its <code class="inline">name</code>, storage <code class="inline">col_type</code>, whether it is the (or part of the) primary key, whether it accepts NULL, and an optional foreign-key <code class="inline">references</code> target <code class="inline">(table, column)</code>. Every fact that framework reads off the annotated attribute is stated here as data.</p></div></div>
+<div class="entry"><pre class="signature">pub(all) enum ColumnType {
   IntType
   BigIntType
   TextType
@@ -99,112 +100,113 @@
   TimeType
   UuidType
   JsonType
-} derive(Eq)</pre>
-<pre class="signature">pub struct Field[T] {
+} derive(Eq)</pre><div class="doc"><p>A column's SQL storage type. These map onto SQLite's type affinities when a <code class="inline">Model</code> renders <code class="inline">CREATE TABLE</code> DDL: <code class="inline">IntType</code>/<code class="inline">BoolType</code> -&gt; INTEGER, <code class="inline">TextType</code> -&gt; TEXT, <code class="inline">RealType</code> -&gt; REAL, <code class="inline">BlobType</code> -&gt; BLOB. <code class="inline">BoolType</code> is a distinct declared type so DDL reads intently, but binds and reads as an integer <code class="inline">0</code>/<code class="inline">1</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub struct Field[T] {
   column : Column
   encode : (T) -&gt; @moondb.Value
-}</pre>
-<pre class="signature">pub struct ManyToMany[S, T] {
+}</pre><div class="doc"><p>One field of a declarative model: a declared [<code class="inline">Column</code>] paired with the projection that reads the field's value out of a record <code class="inline">T</code>. A <code class="inline">Field</code> is the column metadata plus the "how to persist this one attribute" half of the mapping, factored to one place so a <code class="inline">Model</code> can be assembled from a list of fields rather than a hand-written <code class="inline">to_columns</code>.</p><p>This is the shape moonctl's <code class="inline">model</code> generator emits: from a <code class="inline">#orm</code>-annotated struct it produces one <code class="inline">field(...)</code> per attribute (the <code class="inline">encode</code> closure is a trivial projection like <code class="inline">h =&gt; Int(h.id)</code>), and a single <code class="inline">from_row</code> decoder. The generated <code class="inline">[Field]</code> array then drives the column list, the <code class="inline">CREATE TABLE</code> DDL, the <code class="inline">SELECT</code> projection, and the <code class="inline">INSERT</code> binding — everything except decoding a row back into <code class="inline">T</code>, which needs the record constructor MoonBit cannot synthesise without reflection (see [<code class="inline">Model::from_fields</code>]).</p></div></div>
+<div class="entry"><pre class="signature">pub struct ManyToMany[S, T] {
   target : Model[T]
   junction : String
   source_fk : String
   target_fk : String
   target_key : String
   source_key : (S) -&gt; @moondb.Value
-}</pre>
-<pre class="signature">pub struct Model[T] {
+}</pre><div class="doc"><p>A many-to-many relationship from a source <code class="inline">S</code> to a <code class="inline">target</code> <code class="inline">T</code> through a <code class="inline">junction</code> (association) table. The junction's <code class="inline">source_fk</code> column matches a key extracted from the source, and its <code class="inline">target_fk</code> column matches the target's <code class="inline">target_key</code>. Resolving the relationship JOINs the target through the junction. Load it with <code class="inline">Session::load_many</code>; like the 1:N / N:1 relations, MoonBit's lack of attribute interception makes the load an explicit call rather than a lazy attribute access.</p></div></div>
+<div class="entry"><pre class="signature">pub struct Model[T] {
   table : String
   columns : Array[Column]
   from_row : (@moondb.Row) -&gt; T raise @moondb.DbError
   to_columns : (T) -&gt; Array[(String, @moondb.Value)]
   ident : Map[Int32, Map[String, T]]
-}</pre>
-<pre class="signature">pub struct Relation[S, T] {
+}</pre><div class="doc"><p>A declarative model: the mapping between a database table and a MoonBit record type <code class="inline">T</code>. It bundles the <code class="inline">table</code> name, the ordered <code class="inline">columns</code>, and the two mapping closures that MoonBit cannot synthesise for want of reflection: <code class="inline">from_row</code> decodes a fetched <code class="inline">Row</code> into a <code class="inline">T</code>, and <code class="inline">to_columns</code> projects a <code class="inline">T</code> back into the <code class="inline">(name, Value)</code> pairs an INSERT binds. Build one with <code class="inline">Model::new</code>. The columns are the <code class="inline">mapped_column</code>s, and the two closures are the automatic attribute&lt;-&gt;column mapping made visible. Being a plain value it stays pure and compiles on every backend.</p></div></div>
+<div class="entry"><pre class="signature">pub struct Relation[S, T] {
   target : Model[T]
   key_column : String
   source_key : (S) -&gt; @moondb.Value
   to_many : Bool
-}</pre>
-<h3>Functions &amp; methods</h3>
-<pre class="signature">pub fn[S, T] belongs_to(Model[T], String, (S) -&gt; @moondb.Value) -&gt; Relation[S, T]</pre>
-<pre class="signature">pub fn column(String, ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; Column</pre>
-<pre class="signature">pub fn[T, V : @moondb.ToValue] field(String, ColumnType, (T) -&gt; V, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; Field[T]</pre>
-<pre class="signature">pub fn[S, T] has_many(Model[T], String, (S) -&gt; @moondb.Value) -&gt; Relation[S, T]</pre>
-<pre class="signature">pub fn[S, T] many_to_many(Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -&gt; @moondb.Value) -&gt; ManyToMany[S, T]</pre>
-<pre class="signature">pub fn Column::ddl(Self, inline_pk? : Bool) -&gt; String</pre>
-<pre class="signature">pub fn Column::ddl_for(Self, @query.Dialect, inline_pk? : Bool) -&gt; String</pre>
-<pre class="signature">pub fn ColumnType::equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn ColumnType::not_equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn ColumnType::sql_for(Self, @query.Dialect) -&gt; String</pre>
-<pre class="signature">pub fn[T] Field::name(Self[T]) -&gt; String</pre>
-<pre class="signature">pub fn[S, T] ManyToMany::query(Self[S, T], S) -&gt; @query.Select</pre>
-<pre class="signature">pub fn[T] Model::column_names(Self[T]) -&gt; Array[String]</pre>
-<pre class="signature">pub fn[T] Model::create_table_sql(Self[T], if_not_exists? : Bool) -&gt; String</pre>
-<pre class="signature">pub fn[T] Model::create_table_sql_for(Self[T], @query.Dialect, if_not_exists? : Bool) -&gt; String</pre>
-<pre class="signature">pub fn[T] Model::from_fields(String, Array[Field[T]], (@moondb.Row) -&gt; T raise @moondb.DbError) -&gt; Self[T]</pre>
-<pre class="signature">pub fn[T] Model::insert_of(Self[T], T) -&gt; @query.Insert</pre>
-<pre class="signature">pub fn[T] Model::map_row(Self[T], @moondb.Row) -&gt; T raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Model::map_rows(Self[T], Array[@moondb.Row]) -&gt; Array[T] raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Model::new(String, Array[Column], (@moondb.Row) -&gt; T raise @moondb.DbError, (T) -&gt; Array[(String, @moondb.Value)]) -&gt; Self[T]</pre>
-<pre class="signature">pub fn[T] Model::parent_tables(Self[T]) -&gt; Array[String]</pre>
-<pre class="signature">pub fn[T] Model::pk_columns(Self[T]) -&gt; Array[String]</pre>
-<pre class="signature">pub fn[T] Model::pk_of(Self[T], T) -&gt; Array[@moondb.Value]</pre>
-<pre class="signature">pub fn[T] Model::select(Self[T]) -&gt; @query.Select</pre>
-<pre class="signature">pub fn[T] Model::table_descriptor(Self[T]) -&gt; @query.Table</pre>
-<pre class="signature">pub fn[S, T] Relation::batch_query(Self[S, T], Array[S]) -&gt; @query.Select</pre>
-<pre class="signature">pub fn[S, T] Relation::query(Self[S, T], S) -&gt; @query.Select</pre>
-<pre class="signature">pub fn[S, T] Relation::source_value(Self[S, T], S) -&gt; @moondb.Value</pre>
+}</pre><div class="doc"><p>A foreign-key relationship from a source record <code class="inline">S</code> to a <code class="inline">target</code> model <code class="inline">T</code>, resolved by matching <code class="inline">target.key_column</code> against a <code class="inline">Value</code> extracted from the source. <code class="inline">to_many</code> records the cardinality (a 1:N parent-&gt;children link versus a N:1 child-&gt;parent link) so callers know whether to expect many rows or one. Because MoonBit has no attribute interception. The relationship is therefore a first-class value and the load is explicit, <code class="inline">Session::load</code> / <code class="inline">Session::load_one</code>, exactly the eager.</p></div></div>
+<h3>Functions &amp; methods <span class="count">26</span></h3>
+<div class="entry"><pre class="signature">pub fn[S, T] belongs_to(Model[T], String, (S) -&gt; @moondb.Value) -&gt; Relation[S, T]</pre><div class="doc"><p>A N:1 relationship: <code class="inline">child</code> -&gt; its single parent in <code class="inline">target</code>, matched by the parent's <code class="inline">target_key</code> column (usually its primary key) equalling the foreign key extracted from the child by <code class="inline">child_key</code>. Load it with <code class="inline">Session::load_one</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn column(String, ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; Column</pre><div class="doc"><p>Declare a <code class="inline">Column</code>. <code class="inline">primary_key</code> and <code class="inline">references</code> default off; a primary-key column is <code class="inline">NOT NULL</code> implicitly (SQLite treats INTEGER PRIMARY KEY as the rowid), and <code class="inline">nullable</code> defaults to <code class="inline">true</code> for every other column.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Column::ddl(Self, inline_pk? : Bool) -&gt; String</pre><div class="doc"><p>Render this column as a single <code class="inline">CREATE TABLE</code> column definition, e.g. <code class="inline">"user_id INTEGER NOT NULL REFERENCES users(id)"</code>. A <code class="inline">PRIMARY KEY</code> column emits that keyword; a non-nullable column emits <code class="inline">NOT NULL</code>; a <code class="inline">references</code> target emits a <code class="inline">REFERENCES table(column)</code> clause. Column and table names are trusted identifiers declared in code, never bound values.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Column::ddl_for(Self, @query.Dialect, inline_pk? : Bool) -&gt; String</pre><div class="doc"><p>A column definition rendered for a specific <code class="inline">Dialect</code>. An autoincrement primary key takes each engine's idiom: SQLite <code class="inline">INTEGER PRIMARY KEY AUTOINCREMENT</code>, PostgreSQL <code class="inline">SERIAL PRIMARY KEY</code> (<code class="inline">BIGSERIAL</code> for <code class="inline">BigIntType</code>), MySQL <code class="inline">INT AUTO_INCREMENT PRIMARY KEY</code> (<code class="inline">BIGINT</code> for <code class="inline">BigIntType</code>). Otherwise it is <code class="inline">sql_for</code> plus the same constraint clauses as <code class="inline">ddl</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn ColumnType::sql_for(Self, @query.Dialect) -&gt; String</pre><div class="doc"><p>The declared type keyword for a <code class="inline">ColumnType</code> in a given SQL <code class="inline">Dialect</code>. SQLite is the affinity-based default; PostgreSQL and MySQL render their native spellings (BOOLEAN/BYTEA/DOUBLE PRECISION/UUID/JSONB on PG; INT/TINYINT(1)/DOUBLE/JSON on MySQL). This is the per-dialect counterpart of <code class="inline">ColumnType::sql</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T, V : @moondb.ToValue] field(String, ColumnType, (T) -&gt; V, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -&gt; Field[T]</pre><div class="doc"><p>Declare a model field: its column metadata and the projection <code class="inline">encode</code> that reads the field out of a record. The column knobs (<code class="inline">primary_key</code>, <code class="inline">nullable</code>, <code class="inline">references</code>) mirror [<code class="inline">column</code>]. <code class="inline">encode</code> returns anything that binds as a parameter, so it is usually the attribute itself, <code class="inline">h =&gt; h.id</code>, and <code class="inline">T?</code> binds <code class="inline">None</code> as <code class="inline">NULL</code>; a [<code class="inline">Value</code>] binds as itself.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Field::name(Self[T]) -&gt; String</pre><div class="doc"><p>The name of the column this field maps to.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] has_many(Model[T], String, (S) -&gt; @moondb.Value) -&gt; Relation[S, T]</pre><div class="doc"><p>A 1:N relationship: <code class="inline">parent</code> -&gt; its children in <code class="inline">target</code>, matched by the child's <code class="inline">foreign_key</code> column equalling the parent key extracted by <code class="inline">parent_key</code>. Load it with <code class="inline">Session::load</code>, which returns every matching child record.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] many_to_many(Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -&gt; @moondb.Value) -&gt; ManyToMany[S, T]</pre><div class="doc"><p>Define a many-to-many relationship through <code class="inline">junction</code>. <code class="inline">source_fk</code> / <code class="inline">target_fk</code> are the junction columns pointing at the source key and the <code class="inline">target_key</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] ManyToMany::query(Self[S, T], S) -&gt; @query.Select</pre><div class="doc"><p>The <code class="inline">Select</code> resolving this relationship for a <code class="inline">source</code>: the target rows joined to the junction on <code class="inline">junction.target_fk = target.target_key</code>, filtered to <code class="inline">junction.source_fk = ?</code> with the source key bound (never spliced). The target columns are projected qualified (<code class="inline">target.col</code>) so a same-named junction column never makes the projection ambiguous. <code class="inline">Session::load_many</code> runs it and maps.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::column_names(Self[T]) -&gt; Array[String]</pre><div class="doc"><p>The declared column names, in order.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::create_table_sql(Self[T], if_not_exists? : Bool) -&gt; String</pre><div class="doc"><p>Render <code class="inline">CREATE TABLE</code> DDL for this model from its declared columns. With <code class="inline">if_not_exists=true</code> the statement is idempotent (<code class="inline">CREATE TABLE IF NOT EXISTS</code>).</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::create_table_sql_for(Self[T], @query.Dialect, if_not_exists? : Bool) -&gt; String</pre><div class="doc"><p><code class="inline">CREATE TABLE</code> DDL for this model rendered for a specific <code class="inline">Dialect</code> — the multi-dialect counterpart of <code class="inline">create_table_sql</code>. Uses <code class="inline">Column::ddl_for</code>, keeps a composite primary key as a table-level constraint, and appends <code class="inline">ENGINE=InnoDB</code> on MySQL.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::from_fields(String, Array[Field[T]], (@moondb.Row) -&gt; T raise @moondb.DbError) -&gt; Self[T]</pre><div class="doc"><p>Build a <code class="inline">Model[T]</code> from a list of [<code class="inline">Field</code>]s and a single row decoder — the declarative path that removes the hand-written <code class="inline">to_columns</code>. The columns and the binding projection are both derived from <code class="inline">fields</code>: <code class="inline">columns</code> is each field's declared column, and <code class="inline">to_columns</code> maps a record to <code class="inline">(name, field.encode(record))</code> pairs, leaving out an autoincrement key that encodes as <code class="inline">NULL</code> so the database assigns it. You still supply <code class="inline">from_row</code>, because reconstructing a <code class="inline">T</code> from a fetched row needs the record constructor, and MoonBit — lacking reflection — cannot synthesise it; that one closure is the irreducible core of the mapping.</p><p>This is the constructor moonctl-generated model metadata targets: the generator emits the <code class="inline">[Field]</code> array and the <code class="inline">from_row</code> decoder, and <code class="inline">from_fields</code> turns them into a live <code class="inline">Model</code>. Written by hand it reads just as directly:</p><p>``<code class="inline"> Model::from_fields( "hero", [ field("id", IntType, primary_key=true, h =&gt; h.id), field("name", TextType, nullable=false, h =&gt; h.name), ], r =&gt; { id: r.read(0), name: r.read(1) }, ) </code>``</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::insert_of(Self[T], T) -&gt; @query.Insert</pre><div class="doc"><p>Build an <code class="inline">Insert</code> that persists <code class="inline">record</code>, binding the pairs from <code class="inline">to_columns</code>. Values travel as <code class="inline">?</code> placeholders exactly like the rest of the builder.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::map_row(Self[T], @moondb.Row) -&gt; T raise @moondb.DbError</pre><div class="doc"><p>Decode a single fetched <code class="inline">Row</code> into a record via the model's <code class="inline">from_row</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::map_rows(Self[T], Array[@moondb.Row]) -&gt; Array[T] raise @moondb.DbError</pre><div class="doc"><p>Decode a whole result set into records, preserving row order.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::new(String, Array[Column], (@moondb.Row) -&gt; T raise @moondb.DbError, (T) -&gt; Array[(String, @moondb.Value)]) -&gt; Self[T]</pre><div class="doc"><p>Define a <code class="inline">Model[T]</code>. <code class="inline">from_row</code> should read the record's fields off the <code class="inline">@moondb.Row</code> (via <code class="inline">Row::text</code> / <code class="inline">Row::int</code> / <code class="inline">Row::by_name</code> …) — those accessors raise <code class="inline">@moondb.DbError</code> on a type or index mismatch, so <code class="inline">from_row</code> raises too and a decode bug surfaces at the call site. <code class="inline">to_columns</code> should list the column/value pairs to persist (typically every column except an autoincrement primary key). Write the closures in arrow form so the <code class="inline">raise</code> effect is inferred, e.g. <code class="inline">(r) =&gt; \{ id: r.int(0), name: r.text(1) \}</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::parent_tables(Self[T]) -&gt; Array[String]</pre><div class="doc"><p>The distinct tables this model's foreign keys point at, itself excluded. A flush orders inserts so every table named here is written before this one, and deletes the other way round.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::pk_columns(Self[T]) -&gt; Array[String]</pre><div class="doc"><p>The declared primary-key column names, in declaration order. Empty when the model declares no key at all — the unit of work needs one to address a row, and <code class="inline">Session::get</code> / <code class="inline">Session::delete_record</code> say so rather than guessing.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::pk_of(Self[T], T) -&gt; Array[@moondb.Value]</pre><div class="doc"><p>A record's primary-key values in <code class="inline">pk_columns</code> order, read off the same <code class="inline">to_columns</code> projection an INSERT binds — the only route to them, since MoonBit cannot look up an attribute by name.</p><p>A projection that omits a key column — the usual shape for an autoincrement id the server assigns — stops the scan there, so the result is shorter than <code class="inline">pk_columns</code>. That length mismatch is how a session tells a record it can address from one whose key does not exist yet.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::select(Self[T]) -&gt; @query.Select</pre><div class="doc"><p>A <code class="inline">Select</code> over this model's table with every declared column projected explicitly (so the projection order is fixed and known to <code class="inline">from_row</code>). Add <code class="inline">where_</code> / <code class="inline">order_by</code> / <code class="inline">limit</code> to it as usual, then run it with <code class="inline">Session::fetch_as</code> to get mapped records back.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Model::table_descriptor(Self[T]) -&gt; @query.Table</pre><div class="doc"><p>The <code class="inline">Table</code> descriptor for this model (name + column names), for interop with the plain builder API.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] Relation::batch_query(Self[S, T], Array[S]) -&gt; @query.Select</pre><div class="doc"><p>One SELECT covering every source's related rows — <code class="inline">key_column IN (…)</code> over the sources' keys — so loading a relation for a list costs one query instead of one per row. <code class="inline">source_value</code> is what buckets the results back.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] Relation::query(Self[S, T], S) -&gt; @query.Select</pre><div class="doc"><p>The <code class="inline">Select</code> that resolves this relationship for a given <code class="inline">source</code> record: the target model's projection filtered to <code class="inline">key_column = ?</code>, with the source-derived value bound (never spliced), so eager loading is injection-safe like every other query. <code class="inline">Session::load</code> runs this and maps the rows.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] Relation::source_value(Self[S, T], S) -&gt; @moondb.Value</pre><div class="doc"><p>The single <code class="inline">Select</code> that resolves this relationship for *many* sources at once: the target model's projection filtered to <code class="inline">key_column IN (k1, k2, …)</code>, where the keys are the distinct values extracted from <code class="inline">sources</code>. This is the query behind an N+1-avoiding batch load — one round trip fetches the related rows of every source, instead of one <code class="inline">query(source)</code> per source. Every key binds as its own placeholder. With no sources the result filters on the empty set (<code class="inline">IN (NULL)</code>), matching nothing; <code class="inline">Session::load_batch</code> short-circuits that case without a query. The source-side key this relationship extracts from a <code class="inline">source</code> record — the value the target's <code class="inline">key_column</code> is matched against. Exposed so a batch load can bucket fetched rows back to their sources.</p></div></div>
 </section>
 <section class="section" id="query">
-<p class="folio">moonbitstack/moonorm/query</p>
+<p class="eyebrow">moonbitstack/moonorm/query</p>
 <h2>query</h2>
-<h3>Types</h3>
-<pre class="signature">pub struct Delete {
+<h3>Types <span class="count">13</span></h3>
+<div class="entry"><pre class="signature">pub(open) trait AsSource {
+  fn to_source(Self) -&gt; Source
+}</pre><div class="doc"><p>What can stand where a table is expected. A <code class="inline">String</code> is the table name — so <code class="inline">select("users")</code> and <code class="inline">"teams".join(…)</code> keep reading as they always did — and a <code class="inline">Source</code> is anything richer (a derived table, an alias, a LATERAL).</p></div></div>
+<div class="entry"><pre class="signature">pub struct Delete {
   table : String
   filter : Where
   returning : Array[String]
-}</pre>
-<pre class="signature">pub(all) enum Dialect {
+}</pre><div class="doc"><p>A DELETE statement builder. Generative like <code class="inline">Select</code>, and it shares the same WHERE clause.</p></div></div>
+<div class="entry"><pre class="signature">pub(all) enum Dialect {
   Sqlite
   Postgres
   Mysql
-} derive(Eq)</pre>
-<pre class="signature">pub struct Insert {
+} derive(Eq)</pre><div class="doc"><p>The SQL dialect a statement renders for. Most of the builder is dialect-neutral — it emits <code class="inline">?</code> placeholders and standard clauses that every backend accepts — but a few constructs genuinely differ: upsert is <code class="inline">ON CONFLICT ... DO UPDATE</code> on SQLite and PostgreSQL versus <code class="inline">ON DUPLICATE KEY UPDATE</code> on MySQL, and <code class="inline">RETURNING</code> exists on SQLite and PostgreSQL but not MySQL. <code class="inline">build_for</code> takes a <code class="inline">Dialect</code> so those render correctly; the no-argument <code class="inline">build</code> renders the SQLite/PostgreSQL form, which is also what the <code class="inline">?</code>-placeholder default targets.</p></div></div>
+<div class="entry"><pre class="signature">pub struct Insert {
   table : String
   cols : Array[String]
   vals : Array[@moondb.Value]
   extra_rows : Array[Array[@moondb.Value]]
   mut conflict : Conflict?
   returning : Array[String]
-}</pre>
-<pre class="signature">pub(all) struct LockClause {
+}</pre><div class="doc"><p>An INSERT statement builder, with optional upsert (<code class="inline">ON CONFLICT</code>) and <code class="inline">RETURNING</code> support. Generative like <code class="inline">Select</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub(all) struct LockClause {
   mode : LockMode
   of : Array[String]
   nowait : Bool
   skip_locked : Bool
-} derive(Eq, @debug.Debug)</pre>
-<pre class="signature">pub(all) enum LockMode {
+} derive(Eq, @debug.Debug)</pre><div class="doc"><p>The tables it is restricted to (<code class="inline">OF …</code>, empty = all), and whether it fails rather than waits (<code class="inline">NOWAIT</code>) or skips locked rows (<code class="inline">SKIP LOCKED</code>).</p></div></div>
+<div class="entry"><pre class="signature">pub(all) enum LockMode {
   ForUpdate
   ForShare
-} derive(Eq, @debug.Debug)</pre>
-<pre class="signature">pub(all) enum Nulls {
+} derive(Eq, @debug.Debug)</pre><div class="doc"><p>The kind of row lock a <code class="inline">FOR UPDATE</code> / <code class="inline">FOR SHARE</code> clause takes.</p></div></div>
+<div class="entry"><pre class="signature">pub(all) enum Nulls {
   Auto
   First
   Last
-} derive(Eq)</pre>
-<pre class="signature">pub(all) enum Order {
+} derive(Eq)</pre><div class="doc"><p><code class="inline">Auto</code> emits nothing and leaves the placement to the server, which differs: PostgreSQL sorts NULLs last ascending, SQLite first. <code class="inline">First</code> / <code class="inline">Last</code> say it explicitly; MySQL has no such syntax and rejects it.</p></div></div>
+<div class="entry"><pre class="signature">pub(all) enum Order {
   Asc
   Desc
-} derive(Eq)</pre>
-<pre class="signature">pub(all) enum Predicate {
+} derive(Eq)</pre><div class="doc"><p>Sort direction for an ORDER BY term.</p></div></div>
+<div class="entry"><pre class="signature">pub(all) enum Predicate {
   Cmp(col~ : String, op~ : String, val~ : @moondb.Value)
   InList(col~ : String, vals~ : Array[@moondb.Value], negated~ : Bool)
   Exists(sub~ : Select, negated~ : Bool)
   And(Array[Predicate])
   Or(Array[Predicate])
   Not(Predicate)
-}</pre>
-<pre class="signature">pub struct Select {
+}</pre><div class="doc"><p>A boolean predicate tree, which the flat <code class="inline">where_</code>/<code class="inline">eq</code> API (always joined by <code class="inline">AND</code>) cannot. Every comparison binds its value as a placeholder, so a <code class="inline">(a = ? OR b = ?)</code> filter stays fully parameterised. Attach one to a query with <code class="inline">Select::where_pred</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub struct Select {
   from_ : Source
   ctes : Array[Cte]
   cols : Array[String]
@@ -219,138 +221,123 @@
   mut limit_ : Int32?
   mut offset_ : Int32?
   mut lock_ : LockClause?
-}</pre>
-<pre class="signature">pub(all) enum Source {
+}</pre><div class="doc"><p>A SELECT statement builder. Every method is generative, it returns a new statement and leaves the receiver alone, so a half-built query is a safe base to branch from.</p></div></div>
+<div class="entry"><pre class="signature">pub(all) enum Source {
   Tbl(String)
   Sub(Select)
   Alias(Source, String)
   Lateral(Source)
-}</pre>
-<pre class="signature">pub(all) struct Table {
+}</pre><div class="doc"><p>What a <code class="inline">FROM</code> or a <code class="inline">JOIN</code> names. A bare table is <code class="inline">Tbl</code>; <code class="inline">Sub</code> is a derived table (a whole <code class="inline">Select</code>, whose bound values thread into the enclosing statement's params at the position the subquery renders); <code class="inline">Alias</code> names either of those, which PostgreSQL and MySQL require of a derived table; <code class="inline">Lateral</code> lets a derived table reference the columns of the sources to its left (PostgreSQL and MySQL 8.0.14+; SQLite has no LATERAL).</p></div></div>
+<div class="entry"><pre class="signature">pub(all) struct Table {
   name : String
   columns : Array[String]
-}</pre>
-<pre class="signature">pub struct Update {
+}</pre><div class="doc"><p>A lightweight table descriptor: a table <code class="inline">name</code> plus its known <code class="inline">columns</code>. MoonBit has no reflection, so the schema is declared explicitly rather than introspected. <code class="inline">select()</code> turns it into a <code class="inline">Select</code> with every column projected.</p></div></div>
+<div class="entry"><pre class="signature">pub struct Update {
   table : String
   sets : Array[(String, Assign)]
   filter : Where
   returning : Array[String]
-}</pre>
-<pre class="signature">pub(open) trait AsSource {
-  fn to_source(Self) -&gt; Source
-}</pre>
-<h3>Functions &amp; methods</h3>
-<pre class="signature">pub fn case_(Array[(String, String)], else_? : String) -&gt; String</pre>
-<pre class="signature">pub fn cast(String, String) -&gt; String</pre>
-<pre class="signature">pub fn delete(String) -&gt; Delete</pre>
-<pre class="signature">pub fn func(String, Array[String]) -&gt; String</pre>
-<pre class="signature">pub fn insert(String) -&gt; Insert</pre>
-<pre class="signature">pub fn is_ident(String) -&gt; Bool</pre>
-<pre class="signature">pub fn[S : AsSource] select(S) -&gt; Select</pre>
-<pre class="signature">pub fn update(String) -&gt; Update</pre>
-<pre class="signature">pub fn Delete::build(Self) -&gt; (String, Array[@moondb.Value])</pre>
-<pre class="signature">pub fn Delete::build_for(Self, Dialect) -&gt; (String, Array[@moondb.Value])</pre>
-<pre class="signature">pub fn Delete::returning(Self, String) -&gt; Self</pre>
-<pre class="signature">pub fn Delete::returning_all(Self) -&gt; Self</pre>
-<pre class="signature">pub fn Delete::where_(Self, String, String, @moondb.Value) -&gt; Self</pre>
-<pre class="signature">pub fn Delete::where_in(Self, String, Select) -&gt; Self</pre>
-<pre class="signature">pub fn Delete::where_not_in(Self, String, Select) -&gt; Self</pre>
-<pre class="signature">pub fn Delete::where_pred(Self, Predicate) -&gt; Self</pre>
-<pre class="signature">pub fn Dialect::equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn Dialect::not_equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn Insert::build(Self) -&gt; (String, Array[@moondb.Value])</pre>
-<pre class="signature">pub fn Insert::build_for(Self, Dialect) -&gt; (String, Array[@moondb.Value])</pre>
-<pre class="signature">pub fn Insert::do_nothing(Self) -&gt; Self</pre>
-<pre class="signature">pub fn Insert::do_update(Self, String, @moondb.Value) -&gt; Self</pre>
-<pre class="signature">pub fn Insert::do_update_excluded(Self, String) -&gt; Self</pre>
-<pre class="signature">pub fn Insert::on_conflict(Self, Array[String]) -&gt; Self</pre>
-<pre class="signature">pub fn Insert::returning(Self, String) -&gt; Self</pre>
-<pre class="signature">pub fn Insert::returning_all(Self) -&gt; Self</pre>
-<pre class="signature">pub fn Insert::set(Self, String, @moondb.Value) -&gt; Self</pre>
-<pre class="signature">pub fn Insert::values(Self, Array[@moondb.Value]) -&gt; Self</pre>
-<pre class="signature">pub fn LockClause::equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn LockClause::not_equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn LockClause::to_repr(Self) -&gt; @debug.Repr</pre>
-<pre class="signature">pub fn LockMode::equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn LockMode::not_equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn LockMode::to_repr(Self) -&gt; @debug.Repr</pre>
-<pre class="signature">pub fn Nulls::equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn Nulls::not_equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn Order::equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn Order::not_equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn Predicate::build(Self) -&gt; (String, Array[@moondb.Value])</pre>
-<pre class="signature">pub fn Select::build(Self) -&gt; (String, Array[@moondb.Value])</pre>
-<pre class="signature">pub fn Select::column(Self, String) -&gt; Self</pre>
-<pre class="signature">pub fn Select::count(Self) -&gt; Self</pre>
-<pre class="signature">pub fn[S : AsSource] Select::cross_join(Self, S) -&gt; Self</pre>
-<pre class="signature">pub fn Select::distinct(Self) -&gt; Self</pre>
-<pre class="signature">pub fn Select::distinct_on(Self, Array[String]) -&gt; Self</pre>
-<pre class="signature">pub fn Select::eq(Self, String, @moondb.Value) -&gt; Self</pre>
-<pre class="signature">pub fn Select::except_(Self, Self) -&gt; Self</pre>
-<pre class="signature">pub fn Select::for_update(Self, read? : Bool, of? : Array[String], nowait? : Bool, skip_locked? : Bool) -&gt; Self</pre>
-<pre class="signature">pub fn[S : AsSource] Select::full_join(Self, S, String) -&gt; Self</pre>
-<pre class="signature">pub fn Select::group_by(Self, String) -&gt; Self</pre>
-<pre class="signature">pub fn Select::having(Self, String, String, @moondb.Value) -&gt; Self</pre>
-<pre class="signature">pub fn Select::intersect(Self, Self) -&gt; Self</pre>
-<pre class="signature">pub fn[S : AsSource] Select::join(Self, S, String) -&gt; Self</pre>
-<pre class="signature">pub fn[S : AsSource] Select::join_using(Self, S, Array[String]) -&gt; Self</pre>
-<pre class="signature">pub fn Select::label(Self, String, String) -&gt; Self</pre>
-<pre class="signature">pub fn[S : AsSource] Select::left_join(Self, S, String) -&gt; Self</pre>
-<pre class="signature">pub fn Select::limit(Self, Int32) -&gt; Self</pre>
-<pre class="signature">pub fn Select::offset(Self, Int32) -&gt; Self</pre>
-<pre class="signature">pub fn Select::order_by(Self, String, Order, nulls? : Nulls) -&gt; Self</pre>
-<pre class="signature">pub fn Select::raw(Self, String) -&gt; Self</pre>
-<pre class="signature">pub fn[S : AsSource] Select::right_join(Self, S, String) -&gt; Self</pre>
-<pre class="signature">pub fn Select::union(Self, Self) -&gt; Self</pre>
-<pre class="signature">pub fn Select::union_all(Self, Self) -&gt; Self</pre>
-<pre class="signature">pub fn Select::where_(Self, String, String, @moondb.Value) -&gt; Self</pre>
-<pre class="signature">pub fn Select::where_exists(Self, Self) -&gt; Self</pre>
-<pre class="signature">pub fn Select::where_in(Self, String, Self) -&gt; Self</pre>
-<pre class="signature">pub fn Select::where_in_values(Self, String, Array[@moondb.Value]) -&gt; Self</pre>
-<pre class="signature">pub fn Select::where_not_exists(Self, Self) -&gt; Self</pre>
-<pre class="signature">pub fn Select::where_not_in(Self, String, Self) -&gt; Self</pre>
-<pre class="signature">pub fn Select::where_not_in_values(Self, String, Array[@moondb.Value]) -&gt; Self</pre>
-<pre class="signature">pub fn Select::where_pred(Self, Predicate) -&gt; Self</pre>
-<pre class="signature">pub fn Select::window(Self, String, partition_by? : Array[String], order_by? : Array[(String, Order)], as_? : String) -&gt; Self</pre>
-<pre class="signature">pub fn Select::with_cte(Self, String, Self) -&gt; Self</pre>
-<pre class="signature">pub fn Select::with_recursive(Self, String, Self, Self, all? : Bool) -&gt; Self</pre>
-<pre class="signature">pub fn Source::to_source(Self) -&gt; Self</pre>
-<pre class="signature">pub fn Table::select(Self) -&gt; Select</pre>
-<pre class="signature">pub fn Update::build(Self) -&gt; (String, Array[@moondb.Value])</pre>
-<pre class="signature">pub fn Update::build_for(Self, Dialect) -&gt; (String, Array[@moondb.Value])</pre>
-<pre class="signature">pub fn Update::returning(Self, String) -&gt; Self</pre>
-<pre class="signature">pub fn Update::returning_all(Self) -&gt; Self</pre>
-<pre class="signature">pub fn Update::set(Self, String, @moondb.Value) -&gt; Self</pre>
-<pre class="signature">pub fn Update::set_expr(Self, String, String, vals? : Array[@moondb.Value]) -&gt; Self</pre>
-<pre class="signature">pub fn Update::where_(Self, String, String, @moondb.Value) -&gt; Self</pre>
-<pre class="signature">pub fn Update::where_in(Self, String, Select) -&gt; Self</pre>
-<pre class="signature">pub fn Update::where_not_in(Self, String, Select) -&gt; Self</pre>
-<pre class="signature">pub fn Update::where_pred(Self, Predicate) -&gt; Self</pre>
+}</pre><div class="doc"><p>An UPDATE statement builder. Generative like <code class="inline">Select</code>, and it shares the same WHERE clause, so <code class="inline">where_pred</code> / <code class="inline">where_in</code> narrow an update exactly as they narrow a query.</p></div></div>
+<h3>Functions &amp; methods <span class="count">74</span></h3>
+<div class="entry"><pre class="signature">pub fn case_(Array[(String, String)], else_? : String) -&gt; String</pre><div class="doc"><p>A searched <code class="inline">CASE</code> expression: each <code class="inline">(condition, result)</code> pair becomes one <code class="inline">WHEN … THEN …</code>, and a non-empty <code class="inline">else_</code> the trailing <code class="inline">ELSE</code>. Identifier-level like <code class="inline">func</code>. With no branches there is nothing to test, so it folds to <code class="inline">else_</code> (or <code class="inline">NULL</code>), which is what an all-branchless <code class="inline">CASE</code> would evaluate to anyway.</p></div></div>
+<div class="entry"><pre class="signature">pub fn cast(String, String) -&gt; String</pre><div class="doc"><p>A type conversion: <code class="inline">cast("price", "NUMERIC(10,2)")</code> renders <code class="inline">CAST(price AS NUMERIC(10,2))</code>. Identifier-level like <code class="inline">func</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn delete(String) -&gt; Delete</pre><div class="doc"><p>Start a DELETE from <code class="inline">table</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Delete::build(Self) -&gt; (String, Array[@moondb.Value])</pre><div class="doc"><p>Render <code class="inline">(sql, params)</code> for the SQLite/PostgreSQL dialect.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Delete::build_for(Self, Dialect) -&gt; (String, Array[@moondb.Value])</pre><div class="doc"><p>Render <code class="inline">(sql, params)</code> for <code class="inline">dialect</code>. Identical everywhere but <code class="inline">RETURNING</code>, which MySQL does not have and so does not get.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Delete::returning(Self, String) -&gt; Self</pre><div class="doc"><p>Return <code class="inline">col</code> from each deleted row (SQLite 3.35+, PostgreSQL) — the row's contents survive the delete only if you ask for them here. Repeatable; <code class="inline">build_for(Mysql)</code> drops it.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Delete::returning_all(Self) -&gt; Self</pre><div class="doc"><p>Return every column of each deleted row (<code class="inline">RETURNING *</code>). See <code class="inline">returning</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Delete::where_(Self, String, String, @moondb.Value) -&gt; Self</pre><div class="doc"><p>Narrow the delete with <code class="inline">col op ?</code>. Conditions are ANDed together.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Delete::where_in(Self, String, Select) -&gt; Self</pre><div class="doc"><p>Narrow the delete with <code class="inline">col IN (subquery)</code> — "delete the rows some other query picks out". The subquery's bound values splice in at the predicate's position.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Delete::where_not_in(Self, String, Select) -&gt; Self</pre><div class="doc"><p>Narrow the delete with <code class="inline">col NOT IN (subquery)</code>. See <code class="inline">where_in</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Delete::where_pred(Self, Predicate) -&gt; Self</pre><div class="doc"><p>Narrow the delete with a boolean <code class="inline">Predicate</code> tree. See <code class="inline">Select::where_pred</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn func(String, Array[String]) -&gt; String</pre><div class="doc"><p>A function call as a column expression: <code class="inline">func("coalesce", ["a", "b"])</code> renders <code class="inline">coalesce(a, b)</code>. The arguments are identifier-level SQL, rendered verbatim like <code class="inline">Select::raw</code>, so bind a value by placing a <code class="inline">?</code> and passing it through the surrounding clause.</p></div></div>
+<div class="entry"><pre class="signature">pub fn insert(String) -&gt; Insert</pre><div class="doc"><p>Start an INSERT into <code class="inline">table</code>. Values are bound, never spliced, so a column holding a quote or a semicolon is a value and not syntax.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Insert::build(Self) -&gt; (String, Array[@moondb.Value])</pre><div class="doc"><p>Render to <code class="inline">(sql, params)</code> for the SQLite/PostgreSQL dialect. Equivalent to <code class="inline">build_for(Sqlite)</code>; kept as the no-argument default because plain inserts and the <code class="inline">?</code>-placeholder convention target this form.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Insert::build_for(Self, Dialect) -&gt; (String, Array[@moondb.Value])</pre><div class="doc"><p>Render to <code class="inline">(sql, params)</code> for <code class="inline">dialect</code>, with <code class="inline">?</code> placeholders for every bound value. Bound values appear in params in SQL-text order: the inserted <code class="inline">VALUES</code> first, then any <code class="inline">DO UPDATE SET col = ?</code> values. Upsert renders as <code class="inline">ON CONFLICT</code> on SQLite/PostgreSQL and <code class="inline">ON DUPLICATE KEY UPDATE</code> on MySQL; <code class="inline">RETURNING</code> is emitted on SQLite/PostgreSQL and omitted on MySQL.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Insert::do_nothing(Self) -&gt; Self</pre><div class="doc"><p>On a conflict, keep the existing row and change nothing (<code class="inline">ON CONFLICT DO NOTHING</code>). MySQL has no such form, so <code class="inline">build_for(Mysql)</code> renders a no-op self-assignment instead.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Insert::do_update(Self, String, @moondb.Value) -&gt; Self</pre><div class="doc"><p>On a conflict, set <code class="inline">col</code> to a bound value (<code class="inline">col = ?</code>). The value binds as a parameter after the inserted values, so an upsert stays injection-safe.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Insert::do_update_excluded(Self, String) -&gt; Self</pre><div class="doc"><p>On a conflict, set <code class="inline">col</code> to the value the failed insert tried to write (<code class="inline">excluded.col</code> on SQLite/PostgreSQL, <code class="inline">VALUES(col)</code> on MySQL). This is the "overwrite with the incoming row" upsert.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Insert::on_conflict(Self, Array[String]) -&gt; Self</pre><div class="doc"><p>Turn this INSERT into an upsert keyed on <code class="inline">targets</code>. Chain <code class="inline">do_update</code> / <code class="inline">do_update_excluded</code> to say what to change on a collision, or leave it and call <code class="inline">do_nothing</code>. SQLite and PostgreSQL name the conflict target explicitly; <code class="inline">build_for(Mysql)</code> ignores it (MySQL infers the key), so pass it regardless and the right dialect uses it.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Insert::returning(Self, String) -&gt; Self</pre><div class="doc"><p>Return <code class="inline">col</code> from each inserted (or upserted) row. On SQLite and PostgreSQL this appends <code class="inline">RETURNING</code>, so a caller reads the server-assigned id or a default/trigger-computed value back in the same round trip instead of a second SELECT. Repeatable. <code class="inline">build_for(Mysql)</code> drops it — MySQL has no <code class="inline">RETURNING</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Insert::returning_all(Self) -&gt; Self</pre><div class="doc"><p>Return every column of each inserted row (<code class="inline">RETURNING *</code>). See <code class="inline">returning</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Insert::set(Self, String, @moondb.Value) -&gt; Self</pre><div class="doc"><p>Set a column to a value.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Insert::values(Self, Array[@moondb.Value]) -&gt; Self</pre><div class="doc"><p>Append another row to a multi-row INSERT. Every value binds as its own placeholder, so a bulk insert stays injection-safe; each <code class="inline">row</code> must supply one value per column.</p></div></div>
+<div class="entry"><pre class="signature">pub fn is_ident(String) -&gt; Bool</pre><div class="doc"><p>Whether <code class="inline">s</code> is a bare SQL identifier: a letter or <code class="inline">_</code>, then letters, digits or <code class="inline">_</code>. Identifiers cannot be bound as parameters, so a name that is interpolated into SQL (a table, a savepoint) is checked with this first; anything else is refused rather than quoted, which keeps the rule the same on every dialect.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Predicate::build(Self) -&gt; (String, Array[@moondb.Value])</pre><div class="doc"><p>Render a predicate to its SQL fragment and the values it binds, in text order. A multi-child <code class="inline">And</code>/<code class="inline">Or</code> is wrapped in parentheses so nesting composes correctly.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S : AsSource] select(S) -&gt; Select</pre><div class="doc"><p>Start a SELECT over <code class="inline">src</code> — a table name, or a <code class="inline">Source</code> for a derived table, an alias or a LATERAL.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::build(Self) -&gt; (String, Array[@moondb.Value])</pre><div class="doc"><p>Render to <code class="inline">(sql, params)</code>, with <code class="inline">?</code> placeholders for every bound value. Bound values appear in the params list in the same left-to-right order they occur in the SQL text: CTE subqueries first (the leading <code class="inline">WITH</code>), then any derived table in <code class="inline">FROM</code> and the joins, then the <code class="inline">WHERE</code> predicates, then <code class="inline">HAVING</code>, then the set-operation operands.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::column(Self, String) -&gt; Self</pre><div class="doc"><p>Add a projected column (no columns selects <code class="inline">*</code>).</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::count(Self) -&gt; Self</pre><div class="doc"><p>Project <code class="inline">COUNT(*)</code> — the most common aggregate. Sugar for <code class="inline">raw("COUNT(*)")</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S : AsSource] Select::cross_join(Self, S) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">CROSS JOIN src</code> — the cartesian product, which takes no <code class="inline">ON</code>. Paired with a <code class="inline">Lateral</code> source this is how a row-generating function is joined per row.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::distinct(Self) -&gt; Self</pre><div class="doc"><p>Deduplicate the result set: <code class="inline">SELECT DISTINCT</code>. Applies to this query's own projection (each operand of a set operation carries its own DISTINCT).</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::distinct_on(Self, Array[String]) -&gt; Self</pre><div class="doc"><p>Keep the first row of each distinct <code class="inline">cols</code> group: <code class="inline">SELECT DISTINCT ON (a, b)</code>, PostgreSQL's extension. Which row is "first" is whatever <code class="inline">ORDER BY</code> says, so pair it with an <code class="inline">order_by</code> that leads with the same columns. Takes precedence over plain <code class="inline">distinct</code> when both are set; no other dialect accepts it.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::eq(Self, String, @moondb.Value) -&gt; Self</pre><div class="doc"><p>Shorthand for <code class="inline">where_(col, "=", val)</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::except_(Self, Self) -&gt; Self</pre><div class="doc"><p><code class="inline">EXCEPT</code> — rows in this query but not in <code class="inline">other</code> (SQL's set difference).</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::for_update(Self, read? : Bool, of? : Array[String], nowait? : Bool, skip_locked? : Bool) -&gt; Self</pre><div class="doc"><p>Or <code class="inline">FOR SHARE</code> when <code class="inline">read</code>; restrict it to certain tables with <code class="inline">of</code>; make it fail immediately on a locked row with <code class="inline">nowait</code>, or skip locked rows with <code class="inline">skip_locked</code>. The clause is emitted after <code class="inline">ORDER BY</code> / <code class="inline">LIMIT</code> / <code class="inline">OFFSET</code>, the standard SQL position (SQLite, which has no row locks, ignores it).</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S : AsSource] Select::full_join(Self, S, String) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">FULL JOIN src ON &lt;on&gt;</code> — every row of both sides. See <code class="inline">join</code>. MySQL has no FULL JOIN; SQLite gained it in 3.39.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::group_by(Self, String) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">GROUP BY</code> column (repeatable; columns are emitted in call order).</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::having(Self, String, String, @moondb.Value) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">col op ?</code> predicate to the <code class="inline">HAVING</code> clause (ANDed with the rest). The value is bound as a <code class="inline">?</code> placeholder exactly like <code class="inline">where_</code>, so aggregate filters stay injection-safe.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::intersect(Self, Self) -&gt; Self</pre><div class="doc"><p><code class="inline">INTERSECT</code> — rows present in both queries.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S : AsSource] Select::join(Self, S, String) -&gt; Self</pre><div class="doc"><p>Add an inner <code class="inline">JOIN src ON &lt;on&gt;</code>. <code class="inline">src</code> is a table name or a <code class="inline">Source</code> (a derived table brings its bound values with it). The <code class="inline">on</code> predicate is rendered verbatim (it references columns, not bound values), so pass only trusted identifiers.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S : AsSource] Select::join_using(Self, S, Array[String]) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">JOIN src USING (a, b)</code> — the equi-join on columns of the same name in both tables, which also collapses each pair into one output column. <code class="inline">cols</code> are identifiers, rendered verbatim.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::label(Self, String, String) -&gt; Self</pre><div class="doc"><p>The name is what the result row is keyed by, so it is what <code class="inline">from_row</code> reads.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S : AsSource] Select::left_join(Self, S, String) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">LEFT JOIN src ON &lt;on&gt;</code> — every left row, matched or not. See <code class="inline">join</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::limit(Self, Int32) -&gt; Self</pre><div class="doc"><p>Cap how many rows come back.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::offset(Self, Int32) -&gt; Self</pre><div class="doc"><p>Skip the first <code class="inline">n</code> rows. Paired with <code class="inline">limit</code> this is a page.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::order_by(Self, String, Order, nulls? : Nulls) -&gt; Self</pre><div class="doc"><p>Order the result by a column. Repeated calls order by each in turn. <code class="inline">nulls</code> places NULLs explicitly (<code class="inline">NULLS FIRST</code> / <code class="inline">NULLS LAST</code>); the default leaves it to the server, which is the only portable choice — MySQL rejects the syntax.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::raw(Self, String) -&gt; Self</pre><div class="doc"><p>Add a raw column expression (e.g. an aggregate like <code class="inline">"SUM(price)"</code> or a qualified <code class="inline">"users.id"</code>). Identical machinery to <code class="inline">column</code>; named for intent so call sites read as "this is an expression, not a plain column name".</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S : AsSource] Select::right_join(Self, S, String) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">RIGHT JOIN src ON &lt;on&gt;</code> — every right row, matched or not. See <code class="inline">join</code>. SQLite gained it in 3.39; older versions need the join written the other way.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::union(Self, Self) -&gt; Self</pre><div class="doc"><p><code class="inline">UNION</code> this query with <code class="inline">other</code> — the combined rows with duplicates removed. A trailing ORDER BY / LIMIT on this query binds to the whole compound (standard SQL); one on <code class="inline">other</code> makes it a derived table so it keeps binding to <code class="inline">other</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::union_all(Self, Self) -&gt; Self</pre><div class="doc"><p><code class="inline">UNION ALL</code> — the combined rows keeping duplicates.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::where_(Self, String, String, @moondb.Value) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">col op ?</code> predicate (ANDed with the rest).</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::where_exists(Self, Self) -&gt; Self</pre><div class="doc"><p>Add an <code class="inline">EXISTS (subquery)</code> predicate (ANDed with the rest). The subquery's bound values splice in at its position, so it stays injection-safe.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::where_in(Self, String, Self) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">col IN (subquery)</code> predicate (ANDed with the rest). The subquery's bound values splice in at the predicate's position, so a correlated or filtering subquery stays injection-safe exactly like a scalar <code class="inline">where_</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::where_in_values(Self, String, Array[@moondb.Value]) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">col IN (?, ?, …)</code> predicate over an explicit list of values (ANDed with the rest). Every value binds as its own placeholder, never spliced — this is the set-membership filter a batch load issues to fetch the related rows of many parents in one round trip (<code class="inline">WHERE fk IN (key1, key2, …)</code>) instead of one query per parent. An empty <code class="inline">vals</code> renders the always-false <code class="inline">1 = 0</code> — "in the empty set" matches nothing — so a batch load with no keys returns no rows rather than erroring.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::where_not_exists(Self, Self) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">NOT EXISTS (subquery)</code> predicate (ANDed with the rest). See <code class="inline">where_exists</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::where_not_in(Self, String, Self) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">col NOT IN (subquery)</code> predicate (ANDed with the rest). See <code class="inline">where_in</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::where_not_in_values(Self, String, Array[@moondb.Value]) -&gt; Self</pre><div class="doc"><p>Add a <code class="inline">col NOT IN (?, ?, …)</code> predicate over an explicit list of values (ANDed with the rest). See <code class="inline">where_in_values</code>; an empty <code class="inline">vals</code> renders the always-true <code class="inline">1 = 1</code> — "not in the empty set" matches every row.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::where_pred(Self, Predicate) -&gt; Self</pre><div class="doc"><p>Add a boolean <code class="inline">Predicate</code> tree to the <code class="inline">WHERE</code> — the parameter-safe <code class="inline">AND</code>/<code class="inline">OR</code>/<code class="inline">NOT</code> grouping the flat <code class="inline">where_</code>/<code class="inline">eq</code> cannot express, e.g. <code class="inline">where_pred(Or([Cmp(col="a", op="=", val=Int(1)), Cmp(col="b", op="=", val=Int(2))]))</code>. Predicates are ANDed with the other clauses, so mixing <code class="inline">eq(...)</code> and <code class="inline">where_pred(...)</code> composes as one conjunction.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::window(Self, String, partition_by? : Array[String], order_by? : Array[(String, Order)], as_? : String) -&gt; Self</pre><div class="doc"><p>Project a window function: <code class="inline">&lt;expr&gt; OVER (PARTITION BY … ORDER BY …)</code>, optionally aliased. Window functions compute over a frame of rows without collapsing them (<code class="inline">ROW_NUMBER()</code>, <code class="inline">RANK()</code>, a running <code class="inline">SUM(x)</code>), so this adds one more projected column rather than grouping. <code class="inline">expr</code> is the function call (<code class="inline">"ROW_NUMBER()"</code>, <code class="inline">"SUM(amount)"</code>), <code class="inline">partition_by</code> splits the rows into independent windows, and <code class="inline">order_by</code> ranks within each. All three are identifier-level SQL (they name columns and functions, never bound values), so they render verbatim like <code class="inline">raw</code> and carry no parameters. An empty <code class="inline">partition_by</code> and <code class="inline">order_by</code> yields the whole result as one unordered window, <code class="inline">&lt;expr&gt; OVER ()</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::with_cte(Self, String, Self) -&gt; Self</pre><div class="doc"><p>Attach a common table expression: <code class="inline">WITH name AS (sub)</code>. Repeatable — several CTEs render comma-separated in one leading <code class="inline">WITH</code>. The subquery is parameterised like any other statement; its bound values lead the final params list because the <code class="inline">WITH</code> clause leads the SQL text. <code class="inline">name</code> is a trusted identifier declared in code, never a bound value.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Select::with_recursive(Self, String, Self, Self, all? : Bool) -&gt; Self</pre><div class="doc"><p><code class="inline">anchor</code> is the base term and <code class="inline">step</code> the term that refers back to <code class="inline">name</code> in its own <code class="inline">FROM</code> — the CTE name is a trusted identifier referenceable in <code class="inline">step</code> and in this query's own <code class="inline">FROM</code>, so the usual shape is <code class="inline">select(name).with_recursive(name, anchor, step)</code>. <code class="inline">all</code> picks <code class="inline">UNION ALL</code> (keep duplicates, the common tree/graph walk) over the default <code class="inline">UNION</code>. The two terms compose through the existing <code class="inline">union</code> / <code class="inline">union_all</code> builders, so their bound values thread through in text order like any CTE.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Source::to_source(Self) -&gt; Self</pre></div>
+<div class="entry"><pre class="signature">pub fn Table::select(Self) -&gt; Select</pre><div class="doc"><p>Start a SELECT over this table with all of its declared <code class="inline">columns</code> projected (an empty <code class="inline">columns</code> yields <code class="inline">SELECT *</code>, matching <code class="inline">select(name)</code>).</p></div></div>
+<div class="entry"><pre class="signature">pub fn update(String) -&gt; Update</pre><div class="doc"><p>Start an UPDATE of <code class="inline">table</code>. Without a <code class="inline">where_</code> it rewrites every row, which is what SQL does and what the caller asked for.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Update::build(Self) -&gt; (String, Array[@moondb.Value])</pre><div class="doc"><p>Render <code class="inline">(sql, params)</code> for the SQLite/PostgreSQL dialect. The SET values come first and the WHERE values after, in the order the placeholders appear, which is the order every driver binds in.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Update::build_for(Self, Dialect) -&gt; (String, Array[@moondb.Value])</pre><div class="doc"><p>Render <code class="inline">(sql, params)</code> for <code class="inline">dialect</code>. Identical everywhere but <code class="inline">RETURNING</code>, which MySQL does not have and so does not get.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Update::returning(Self, String) -&gt; Self</pre><div class="doc"><p>Return <code class="inline">col</code> from each updated row (SQLite 3.35+, PostgreSQL). Repeatable; <code class="inline">build_for(Mysql)</code> drops it.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Update::returning_all(Self) -&gt; Self</pre><div class="doc"><p>Return every column of each updated row (<code class="inline">RETURNING *</code>). See <code class="inline">returning</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Update::set(Self, String, @moondb.Value) -&gt; Self</pre><div class="doc"><p>Assign one column a bound value. Repeated calls set each, in the order given.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Update::set_expr(Self, String, String, vals? : Array[@moondb.Value]) -&gt; Self</pre><div class="doc"><p>Assign one column an expression instead of a value — <code class="inline">set_expr("n", "n + ?", vals=[Int(1)])</code> renders <code class="inline">SET n = n + ?</code>. The expression is rendered verbatim, so it can read the row's current columns, which a bound value cannot; anything that varies belongs in <code class="inline">vals</code>, one per <code class="inline">?</code>, and binds in the order the placeholders appear.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Update::where_(Self, String, String, @moondb.Value) -&gt; Self</pre><div class="doc"><p>Narrow the update with <code class="inline">col op ?</code>. Conditions are ANDed together.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Update::where_in(Self, String, Select) -&gt; Self</pre><div class="doc"><p>Narrow the update with <code class="inline">col IN (subquery)</code> — "update the rows some other query picks out". The subquery's bound values splice in at the predicate's position.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Update::where_not_in(Self, String, Select) -&gt; Self</pre><div class="doc"><p>Narrow the update with <code class="inline">col NOT IN (subquery)</code>. See <code class="inline">where_in</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Update::where_pred(Self, Predicate) -&gt; Self</pre><div class="doc"><p>Narrow the update with a boolean <code class="inline">Predicate</code> tree — the <code class="inline">AND</code>/<code class="inline">OR</code>/<code class="inline">NOT</code> grouping the flat <code class="inline">where_</code> cannot express. See <code class="inline">Select::where_pred</code>.</p></div></div>
 </section>
 <section class="section" id="session">
-<p class="folio">moonbitstack/moonorm/session</p>
+<p class="eyebrow">moonbitstack/moonorm/session</p>
 <h2>session</h2>
-<h3>Types</h3>
-<pre class="signature">pub(all) suberror LostUpdate {
-  LostUpdate(String)
-}</pre>
-<pre class="signature">pub(all) enum IsolationLevel {
+<h3>Types <span class="count">6</span></h3>
+<div class="entry"><pre class="signature">pub(all) enum IsolationLevel {
   ReadUncommitted
   ReadCommitted
   RepeatableRead
   Serializable
-} derive(Eq)</pre>
-<pre class="signature">pub struct RowStream[T] {
+} derive(Eq)</pre><div class="doc"><p>A SQL transaction isolation level, in the four-rung ANSI ladder from weakest to strongest. Passed via <code class="inline">TxOptions</code> to <code class="inline">Session::begin_with</code>, which renders the backend's <code class="inline">SET TRANSACTION</code> (or SQLite <code class="inline">PRAGMA</code>) statement.</p></div></div>
+<div class="entry"><pre class="signature">pub(all) suberror LostUpdate {
+  LostUpdate(String)
+}</pre><div class="doc"><p>A lost update was detected: an optimistic-lock <code class="inline">UPDATE</code> matched no row because the row's version had already moved on since it was read. Raised by <code class="inline">Session::modify_versioned</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub struct RowStream[T] {
   cursor : &amp;@moondb.Cursor
   model : @schema.Model[T]
-}</pre>
-<pre class="signature">pub struct Savepoint {
+}</pre><div class="doc"><p>A typed streaming cursor: each [<code class="inline">next</code>](RowStream::next) decodes one row into a record via the model. The record-level counterpart to [<code class="inline">Session::stream</code>].</p></div></div>
+<div class="entry"><pre class="signature">pub struct Savepoint {
   sess : Session
   name : String
   depth : Int32
   mut finished : Bool
-}</pre>
-<pre class="signature">pub struct Session {
+}</pre><div class="doc"><p>A nested transaction opened by <code class="inline">Session::begin_nested</code>, wrapping one SAVEPOINT whose name and depth the session tracks for you. Merging it into the enclosing transaction) or <code class="inline">rollback</code>-ing (discard the work since the savepoint). Both are terminal and idempotent — calling either a second time is a no-op — and both decrement the session's savepoint depth.</p></div></div>
+<div class="entry"><pre class="signature">pub struct Session {
   driver : &amp;@moondb.Driver
   mut sp_depth : Int32
   mut sp_seq : Int32
@@ -359,103 +346,97 @@
   dirty : Array[Work]
   deleted : Array[Work]
   detach : Array[() -&gt; Unit]
-}</pre>
-<pre class="signature">pub(all) struct TxOptions {
+}</pre><div class="doc"><p>An explicit unit-of-work over a <code class="inline">@moondb.Driver</code>. Every statement here is issued explicitly, the faithful MoonBit equivalent given the absence of attribute interception. It holds the backend as a <code class="inline">&amp;@moondb.Driver</code> trait object, so one <code class="inline">Session</code> type drives every backend.</p></div></div>
+<div class="entry"><pre class="signature">pub(all) struct TxOptions {
   isolation : IsolationLevel?
   read_only : Bool
-}</pre>
-<h3>Functions &amp; methods</h3>
-<pre class="signature">pub fn LostUpdate::output(Self, &amp;Logger) -&gt; Unit</pre>
-<pre class="signature">pub fn LostUpdate::to_string(Self) -&gt; String</pre>
-<pre class="signature">pub fn IsolationLevel::equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn IsolationLevel::keyword(Self) -&gt; String</pre>
-<pre class="signature">pub fn IsolationLevel::not_equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn[T] RowStream::close(Self[T]) -&gt; Unit</pre>
-<pre class="signature">pub fn[T] RowStream::next(Self[T]) -&gt; T? raise @moondb.DbError</pre>
-<pre class="signature">pub fn Savepoint::commit(Self) -&gt; Unit raise @moondb.DbError</pre>
-<pre class="signature">pub fn Savepoint::depth(Self) -&gt; Int32</pre>
-<pre class="signature">pub fn Savepoint::name(Self) -&gt; String</pre>
-<pre class="signature">pub fn Savepoint::release(Self) -&gt; Unit raise @moondb.DbError</pre>
-<pre class="signature">pub fn Savepoint::rollback(Self) -&gt; Unit raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::add(Self, @query.Insert) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Session::add_record(Self, @schema.Model[T], T) -&gt; Unit</pre>
-<pre class="signature">pub fn[T] Session::all(Self, @schema.Model[T]) -&gt; Array[T] raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::begin(Self) -&gt; Unit raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::begin_nested(Self) -&gt; Savepoint raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::begin_with(Self, TxOptions, dialect? : @query.Dialect) -&gt; Unit raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::close(Self) -&gt; Unit</pre>
-<pre class="signature">pub fn Session::commit(Self) -&gt; Unit raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Session::create_table(Self, @schema.Model[T], if_not_exists? : Bool) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Session::delete_record(Self, @schema.Model[T], T) -&gt; Unit raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::deleted_count(Self) -&gt; Int32</pre>
-<pre class="signature">pub fn Session::dirty_count(Self) -&gt; Int32</pre>
-<pre class="signature">pub fn Session::execute(Self, String, Array[@moondb.Value]) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Session::expunge(Self, @schema.Model[T], T) -&gt; Unit</pre>
-<pre class="signature">pub fn Session::expunge_all(Self) -&gt; Unit</pre>
-<pre class="signature">pub fn Session::fetch(Self, @query.Select) -&gt; Array[@moondb.Row] raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Session::fetch_as(Self, @schema.Model[T], @query.Select) -&gt; Array[T] raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::flush(Self) -&gt; Unit raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Session::get(Self, @schema.Model[T], @moondb.Value) -&gt; T? raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Session::get_by(Self, @schema.Model[T], Array[@moondb.Value]) -&gt; T? raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Session::insert_record(Self, @schema.Model[T], T) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
-<pre class="signature">pub fn[S, T] Session::load(Self, S, @schema.Relation[S, T]) -&gt; Array[T] raise @moondb.DbError</pre>
-<pre class="signature">pub fn[S, T] Session::load_batch(Self, Array[S], @schema.Relation[S, T]) -&gt; Array[Array[T]] raise @moondb.DbError</pre>
-<pre class="signature">pub fn[S, T] Session::load_many(Self, S, @schema.ManyToMany[S, T]) -&gt; Array[T] raise @moondb.DbError</pre>
-<pre class="signature">pub fn[S, T] Session::load_one(Self, S, @schema.Relation[S, T]) -&gt; T? raise @moondb.DbError</pre>
-<pre class="signature">pub fn[S, T] Session::load_one_batch(Self, Array[S], @schema.Relation[S, T]) -&gt; Array[T?] raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::modify(Self, @query.Update) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::modify_versioned(Self, @query.Update, what? : String) -&gt; @moondb.ExecResult raise</pre>
-<pre class="signature">pub fn Session::new(&amp;@moondb.Driver) -&gt; Self</pre>
-<pre class="signature">pub fn Session::pending_count(Self) -&gt; Int32</pre>
-<pre class="signature">pub fn Session::query(Self, String, Array[@moondb.Value]) -&gt; Array[@moondb.Row] raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::query_stream(Self, String, Array[@moondb.Value]) -&gt; &amp;@moondb.Cursor raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::release(Self, String) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::remove(Self, @query.Delete) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::rollback(Self) -&gt; Unit raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::rollback_to(Self, String) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::savepoint(Self, String) -&gt; @moondb.ExecResult raise @moondb.DbError</pre>
-<pre class="signature">pub fn Session::savepoint_depth(Self) -&gt; Int32</pre>
-<pre class="signature">pub fn Session::stream(Self, @query.Select) -&gt; &amp;@moondb.Cursor raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Session::stream_as(Self, @schema.Model[T], @query.Select) -&gt; RowStream[T] raise @moondb.DbError</pre>
-<pre class="signature">pub fn[T] Session::update_record(Self, @schema.Model[T], T) -&gt; Unit raise @moondb.DbError</pre>
-<pre class="signature">pub fn[D : @moondb.Driver, T] Session::with_pool(@pool.Pool[D], (Self) -&gt; T raise) -&gt; T raise</pre>
-<pre class="signature">pub fn TxOptions::default() -&gt; Self</pre>
-<pre class="signature">pub fn TxOptions::to_sql(Self, @query.Dialect) -&gt; Array[String]</pre>
+}</pre><div class="doc"><p>Options for a transaction opened by <code class="inline">Session::begin_with</code>: an optional <code class="inline">isolation</code> level and a <code class="inline">read_only</code> flag. A plain value the session renders into the backend's transaction-characteristics statement.</p></div></div>
+<h3>Functions &amp; methods <span class="count">52</span></h3>
+<div class="entry"><pre class="signature">pub fn IsolationLevel::keyword(Self) -&gt; String</pre><div class="doc"><p>The ANSI keyword for an isolation level (<code class="inline">"READ COMMITTED"</code>, <code class="inline">"SERIALIZABLE"</code>, …).</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] RowStream::close(Self[T]) -&gt; Unit</pre><div class="doc"><p>Release the underlying cursor early.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] RowStream::next(Self[T]) -&gt; T? raise @moondb.DbError</pre><div class="doc"><p>The next decoded record, or <code class="inline">None</code> once the result is exhausted.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Savepoint::commit(Self) -&gt; Unit raise @moondb.DbError</pre></div>
+<div class="entry"><pre class="signature">pub fn Savepoint::depth(Self) -&gt; Int32</pre><div class="doc"><p>This savepoint's nesting depth (1 for the outermost <code class="inline">begin_nested</code>, 2 for one opened inside it, and so on).</p></div></div>
+<div class="entry"><pre class="signature">pub fn Savepoint::name(Self) -&gt; String</pre><div class="doc"><p>The generated SQL name of this savepoint.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Savepoint::release(Self) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>Release this savepoint (<code class="inline">RELEASE SAVEPOINT &lt;name&gt;</code>), keeping the work done since it opened and merging it into the enclosing transaction. Terminal and idempotent.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Savepoint::rollback(Self) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>Roll back and close this savepoint, discarding everything done since it opened while leaving the enclosing transaction intact. It issues <code class="inline">ROLLBACK TO SAVEPOINT</code> followed by <code class="inline">RELEASE SAVEPOINT</code>, so, the savepoint is terminal afterwards and the depth drops. Terminal and idempotent.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::add(Self, @query.Insert) -&gt; @moondb.ExecResult raise @moondb.DbError</pre><div class="doc"><p>Build and run an <code class="inline">Insert</code> **now**, returning the affected-row count and new rowid. This is the statement-level form: it goes to the driver on this call and never touches the unit of work. To queue a record instead and let <code class="inline">flush</code> order and emit it, use <code class="inline">add_record</code>.</p><p>This renders the SQLite/PostgreSQL form (<code class="inline">ON CONFLICT</code> upserts, <code class="inline">RETURNING</code>); for a MySQL upsert build the dialect form explicitly — <code class="inline">session.execute(stmt.build_for(Mysql))</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Session::add_record(Self, @schema.Model[T], T) -&gt; Unit</pre><div class="doc"><p>Queue <code class="inline">record</code> for insertion. Nothing reaches the database until <code class="inline">flush</code>, or until <code class="inline">commit</code> flushes on the caller's behalf; the delay is what lets the flush order parents before children and register the row in the identity map. To insert on this call instead, use <code class="inline">insert_record</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Session::all(Self, @schema.Model[T]) -&gt; Array[T] raise @moondb.DbError</pre><div class="doc"><p>Fetch every row of a model's table, decoded into records (<code class="inline">SELECT &lt;cols&gt; FROM &lt;table&gt;</code>).</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::begin(Self) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>Begin an explicit transaction. Delegates to the driver's transaction bracket (<code class="inline">@moondb.Driver::begin</code>) rather than emitting <code class="inline">BEGIN</code> as text, so a driver that manages transactions out-of-band (or maps them to savepoints) stays in control.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::begin_nested(Self) -&gt; Savepoint raise @moondb.DbError</pre><div class="doc"><p>Open a nested transaction — <code class="inline">SAVEPOINT &lt;auto-name&gt;</code> — and return a handle that tracks its name and depth, so callers never spell (or risk mis-spelling) a savepoint name. Nesting <code class="inline">begin_nested</code> inside another increases the depth; each handle's <code class="inline">release</code>/<code class="inline">rollback</code> brings it back down. This is the ergonomic, depth-tracked counterpart of the raw <code class="inline">savepoint</code>/<code class="inline">rollback_to</code>/<code class="inline">release</code> trio. The generated name (<code class="inline">moonorm_sp_&lt;n&gt;</code>, <code class="inline">n</code> strictly increasing per session) is a bare identifier by construction, so it is injection-safe without a runtime check.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::begin_with(Self, TxOptions, dialect? : @query.Dialect) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>Begin a transaction with explicit isolation / read-only options. It brackets the driver's <code class="inline">begin</code> with the <code class="inline">SET TRANSACTION</code> (or <code class="inline">PRAGMA</code>) statements <code class="inline">opts</code> renders for <code class="inline">dialect</code>, ordered so each backend accepts them: before <code class="inline">BEGIN</code> for MySQL and SQLite, after <code class="inline">BEGIN</code> for PostgreSQL (see <code class="inline">TxOptions::to_sql</code>). <code class="inline">dialect</code> defaults to <code class="inline">Postgres</code>, whose <code class="inline">SET TRANSACTION ISOLATION LEVEL</code> spelling is the ANSI-standard one. Commit or roll back with the usual <code class="inline">commit</code>/<code class="inline">rollback</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::close(Self) -&gt; Unit</pre><div class="doc"><p>Close the session's underlying connection, dropping anything still queued and every record the identity map holds.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::commit(Self) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>Flush the unit of work, then commit the current transaction. Queued records reach the database here if nothing has flushed them yet, which is why a caller can add and commit without naming <code class="inline">flush</code> at all. With an empty queue this is the bare driver commit.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Session::create_table(Self, @schema.Model[T], if_not_exists? : Bool) -&gt; @moondb.ExecResult raise @moondb.DbError</pre><div class="doc"><p>Create the table backing <code class="inline">model</code> from its declared columns (see <code class="inline">Model::create_table_sql</code>). With <code class="inline">if_not_exists=true</code> the DDL is idempotent.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Session::delete_record(Self, @schema.Model[T], T) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>Queue <code class="inline">record</code> for deletion. The <code class="inline">DELETE</code> is keyed on the record's primary key and runs last, in the reverse dependency order, so a child row goes before the parent it points at. Flushing it also drops the record from the identity map. Raises <code class="inline">QueryError</code> when the model declares no primary key or the record does not carry one. To delete on this call instead, build a <code class="inline">Delete</code> and use <code class="inline">remove</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::deleted_count(Self) -&gt; Int32</pre><div class="doc"><p>How many records are queued for deletion.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::dirty_count(Self) -&gt; Int32</pre><div class="doc"><p>How many records are queued for update.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::execute(Self, String, Array[@moondb.Value]) -&gt; @moondb.ExecResult raise @moondb.DbError</pre><div class="doc"><p>Execute a raw statement with bound <code class="inline">params</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Session::expunge(Self, @schema.Model[T], T) -&gt; Unit</pre><div class="doc"><p>Drop <code class="inline">record</code> from the identity map, so the next <code class="inline">get</code> reads the row back from the database and returns a fresh instance. Queued work for the record is left alone.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::expunge_all(Self) -&gt; Unit</pre><div class="doc"><p>Empty the identity map: every model this session has loaded through forgets it.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::fetch(Self, @query.Select) -&gt; Array[@moondb.Row] raise @moondb.DbError</pre><div class="doc"><p>Build and run a <code class="inline">Select</code>, returning the matched rows.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Session::fetch_as(Self, @schema.Model[T], @query.Select) -&gt; Array[T] raise @moondb.DbError</pre><div class="doc"><p>Run a <code class="inline">Select</code> and decode every row into a <code class="inline">T</code> via <code class="inline">model</code>. Use it with a <code class="inline">Model::select()</code> (optionally refined with <code class="inline">where_</code>/<code class="inline">order_by</code>) to get records rather than raw <code class="inline">Row</code>s back.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::flush(Self) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>Emit every queued statement, the point where the unit of work becomes SQL. Inserts go first in dependency order, so a parent row precedes any child that references it; then the updates; then the deletes in the reverse order, so a child goes before its parent. Nothing here commits. A statement that has run leaves the queue even when a later one raises, so the failed flush can be rolled back without replaying what already executed.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Session::get(Self, @schema.Model[T], @moondb.Value) -&gt; T? raise @moondb.DbError</pre><div class="doc"><p>Fetch by primary key, consulting the identity map before the database. A row this session has already loaded comes back as the *same* record instance and costs no query; anything else is a <code class="inline">SELECT … WHERE pk = ? LIMIT 1</code> whose result is decoded once and kept. <code class="inline">None</code> means there is no such row. Because the instance is shared, a record with mutable fields is shared too: two holders of the same row see each other's writes, which is the point of an identity map. <code class="inline">expunge</code> drops one; <code class="inline">get_by</code> takes a composite key. The map is scoped to this session *and* to the <code class="inline">Model</code> value passed in, so keep the model in a <code class="inline">let</code> — one rebuilt on every call is a new descriptor each time and carries no history.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Session::get_by(Self, @schema.Model[T], Array[@moondb.Value]) -&gt; T? raise @moondb.DbError</pre><div class="doc"><p><code class="inline">get</code> for a composite primary key: one value per declared key column, in declaration order. Raises <code class="inline">QueryError</code> when the model declares no primary key, or when <code class="inline">key</code> is not as wide as the one it declares.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Session::insert_record(Self, @schema.Model[T], T) -&gt; @moondb.ExecResult raise @moondb.DbError</pre><div class="doc"><p>Insert a mapped <code class="inline">record</code> through its <code class="inline">model</code> **now**, binding the model's <code class="inline">to_columns</code> pairs. Returns the affected-row count and new rowid. Nothing is queued and the identity map is not consulted; <code class="inline">add_record</code> is the unit-of-work counterpart that defers to <code class="inline">flush</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] Session::load(Self, S, @schema.Relation[S, T]) -&gt; Array[T] raise @moondb.DbError</pre><div class="doc"><p>Eagerly load the related records of a 1:N relationship: given a <code class="inline">source</code> parent, run the relationship's query and decode every matching child into a record. MoonBit has no attribute interception, so the load is a call. The match value is bound, so eager loading stays injection-safe.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] Session::load_batch(Self, Array[S], @schema.Relation[S, T]) -&gt; Array[Array[T]] raise @moondb.DbError</pre><div class="doc"><p>Eagerly load a 1:N relationship for *many* sources in a single query, avoiding the N+1 problem. Naively calling <code class="inline">load</code> in a loop fires one SELECT per source; this instead issues one <code class="inline">SELECT … WHERE key_column IN (all the source keys)</code>, then buckets the fetched children back to their parents in memory. The return is index-aligned with <code class="inline">sources</code>: <code class="inline">result[i]</code> is the list of children whose foreign key matches <code class="inline">sources[i]</code>'s key (empty if none). Children are matched to a source by comparing the child row's <code class="inline">key_column</code> value against the source's extracted key, so a source with no children yields an empty list and children are shared correctly when two sources happen to hold the same key. An empty <code class="inline">sources</code> returns an empty array without touching the database.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] Session::load_many(Self, S, @schema.ManyToMany[S, T]) -&gt; Array[T] raise @moondb.DbError</pre><div class="doc"><p>Eagerly load the related records of a many-to-many relationship: run the junction JOIN for <code class="inline">source</code> and decode every matching target row. The N:M counterpart of <code class="inline">Session::load</code>, and like it the source key is bound, so eager loading stays injection-safe.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] Session::load_one(Self, S, @schema.Relation[S, T]) -&gt; T? raise @moondb.DbError</pre><div class="doc"><p>Eagerly load the single related record of a N:1 relationship (e.g. a child's parent): the first matching row decoded into a record, or <code class="inline">None</code> if there is no match. Like <code class="inline">load</code>, the match value is bound.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[S, T] Session::load_one_batch(Self, Array[S], @schema.Relation[S, T]) -&gt; Array[T?] raise @moondb.DbError</pre><div class="doc"><p>Eagerly load a N:1 relationship for *many* sources in a single query — the to-one counterpart of <code class="inline">load_batch</code>. One <code class="inline">SELECT … WHERE key_column IN (…)</code> fetches every distinct parent; the return is index-aligned with <code class="inline">sources</code>, <code class="inline">result[i]</code> being <code class="inline">sources[i]</code>'s parent (<code class="inline">Some</code>) or <code class="inline">None</code> when there is no match. Avoids the N+1 that a per-source <code class="inline">load_one</code> loop would incur.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::modify(Self, @query.Update) -&gt; @moondb.ExecResult raise @moondb.DbError</pre><div class="doc"><p>Build and run an <code class="inline">Update</code>, returning the affected-row count.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::modify_versioned(Self, @query.Update, what? : String) -&gt; @moondb.ExecResult raise</pre><div class="doc"><p>Run a versioned <code class="inline">UPDATE</code> under optimistic concurrency control. <code class="inline">stmt</code> must carry the version predicate in its <code class="inline">WHERE</code> (e.g. <code class="inline">where_(version_col, "=", expected)</code>) and bump the version column in its <code class="inline">SET</code>. If the update matches no row the version has moved on since it was read, a lost update, and this raises <code class="inline">LostUpdate</code> instead of silently doing nothing. The whole statement is parameterised, so both the version guard and the new values stay bound.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::new(&amp;@moondb.Driver) -&gt; Self</pre><div class="doc"><p>Wrap a connected driver in a session.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::pending_count(Self) -&gt; Int32</pre><div class="doc"><p>How many records are queued for insertion.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::query(Self, String, Array[@moondb.Value]) -&gt; Array[@moondb.Row] raise @moondb.DbError</pre><div class="doc"><p>Run a raw query with bound <code class="inline">params</code> and return its rows.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::query_stream(Self, String, Array[@moondb.Value]) -&gt; &amp;@moondb.Cursor raise @moondb.DbError</pre><div class="doc"><p>Stream a raw query's rows through a [<code class="inline">@moondb.Cursor</code>] instead of materialising them. This seam is synchronous, so only a synchronous driver with incremental fetch streams lazily here: moonsqlite steps its prepared statement row by row. A wire driver's cursor is async and cannot come through here at all — moonpostgres implements <code class="inline">@moondb.AsyncDriver</code> instead, so it never sits behind a <code class="inline">Session</code>; MySQL's synchronous adapter falls back to a materialised cursor. For lazy streaming over the wire call <code class="inline">PgConn</code>/<code class="inline">MysqlConn::query_stream</code> directly under an event loop.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::release(Self, String) -&gt; @moondb.ExecResult raise @moondb.DbError</pre><div class="doc"><p>Release a savepoint (<code class="inline">RELEASE SAVEPOINT &lt;name&gt;</code>), merging its work into the enclosing transaction (or savepoint). Rejects a non-identifier <code class="inline">name</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::remove(Self, @query.Delete) -&gt; @moondb.ExecResult raise @moondb.DbError</pre><div class="doc"><p>Build and run a <code class="inline">Delete</code>, returning the affected-row count.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::rollback(Self) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>Roll back the current transaction, abandoning whatever is still queued and emptying the identity map. The records held there describe rows the rollback has just undone, so keeping them would hand out state the database no longer has.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::rollback_to(Self, String) -&gt; @moondb.ExecResult raise @moondb.DbError</pre><div class="doc"><p>Roll back to a savepoint (<code class="inline">ROLLBACK TO SAVEPOINT &lt;name&gt;</code>), undoing everything done since it was opened while keeping the savepoint (and the outer transaction) active. Rejects a non-identifier <code class="inline">name</code> with <code class="inline">QueryError</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::savepoint(Self, String) -&gt; @moondb.ExecResult raise @moondb.DbError</pre><div class="doc"><p>Open a nested transaction with <code class="inline">SAVEPOINT &lt;name&gt;</code>. Savepoints nest arbitrarily, and finalised with <code class="inline">release(name)</code>. <code class="inline">name</code> must be a bare identifier (it is interpolated as an identifier, never a bound value); a non-identifier raises <code class="inline">QueryError</code> rather than reaching the database. The statement is issued through <code class="inline">execute</code>, so a backend that supports SQL savepoints (SQLite, Postgres) runs it verbatim.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::savepoint_depth(Self) -&gt; Int32</pre><div class="doc"><p>How many nested savepoints opened via <code class="inline">begin_nested</code> are currently active.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Session::stream(Self, @query.Select) -&gt; &amp;@moondb.Cursor raise @moondb.DbError</pre><div class="doc"><p>Build and stream a <code class="inline">Select</code>, yielding raw rows through a cursor.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Session::stream_as(Self, @schema.Model[T], @query.Select) -&gt; RowStream[T] raise @moondb.DbError</pre><div class="doc"><p>Build and stream a <code class="inline">Select</code>, decoding each row into a <code class="inline">T</code> on demand — the streaming counterpart to [<code class="inline">fetch_as</code>].</p></div></div>
+<div class="entry"><pre class="signature">pub fn[T] Session::update_record(Self, @schema.Model[T], T) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>Queue <code class="inline">record</code>'s current state as an <code class="inline">UPDATE</code> keyed on its primary key, which notices a change by instrumenting attribute writes. MoonBit intercepts nothing, so a changed record is one the caller says is changed. The statement sets every non-key column, is emitted after the inserts, and refreshes the identity map. Raises <code class="inline">QueryError</code> when the model declares no primary key, when the record does not carry one, or when every column belongs to the key and there is nothing to set. To update on this call instead, build an <code class="inline">Update</code> and use <code class="inline">modify</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn[D : @moondb.Driver, T] Session::with_pool(@pool.Pool[D], (Self) -&gt; T raise) -&gt; T raise</pre><div class="doc"><p>Run <code class="inline">f</code> with a <code class="inline">Session</code> on a connection borrowed from <code class="inline">pool</code>, returning the connection to the pool when <code class="inline">f</code> finishes or raises. The unit of work owns its transaction: commit or roll back inside <code class="inline">f</code> before it returns, since the connection is reused as-is.</p></div></div>
+<div class="entry"><pre class="signature">pub fn TxOptions::default() -&gt; Self</pre><div class="doc"><p>Transaction options with everything defaulted off (backend default isolation, read-write). Set what you need: <code class="inline">{ ..TxOptions::default(), isolation: Some(Serializable) }</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn TxOptions::to_sql(Self, @query.Dialect) -&gt; Array[String]</pre><div class="doc"><p>Render these options into the statements that impose them for <code class="inline">dialect</code>. On PostgreSQL and MySQL that is <code class="inline">SET TRANSACTION ISOLATION LEVEL &lt;level&gt;</code> and/or <code class="inline">SET TRANSACTION READ ONLY</code>; on SQLite, which has no such statement, it is <code class="inline">PRAGMA read_uncommitted = 1</code> for the one weaker level it supports (every other level is SQLite's default serializable behaviour, so nothing is emitted) and <code class="inline">PRAGMA query_only = 1</code> for read-only. An empty result means the backend's defaults already satisfy the options.</p></div></div>
 </section>
 <section class="section" id="migrate">
-<p class="folio">moonbitstack/moonorm/migrate</p>
+<p class="eyebrow">moonbitstack/moonorm/migrate</p>
 <h2>migrate</h2>
-<h3>Types</h3>
-<pre class="signature">pub(all) enum ColumnDiff {
+<h3>Types <span class="count">3</span></h3>
+<div class="entry"><pre class="signature">pub(all) enum ColumnDiff {
   Added(name~ : String, col_type~ : @schema.ColumnType)
   Removed(String)
   TypeChanged(name~ : String, from~ : @schema.ColumnType, to~ : @schema.ColumnType)
-} derive(Eq)</pre>
-<pre class="signature">pub(all) struct Migration {
+} derive(Eq)</pre><div class="doc"><p>One <code class="inline">Removed</code> from the model but still present, or one whose <code class="inline">TypeChanged</code>. Compared by column name; ordering follows the declared columns, then the leftover reflected ones.</p></div></div>
+<div class="entry"><pre class="signature">pub(all) struct Migration {
   version : Int32
   name : String
   up : Array[String]
   down : Array[String]
-}</pre>
-<pre class="signature">pub struct Migrator {
+}</pre><div class="doc"><p>One schema change: a monotonically increasing <code class="inline">version</code>, a human <code class="inline">name</code>, and the ordered SQL statements that apply it (<code class="inline">up</code>) and undo it (<code class="inline">down</code>). Each statement runs through <code class="inline">Session::execute</code>, so a backend that prepares one statement per call (SQLite) still applies a multi-statement migration.</p></div></div>
+<div class="entry"><pre class="signature">pub struct Migrator {
   table : String
-}</pre>
-<h3>Functions &amp; methods</h3>
-<pre class="signature">pub fn diff_schema(Array[@schema.Column], Array[@schema.Column], dialect? : @query.Dialect) -&gt; Array[ColumnDiff]</pre>
-<pre class="signature">pub fn index_ddl(String, String, Array[String], unique? : Bool) -&gt; String</pre>
-<pre class="signature">pub fn reflect_columns(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
-<pre class="signature">pub fn reflect_columns_mysql(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
-<pre class="signature">pub fn reflect_columns_pg(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
-<pre class="signature">pub fn reflect_table(&amp;@moondb.Driver, String) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
-<pre class="signature">pub fn reflect_table_for(&amp;@moondb.Driver, String, @query.Dialect) -&gt; Array[@schema.Column] raise @moondb.DbError</pre>
-<pre class="signature">pub fn ColumnDiff::equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn ColumnDiff::not_equal(Self, Self) -&gt; Bool</pre>
-<pre class="signature">pub fn Migrator::applied_versions(Self, @session.Session) -&gt; Array[Int32] raise @moondb.DbError</pre>
-<pre class="signature">pub fn Migrator::current_version(Self, @session.Session) -&gt; Int32 raise @moondb.DbError</pre>
-<pre class="signature">pub fn Migrator::down_to(Self, @session.Session, Array[Migration], Int32) -&gt; Int32 raise @moondb.DbError</pre>
-<pre class="signature">pub fn Migrator::ensure_table(Self, @session.Session) -&gt; Unit raise @moondb.DbError</pre>
-<pre class="signature">pub fn Migrator::new(table? : String) -&gt; Self raise @moondb.DbError</pre>
-<pre class="signature">pub fn Migrator::up(Self, @session.Session, Array[Migration]) -&gt; Int32 raise @moondb.DbError</pre>
+}</pre><div class="doc"><p>Tracks and applies migrations against a <code class="inline">schema_migrations</code>-style bookkeeping table (its name is configurable for coexistence with other tools). Build one with <code class="inline">Migrator::new</code>.</p></div></div>
+<h3>Functions &amp; methods <span class="count">13</span></h3>
+<div class="entry"><pre class="signature">pub fn diff_schema(Array[@schema.Column], Array[@schema.Column], dialect? : @query.Dialect) -&gt; Array[ColumnDiff]</pre><div class="doc"><p>Diff a model's <code class="inline">declared</code> columns against the <code class="inline">reflected</code> ones from a live table: declared-only columns are <code class="inline">Added</code>, reflected-only are <code class="inline">Removed</code>, and a name in both with a different <code class="inline">col_type</code> is <code class="inline">TypeChanged</code>. An empty result means the table matches the model. This is the write half of autogenerate — feed the diff to DDL to synthesise the migration.</p><p>Scope: reflection recovers only a column's storage type, so declare a model at the same granularity to avoid spurious diffs — a <code class="inline">Bool</code> stored as <code class="inline">INTEGER</code> reflects as <code class="inline">Int</code>, <code class="inline">Uuid</code>/<code class="inline">Json</code> stored as <code class="inline">TEXT</code> reflect as <code class="inline">Text</code>. And the diff reports add/remove/type only, not nullable / default / unique / PK / FK changes.</p><p>With <code class="inline">dialect</code> the types compare as that engine writes them, so a <code class="inline">BigIntType</code> declared against SQLite, where every integer is <code class="inline">INTEGER</code>, is no change; without it they compare as declared.</p></div></div>
+<div class="entry"><pre class="signature">pub fn index_ddl(String, String, Array[String], unique? : Bool) -&gt; String</pre><div class="doc"><p>With <code class="inline">unique=true</code> it is a <code class="inline">CREATE UNIQUE INDEX</code>; multiple <code class="inline">columns</code> make a composite index. Names are trusted identifiers, never bound. Pair it with a <code class="inline">Migration</code>'s <code class="inline">up</code>, and a <code class="inline">DROP INDEX</code> in its <code class="inline">down</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Migrator::applied_versions(Self, @session.Session) -&gt; Array[Int32] raise @moondb.DbError</pre><div class="doc"><p>Every applied version, ascending.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Migrator::current_version(Self, @session.Session) -&gt; Int32 raise @moondb.DbError</pre><div class="doc"><p>The highest applied version, or <code class="inline">0</code> when nothing has been applied yet.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Migrator::down_to(Self, @session.Session, Array[Migration], Int32) -&gt; Int32 raise @moondb.DbError</pre><div class="doc"><p>Roll back every applied migration whose version is greater than <code class="inline">target</code>, in descending version order, running each one's <code class="inline">down</code> statements and removing its bookkeeping row. Returns how many were rolled back. <code class="inline">down_to(0)</code> unwinds everything.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Migrator::ensure_table(Self, @session.Session) -&gt; Unit raise @moondb.DbError</pre><div class="doc"><p>Create the bookkeeping table if it is absent. Idempotent, so it is safe to call before every <code class="inline">up</code>/<code class="inline">down</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Migrator::new(table? : String) -&gt; Self raise @moondb.DbError</pre><div class="doc"><p>A migrator recording applied versions in <code class="inline">table</code> (default <code class="inline">schema_migrations</code>). The name must be a bare SQL identifier — it is interpolated as an identifier, never bound — so a non-identifier is refused up front.</p></div></div>
+<div class="entry"><pre class="signature">pub fn Migrator::up(Self, @session.Session, Array[Migration]) -&gt; Int32 raise @moondb.DbError</pre><div class="doc"><p>Apply every pending migration (those whose version is not yet recorded), in ascending version order, running each one's <code class="inline">up</code> statements and recording it. Returns how many were applied. Already-applied versions are skipped, so this is safe to run repeatedly (it converges the schema to the latest version).</p></div></div>
+<div class="entry"><pre class="signature">pub fn reflect_columns(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre><div class="doc"><p>Parse <code class="inline">PRAGMA table_info</code> rows into <code class="inline">Column</code>s — the reflection core, testable without a live database. The pragma projects, in order, <code class="inline">cid, name, type, notnull, dflt_value, pk</code>; a non-zero <code class="inline">pk</code> marks the primary key and <code class="inline">notnull</code> its NOT NULL.</p></div></div>
+<div class="entry"><pre class="signature">pub fn reflect_columns_mysql(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre><div class="doc"><p>Parse MySQL <code class="inline">SHOW COLUMNS</code> rows (<code class="inline">Field</code>, <code class="inline">Type</code>, <code class="inline">Null</code>, <code class="inline">Key</code>, <code class="inline">Default</code>, <code class="inline">Extra</code>) into <code class="inline">Column</code>s, recovering the primary key (<code class="inline">Key == "PRI"</code>) and autoincrement (<code class="inline">Extra</code> contains <code class="inline">auto_increment</code>).</p></div></div>
+<div class="entry"><pre class="signature">pub fn reflect_columns_pg(Array[@moondb.Row]) -&gt; Array[@schema.Column] raise @moondb.DbError</pre><div class="doc"><p>Parse PostgreSQL <code class="inline">information_schema.columns</code> rows (<code class="inline">column_name</code>, <code class="inline">data_type</code>, <code class="inline">is_nullable</code>) into <code class="inline">Column</code>s — the PG counterpart of <code class="inline">reflect_columns</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn reflect_table(&amp;@moondb.Driver, String) -&gt; Array[@schema.Column] raise @moondb.DbError</pre><div class="doc"><p>Reflect a table's columns off a live connection: run <code class="inline">PRAGMA table_info</code> and parse it. The thin driver wrapper over <code class="inline">reflect_columns</code>.</p></div></div>
+<div class="entry"><pre class="signature">pub fn reflect_table_for(&amp;@moondb.Driver, String, @query.Dialect) -&gt; Array[@schema.Column] raise @moondb.DbError</pre><div class="doc"><p>Reflect a table's columns off a live connection for a specific <code class="inline">Dialect</code>: SQLite via <code class="inline">PRAGMA table_info</code>, PostgreSQL via <code class="inline">information_schema.columns</code>, MySQL via <code class="inline">SHOW COLUMNS</code>. The multi-dialect counterpart of <code class="inline">reflect_table</code>.</p></div></div>
 </section>
         <div class="cta">
           <a class="btn primary" href="guide.html">Read the guide</a>
