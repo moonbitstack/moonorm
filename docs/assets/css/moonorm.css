@@ -19,61 +19,144 @@
 .nav a { color: var(--ink-soft); border: 0; padding: var(--s1) 0; }
 .nav a:hover, .nav a[aria-current="page"] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--pointer); }
 .nav a[aria-current="page"] { color: var(--ink); }
-.topbar .theme-toggle { border: 1px solid var(--hair-strong); background: transparent; color: var(--ink); padding: 6px 10px; cursor: pointer; font-family: var(--font-mono); font-size: 12px; }
-.topbar .theme-toggle:hover { border-color: var(--pointer); color: var(--pointer); }
+/* the theme twin, as a two-position switch — no icon, just the two lights */
+.theme-toggle { display: flex; border: 1px solid var(--hair-strong); }
+.theme-toggle button {
+  border: 0; border-left: 1px solid var(--hair-strong); background: transparent;
+  color: var(--ink-faint); font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.06em; padding: 5px 9px; cursor: pointer;
+  transition: color var(--t1) var(--ease), background-color var(--t1) var(--ease);
+}
+.theme-toggle button:first-child { border-left: 0; }
+.theme-toggle button:hover { color: var(--ink); }
+.theme-toggle button.on { background: var(--ink); color: var(--paper); }
 
-/* ---- hero / the seam ---- */
+/* ---- hero / the seam ----
+   THE SEAM is a bound ledger: two worlds in two columns, one gutter between
+   them. A field is one row, so its two halves are aligned by the grid — never
+   by measurement. The gutter is the seam; each row is stitched across it. */
 .hero { padding: var(--s6) 0 var(--s5); }
 .hero .eyebrow { margin-bottom: var(--s2); }
 .hero .lede { font-family: var(--font-serif); font-size: clamp(18px, 2.2vw, 26px); line-height: 1.4; max-width: 70ch; color: var(--ink); margin: var(--s3) 0 var(--s5); }
 .hero .lede b { color: var(--moonbit); font-weight: 600; }
-.hero .lede i { color: var(--relation); font-style: normal; font-weight: 600; }
-
-.seam-stage {
-  position: relative;
-  display: grid; grid-template-columns: 1fr 64px 1fr; align-items: stretch;
-  border: 1px solid var(--hair); background: var(--paper-2);
-  overflow: hidden;
+.hero .lede i {
+  font-style: italic; font-weight: 500; color: var(--ink);
+  text-decoration: underline; text-decoration-color: var(--hair-strong);
+  text-decoration-thickness: 1px; text-underline-offset: 4px;
 }
-.world { padding: var(--s3); }
-.world h4 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 var(--s2); }
-.world.left h4 { color: var(--moonbit); }
-.world.right h4 { color: var(--relation); }
-.world .src { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.9; white-space: pre; overflow: auto; }
+.hero-note { margin: var(--s3) 0 0; font-size: 13px; max-width: 78ch; }
 
-/* the seam itself */
-.seam { position: relative; border-left: 1px solid var(--hair-strong); border-right: 1px solid var(--hair-strong); }
-.seam-core { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-1px); background: var(--seam); }
-.seam-stitch {
-  position: absolute; left: 50%; width: 12px; height: 12px; transform: translate(-50%, -50%);
-  background: var(--seam-glow); box-shadow: 0 0 0 4px color-mix(in srgb, var(--seam-glow) 22%, transparent);
-  animation: seam-travel var(--t3) linear infinite;
+/* a documentation page opens tighter than the front page */
+.hero.compact { padding-bottom: var(--s2); }
+.hero.compact .lede { margin-bottom: var(--s1); }
+
+/* the plate: a narrower measure than the prose, so the cells stay dense and
+   the gutter reads as a binding rather than a void */
+.seam-stage { --gutter: 96px; max-width: 760px; border: 1px solid var(--hair-strong); background: var(--paper); }
+
+/* toolbar strip: which dialect the right column is speaking */
+.seam-bar {
+  display: flex; align-items: center; gap: var(--s2);
+  padding: 6px var(--s2); background: var(--paper-2);
+  border-bottom: 1px solid var(--hair-strong);
 }
-@keyframes seam-travel { 0% { top: 6%; } 100% { top: 94%; } }
-.seam-flag {
-  position: absolute; left: 50%; transform: translateX(-50%); top: 8px;
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
-  color: var(--mapped); white-space: nowrap;
+.seam-file { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-faint); }
+.seg { display: flex; margin-left: auto; border: 1px solid var(--hair-strong); }
+.seg button {
+  border: 0; border-left: 1px solid var(--hair-strong); background: transparent;
+  color: var(--ink-soft); font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.04em; padding: 4px 10px; cursor: pointer;
+  transition: color var(--t1) var(--ease), background-color var(--t1) var(--ease);
+}
+.seg button:first-child { border-left: 0; }
+.seg button:hover { color: var(--ink); }
+.seg button.on { background: var(--ink); color: var(--paper); }
+
+/* column headings */
+.ledger-head {
+  display: grid; grid-template-columns: minmax(0, 1fr) var(--gutter) minmax(0, 1fr);
+  border-bottom: 1px solid var(--hair);
+}
+.ledger-head .hd { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase; padding: 10px var(--s2); }
+.ledger-head .hd.left { color: var(--moonbit); text-align: right; }
+.ledger-head .hd.right { color: var(--relation); }
+
+/* rows */
+.ledger-box { position: relative; }
+.ledger { display: grid; grid-template-columns: minmax(0, 1fr) var(--gutter) minmax(0, 1fr); }
+.lrow { display: contents; }
+.cell {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px;
+  padding: 12px var(--s2); margin: 0;
+  font-family: var(--font-mono); font-size: 13px; line-height: 1.5;
+  border-bottom: 1px solid var(--hair);
+  overflow-wrap: anywhere; cursor: default;
+  transition: background-color var(--t1) var(--ease);
+}
+.lrow:last-child .cell { border-bottom: 0; }
+.cell .col { font-weight: 500; }
+.cell .typ { color: var(--ink); }
+.cell .flag { color: var(--ink-faint); font-size: 11px; letter-spacing: 0.03em; }
+/* both halves point at the seam: left column right-aligned, right column
+   left-aligned, so the two worlds meet in the gutter instead of drifting apart */
+.cell.left { justify-content: flex-end; }
+.cell.left .col { color: var(--moonbit); }
+.cell.left .typ { color: var(--ink-soft); }
+.cell.right .col { color: var(--relation); }
+.cell.sel { background: color-mix(in srgb, var(--mapped) 10%, transparent); }
+.cell.sel.bad { background: color-mix(in srgb, var(--broken) 12%, transparent); }
+.cell.bad .typ { color: var(--broken); }
+
+/* the seam: a channel with one thread crossing it per row */
+.spine {
+  position: absolute; top: 0; bottom: 0;
+  left: calc(50% - var(--gutter) / 2); width: var(--gutter);
+  border-left: 1px solid var(--hair-strong); border-right: 1px solid var(--hair-strong);
+  background: var(--paper-2); overflow: hidden; pointer-events: none; z-index: 0;
+}
+.spine-glow {
+  position: absolute; left: 50%; width: 2px; height: 34px; margin-left: -1px;
+  background: linear-gradient(to bottom, transparent, var(--mapped) 60%, transparent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--mapped) 45%, transparent);
+  animation: seam-travel 3.2s linear infinite;
+}
+@keyframes seam-travel {
+  0%   { top: -28px; opacity: 0; }
+  12%  { opacity: 0.9; }
+  88%  { opacity: 0.9; }
+  100% { top: 100%; opacity: 0; }
 }
 
-/* mapping nodes */
-.node { display: flex; align-items: center; gap: var(--s1); padding: 2px 0; border-bottom: 1px dotted var(--hair); }
-.node .k { font-family: var(--font-mono); font-size: 12.5px; }
-.node .v { font-family: var(--font-mono); font-size: 12.5px; color: var(--ink-soft); }
-.node.sel { background: color-mix(in srgb, var(--mapped) 12%, transparent); }
-.node.broken.sel { background: color-mix(in srgb, var(--broken) 14%, transparent); }
-.world.left .node .k { color: var(--moonbit); }
-.world.right .node .k { color: var(--relation); }
-
-/* connection beams span the whole stage; the seam is their midpoint */
-.beam { position: absolute; left: 0; right: 0; height: 0; border-top: 2px solid var(--mapped); opacity: 0; transition: opacity var(--t2) var(--ease); z-index: 1; pointer-events: none; }
-.beam.lit { opacity: 0.9; }
-.beam.broken { border-top-color: var(--broken); border-top-style: dashed; }
-/* the seam column sits above the beams, carrying the core line + stitch */
-.seam { z-index: 2; background: var(--paper-2); }
+/* one stitch per field: two end ticks and a thread across the channel */
+.suture {
+  position: relative; z-index: 1;
+  display: flex; align-items: center;
+}
+.suture::before, .suture::after {
+  content: ""; position: absolute; top: 50%; width: 1px; height: 11px;
+  margin-top: -6px; background: var(--hair-strong);
+}
+.suture::before { left: 9px; }
+.suture::after { right: 9px; }
+/* at rest the thread is a row of stitches; it goes solid the moment a
+   mapping is locked, and tears when the types disagree */
+.suture i {
+  display: block; width: 100%; height: 2px;
+  background: repeating-linear-gradient(
+    to right,
+    color-mix(in srgb, var(--ink) 42%, transparent) 0 6px,
+    transparent 6px 11px);
+  transition: background-color var(--t2) var(--ease);
+}
+.suture.lit i { background: var(--mapped); box-shadow: 0 0 10px color-mix(in srgb, var(--mapped) 60%, transparent); }
+.suture.bad i {
+  background: repeating-linear-gradient(to right, var(--broken) 0 4px, transparent 4px 14px);
+  box-shadow: none;
+}
 
 /* compile diagnostic strip */
 .diagnostic {
+  max-width: 760px;
   margin-top: var(--s3); font-family: var(--font-mono); font-size: 13px;
   border: 1px solid var(--hair); background: var(--paper-2); padding: var(--s2) var(--s3);
   display: flex; align-items: center; gap: var(--s2);
@@ -82,30 +165,45 @@
 .diagnostic.ok .badge { color: var(--mapped); }
 .diagnostic.err { border-color: color-mix(in srgb, var(--broken) 50%, var(--hair)); }
 .diagnostic.err .badge { color: var(--broken); }
-.diagnostic .msg { color: var(--ink-soft); }
+.diagnostic .msg { color: var(--ink-soft); overflow-wrap: anywhere; }
 
-/* generated SQL ribbon */
+/* generated statement */
+.gen { max-width: 760px; margin: var(--s2) 0 0; }
+.gen-cap {
+  display: flex; justify-content: space-between; gap: var(--s2);
+  font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-faint);
+  padding: 0 0 6px;
+}
 .gen-sql {
-  margin-top: var(--s2); font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
+  margin: 0; font-family: var(--font-mono); font-size: 13px; line-height: 1.7;
   border: 1px solid var(--hair); border-left: 3px solid var(--mapped); background: var(--paper-2);
   padding: var(--s2) var(--s3); color: var(--ink); white-space: pre; overflow: auto;
 }
+.gen-sql.err { border-left-color: var(--broken); color: var(--broken); }
 
 /* ---- feature cards (the four acts) ---- */
-.acts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--hair); border: 1px solid var(--hair); }
+.acts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--hair); border: 1px solid var(--hair); }
 .act { background: var(--paper); padding: var(--s4); }
 .act .no { font-family: var(--font-mono); font-size: 13px; color: var(--pointer); letter-spacing: 0.1em; }
 .act .act-body { color: var(--ink-soft); font-size: 15px; }
 .act .act-body code.inline { color: var(--ink); }
 
-/* ---- type-mapping table ---- */
-.map-table th:nth-child(2), .map-table td:nth-child(2) { color: var(--moonbit); font-family: var(--font-mono); font-size: 13px; }
-.map-table th:nth-child(3), .map-table td:nth-child(3) { color: var(--relation); font-family: var(--font-mono); font-size: 13px; }
+/* ---- type-mapping table: the MoonBit column is the type side (indigo);
+        every dialect column is the relation side (ochre). ---- */
+.map-table td, .map-table th { font-family: var(--font-mono); font-size: 13px; }
+.map-table th { font-size: 11px; letter-spacing: 0.14em; }
+.map-table th:first-child, .map-table td:first-child { color: var(--moonbit); }
+.map-table th:nth-child(2), .map-table td:nth-child(2),
+.map-table th:nth-child(3), .map-table td:nth-child(3),
+.map-table th:nth-child(4), .map-table td:nth-child(4) { color: var(--relation); }
+.map-table th:last-child, .map-table td:last-child { color: var(--ink-faint); text-align: right; }
 .map-table tr.broken td { color: var(--broken); }
-.map-table tr.broken td:first-child::after { content: " ✗"; color: var(--broken); }
+.map-table tr.broken td:last-child { text-align: right; }
+.map-table tr.broken td:first-child::after { content: " \2717"; color: var(--broken); }
 
 /* ---- code ⟷ SQL side-by-side ---- */
-.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--hair); border: 1px solid var(--hair); }
+.duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--hair); border: 1px solid var(--hair); }
 .duo > div { background: var(--paper-2); padding: var(--s1); }
 .duo .cap { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; padding: var(--s1) var(--s2); color: var(--ink-faint); }
 
@@ -120,10 +218,36 @@
 .btn.primary { border-color: var(--pointer); color: var(--pointer); }
 .btn.primary:hover { background: var(--pointer); color: var(--paper); }
 
+/* ---- API reference: one entry per declaration, signature then prose ---- */
+.section.first { border-top: 0; padding-top: 0; }
+.section.first h2 { margin-top: var(--s2); }
+.section h2 + h3 { margin-top: var(--s4); }
+.section h3 .count {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 400;
+  color: var(--ink-faint); letter-spacing: 0.04em; margin-left: 6px;
+}
+/* a signature is a line of code: it gets the full measure, and the prose that
+   explains it sits underneath rather than squeezing it into a column */
+.entry {
+  padding: 14px 0 18px; border-top: 1px solid var(--hair);
+}
+.entry:last-child { border-bottom: 1px solid var(--hair); }
+.entry .signature {
+  margin: 0; border: 0; background: transparent; padding: 0;
+  font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6;
+  color: var(--ink); overflow-x: auto; white-space: pre;
+}
+.entry .doc { color: var(--ink-soft); font-size: 14px; line-height: 1.65; max-width: 82ch; margin-top: 6px; }
+.entry .doc p { margin: 0 0 8px; }
+.entry .doc p:last-child { margin-bottom: 0; }
+.entry .doc code.inline { font-size: 12.5px; color: var(--ink); }
+.side a .n { color: var(--ink-faint); font-size: 11px; }
+
+
 /* ---- side index (docs pages) ---- */
-.doc-grid { display: grid; grid-template-columns: 240px 1fr; gap: var(--s5); align-items: start; }
+.doc-grid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: var(--s5); align-items: start; }
 .side { position: sticky; top: 72px; font-family: var(--font-mono); font-size: 13px; }
-.side a { display: block; color: var(--ink-soft); border: 0; padding: 6px 0 6px var(--s2); border-left: 2px solid var(--hair); }
+.side a { display: flex; justify-content: space-between; gap: var(--s1); color: var(--ink-soft); border: 0; padding: 6px 0 6px var(--s2); border-left: 2px solid var(--hair); }
 .side a:hover, .side a[aria-current="page"] { color: var(--ink); border-left-color: var(--pointer); }
 .side .grp { color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; margin-top: var(--s3); }
 
@@ -135,7 +259,7 @@
 .pg-section { padding: var(--s5) 0; border-top: 1px solid var(--hair); }
 .pg-section h2 { font-family: var(--font-serif); font-size: clamp(22px, 3vw, 30px); color: var(--ink); margin: 0 0 var(--s2); }
 .pg-section .pg-intro { color: var(--ink-soft); font-size: 16px; max-width: 72ch; margin: 0 0 var(--s4); }
-.pg-block { display: grid; grid-template-columns: 220px 1fr; gap: var(--s4); align-items: start; margin-bottom: var(--s5); }
+.pg-block { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--s4); align-items: start; margin-bottom: var(--s5); }
 .pg-block .pg-label { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
 .pg-block .pg-label b { display: block; color: var(--ink); font-size: 15px; letter-spacing: 0; text-transform: none; margin-top: 4px; font-weight: 600; }
 .pg-tabs { display: flex; gap: 1px; background: var(--hair); border: 1px solid var(--hair); margin-bottom: var(--s3); }
@@ -148,18 +272,25 @@
 .pg-note { font-family: var(--font-mono); font-size: 12.5px; line-height: 1.7; color: var(--ink-soft); border: 1px dashed var(--hair-strong); padding: var(--s2) var(--s3); background: var(--paper-2); }
 .pg-note b { color: var(--mapped); }
 @media (width <= 860px) {
-  .pg-block { grid-template-columns: 1fr; gap: var(--s2); }
+  .pg-block { grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
 }
 
-/* ---- mobile: seam becomes a vertical stack (top MoonBit, bottom SQL) ---- */
+/* ---- mobile: the ledger keeps its seam, narrowed ---- */
 @media (width <= 860px) {
-  .seam-stage { grid-template-columns: 1fr; }
-  .seam { height: 28px; border: 0; border-top: 1px solid var(--hair-strong); border-bottom: 1px solid var(--hair-strong); }
-  .seam-core { top: 50%; left: 0; right: 0; bottom: auto; width: auto; height: 2px; transform: translateY(-1px); }
-  .seam-stitch { top: 50%; left: 50%; animation: seam-travel-h var(--t3) linear infinite; }
-  @keyframes seam-travel-h { 0% { left: 6%; } 100% { left: 94%; } }
-  .acts, .duo { grid-template-columns: 1fr; }
-  .doc-grid { grid-template-columns: 1fr; }
+  .seam-stage { --gutter: 30px; }
+  .ledger-head .hd { font-size: 9px; letter-spacing: 0.1em; padding: 8px 10px; }
+  .cell { padding: 10px; font-size: 11.5px; gap: 0 6px; }
+  .cell .flag { font-size: 10px; }
+  .suture::before, .suture::after { display: none; }
+  .seam-bar { flex-wrap: wrap; gap: var(--s1); }
+  .seg { margin-left: 0; }
+  .acts, .duo { grid-template-columns: minmax(0, 1fr); }
+  .doc-grid { grid-template-columns: minmax(0, 1fr); }
   .side { position: static; }
-  .nav { gap: var(--s2); }
+
+  /* the bar takes a second row instead of squeezing the links into each other */
+  .topbar { flex-wrap: wrap; gap: var(--s2); }
+  .nav { order: 3; width: 100%; margin-left: 0; justify-content: space-between; gap: var(--s2); }
+  .nav a { flex: none; padding: 4px 0; }
+  .theme-toggle { margin-left: auto; }
 }

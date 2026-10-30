@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/moonorm.css">
+  <script>try{var t=localStorage.getItem("moonorm-theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
   <header class="topbar">
@@ -28,7 +29,7 @@
       <a href="showcase.html" aria-current="page">Showcase</a>
       <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
     </nav>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">day</button>
+    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Colour theme"><button type="button" data-set-theme="light">Light</button><button type="button" data-set-theme="dark">Dark</button></div>
   </header>
 
   <main class="wrap">

@@ -11,13 +11,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/moonphase.css">
+  <script>try{var t=localStorage.getItem("moondb-theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="index.html" style="border:0">
       <svg class="glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-        <circle cx="16" cy="16" r="11" fill="var(--phase-light)"/>
-        <circle cx="21" cy="16" r="11" fill="var(--phase-dark)"/>
+        <circle cx="15" cy="16" r="10" fill="currentColor"/>
+        <circle cx="21" cy="16" r="9" fill="var(--paper)"/>
       </svg>
       moondb
     </a>
@@ -28,7 +29,7 @@
       <a href="showcase.html">Showcase</a>
       <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
     </nav>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">day</button>
+    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Colour theme"><button type="button" data-set-theme="light">Light</button><button type="button" data-set-theme="dark">Dark</button></div>
   </header>
 
   <main class="wrap">

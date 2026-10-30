@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Guide · moonorm</title>
+  <title>moonorm — Guide</title>
   <meta name="description" content="A progressive guide to moonorm: install, declare a model, build queries, insert, and migrate — in MoonBit.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/moonorm.css">
+  <script>try{var t=localStorage.getItem("moonorm-theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
   <header class="topbar">
@@ -25,7 +26,7 @@
       <a href="showcase.html">Showcase</a>
       <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
     </nav>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">day</button>
+    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Colour theme"><button type="button" data-set-theme="light">Light</button><button type="button" data-set-theme="dark">Dark</button></div>
   </header>
 
   <main class="wrap">
@@ -44,23 +45,22 @@
       <article>
         <p class="eyebrow">Guide</p>
         <h1>From a MoonBit struct to a table.</h1>
-        <p class="muted">moonorm maps MoonBit types onto SQL at compile time. This guide runs end to end; every snippet compiles in a project that depends only on <code class="inline">moonbitstack/moonorm</code>.</p>
+        <p class="muted">moonorm maps MoonBit types onto SQL. This guide runs end to end, and every snippet on it was compiled against this repository — copy them into a project that depends on <code class="inline">moonbitstack/moonorm</code> and <code class="inline">moonbitstack/moondb</code>.</p>
 
         <div class="statusbar">
-          <span>spec <b>model_test.mbt</b></span>
-          <span>last passed <b>this build</b></span>
-          <span>version <b>0.11.1</b></span>
-          <span>compiler <b>0.1.x</b></span>
+          <span>targets <b>wasm · wasm-gc · js · native</b></span>
+          <span>dialects <b>SQLite · PostgreSQL · MySQL</b></span>
+          <span>driver contract <b>moondb</b></span>
         </div>
 
         <h2 id="install">1 · Install</h2>
-        <p>Add the package and its driver seam:</p>
+        <p>Add the toolkit and its driver contract:</p>
         <pre><code>moon add moonbitstack/moonorm
 moon add moonbitstack/moondb</code></pre>
-        <p class="faint">moonorm builds a query layer; <code class="inline">moondb</code> is the driver contract that a backend (sqlite, postgres, mysql) implements.</p>
+        <p class="faint">moonorm builds the query and schema layer; <code class="inline">moondb</code> is the contract a backend (SQLite, PostgreSQL, MySQL) implements. Values cross that boundary as <code class="inline">Value</code>, never as SQL text.</p>
 
         <h2 id="model">2 · Declare a model</h2>
-        <p>A model pairs a MoonBit type with its columns. Each column carries its type and constraints; the mapping is checked as you write it.</p>
+        <p>A model is a MoonBit struct, the columns that store it, and the two directions of the mapping. Declare the columns once and keep them — the migration section reuses them.</p>
         <pre><code>struct Account {
   id : Int64?
   email : String
@@ -70,69 +70,118 @@ moon add moonbitstack/moondb</code></pre>
   level : Int
 }
 
-let account = Model::new(
-  "accounts",
+fn account_columns() -&gt; Array[@moonorm.Column] {
   [
-    column("id", BigIntType, primary_key=true, autoincrement=true),
-    column("email", TextType, nullable=false, unique=true),
-    column("balance", RealType),
-    column("team_id", BigIntType, references=("teams", "id"), on_delete="SET NULL"),
-    column("status", TextType, nullable=false, default="'active'"),
-    column("level", IntType, checks=["level >= 0"]),
-  ],
-  r => { id: r.read(0), email: r.read(1), balance: r.read(2),
-         team_id: r.read(3), status: r.read(4), level: r.read(5) },
-  a => [
-    ("id", match a.id { Some(v) => @moondb.Int64(v) | None => @moondb.Null }),
-    ("email", @moondb.Text(a.email)),
-    ("balance", @moondb.Double(a.balance)),
-    ("team_id", @moondb.Int64(a.team_id)),
-    ("status", @moondb.Text(a.status)),
-    ("level", @moondb.Int(a.level)),
-  ],
-)</code></pre>
+    @moonorm.column("id", BigIntType, primary_key=true, autoincrement=true),
+    @moonorm.column("email", TextType, nullable=false, unique=true),
+    @moonorm.column("balance", RealType),
+    @moonorm.column("team_id", BigIntType, references=("teams", "id"), on_delete="SET NULL"),
+    @moonorm.column("status", TextType, nullable=false, default="'active'"),
+    @moonorm.column("level", IntType, checks=["level &gt;= 0"]),
+  ]
+}
+
+fn account() -&gt; @moonorm.Model[Account] {
+  @moonorm.Model::new(
+    "accounts",
+    account_columns(),
+    (r) =&gt; {
+      {
+        id: r.read(0),
+        email: r.read(1),
+        balance: r.read(2),
+        team_id: r.read(3),
+        status: r.read(4),
+        level: r.read(5),
+      }
+    },
+    (a) =&gt; {
+      [
+        (
+          "id",
+          match a.id {
+            Some(v) =&gt; @moondb.Int64(v)
+            None =&gt; @moondb.Null
+          },
+        ),
+        ("email", @moondb.Text(a.email)),
+        ("balance", @moondb.Double(a.balance)),
+        ("team_id", @moondb.Int64(a.team_id)),
+        ("status", @moondb.Text(a.status)),
+        ("level", @moondb.Int(a.level)),
+      ]
+    },
+  )
+}</code></pre>
+        <p><code class="inline">id</code> is <code class="inline">Int64?</code> because the database assigns it: <code class="inline">None</code> binds as <code class="inline">NULL</code>, and the server fills the key.</p>
 
         <h2 id="ddl">3 · Generate DDL</h2>
-        <p>The same model yields correct DDL for every dialect — autoincrement keys, foreign keys, checks and defaults all rendered natively.</p>
-        <pre><code>account.create_table_sql_for(Postgres)
-// CREATE TABLE accounts (
-//   id BIGSERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE,
-//   balance DOUBLE PRECISION, team_id BIGINT
-//     REFERENCES teams(id) ON DELETE SET NULL,
-//   status TEXT NOT NULL DEFAULT 'active',
-//   level INTEGER CHECK (level >= 0))
-
-account.create_table_sql_for(Mysql)
-// CREATE TABLE accounts ( ... ) ENGINE=InnoDB
-
-account.create_table_sql_for(Sqlite)
-// CREATE TABLE accounts (
-//   id INTEGER PRIMARY KEY AUTOINCREMENT, ... )</code></pre>
-        <p>Pass <code class="inline">if_not_exists=true</code> to prefix <code class="inline">CREATE TABLE IF NOT EXISTS</code> on every dialect.</p>
+        <p>One model, three dialects. Each of these is a single statement, printed verbatim:</p>
+        <pre><code>fn print_ddl() -&gt; Unit {
+  println(account().create_table_sql_for(Sqlite))
+  println(account().create_table_sql_for(Postgres))
+  println(account().create_table_sql_for(Mysql))
+}
+// CREATE TABLE accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, balance REAL, team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INTEGER CHECK (level &gt;= 0))
+// CREATE TABLE accounts (id BIGSERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE, balance DOUBLE PRECISION, team_id BIGINT REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INTEGER CHECK (level &gt;= 0))
+// CREATE TABLE accounts (id BIGINT AUTO_INCREMENT PRIMARY KEY, email TEXT NOT NULL UNIQUE, balance DOUBLE, team_id BIGINT REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INT CHECK (level &gt;= 0)) ENGINE=InnoDB</code></pre>
+        <p>The differences are the ones that matter: <code class="inline">INTEGER PRIMARY KEY AUTOINCREMENT</code>, <code class="inline">BIGSERIAL</code>, <code class="inline">BIGINT AUTO_INCREMENT</code>, and MySQL's <code class="inline">ENGINE=InnoDB</code> suffix. Pass <code class="inline">if_not_exists=true</code> to prefix <code class="inline">CREATE TABLE IF NOT EXISTS</code> on every dialect.</p>
 
         <h2 id="query">4 · Build a query</h2>
-        <p>A query is a MoonBit expression that compiles into dialect SQL. Values are bound, never spliced.</p>
-        <pre><code>let q = account.select()
-  .where_(fn(a) { a.email == "ada@x.io" })
-  .order_by("level", Asc)
-  .limit(10)
-let (sql, params) = q.build()
-// sql:  SELECT id, email, balance, team_id, status, level
-//         FROM accounts WHERE email = ? ORDER BY level ASC LIMIT ?
-// params: [Text("ada@x.io"), Int(10)]</code></pre>
+        <p>A query is a MoonBit expression that renders to dialect SQL. Every value in the predicate is bound; the statement keeps a placeholder.</p>
+        <pre><code>fn build_query() -&gt; (String, Array[@moondb.Value]) {
+  account()
+    .select()
+    .where_("email", "=", @moondb.Text("ada@x.io"))
+    .order_by("level", Asc)
+    .limit(10)
+    .build()
+}
+// SELECT id, email, balance, team_id, status, level FROM accounts
+//   WHERE email = ? ORDER BY level ASC LIMIT 10
+// params: [Text("ada@x.io")]</code></pre>
+        <p>The value travels in <code class="inline">params</code> as a <code class="inline">Value</code>, so no quoting is possible. <code class="inline">limit</code> takes an integer, not a value, and is written into the statement as a literal.</p>
 
         <h2 id="insert">5 · Insert a row</h2>
-        <pre><code>let ins = account.insert_of(rec)
-let (sql, params) = ins.build_for(Postgres)
-// INSERT INTO accounts (email, balance, team_id, status, level)
-//   VALUES (?, ?, ?, ?, ?) RETURNING id
-// params: [Text("ada@x.io"), Double(0.0), Int64(2), Text("active"), Int(1)]</code></pre>
+        <pre><code>fn build_insert() -&gt; (String, Array[@moondb.Value]) {
+  let row : Account = {
+    id: None,
+    email: "ada@x.io",
+    balance: 0.0,
+    team_id: 2,
+    status: "active",
+    level: 1,
+  }
+  account().insert_of(row).build_for(Postgres)
+}
+// INSERT INTO accounts (id, email, balance, team_id, status, level)
+//   VALUES (?, ?, ?, ?, ?, ?)
+// params: [Null, Text("ada@x.io"), Double(0), Int64(2), Text("active"), Int(1)]</code></pre>
+        <p>The key is bound as <code class="inline">NULL</code> rather than omitted, so one statement serves both an assigned key and a generated one.</p>
 
         <h2 id="migrate">6 · Migrate</h2>
-        <p>Reflect a model against a live database, diff, and emit up/down migrations. Each change is labelled reversible.</p>
-        <pre><code>let diff = Migrator::diff(existing_schema, account.create_table_sql_for(Postgres))
-// → adds column `level INTEGER CHECK (level >= 0)`
-// → reversible: yes (DROP COLUMN)</code></pre>
+        <p>Read what the database actually has, diff it against the columns you declared, and let each difference become a step. Reflected-only columns are <code class="inline">Removed</code>; declared-only ones are <code class="inline">Added</code>.</p>
+        <pre><code>pub fn plan_for(db : &amp;@moondb.Driver) -&gt; Array[@moonorm.ColumnDiff] raise @moondb.DbError {
+  let reflected = @moonorm.reflect_table(db, "accounts")
+  @moonorm.diff_schema(account_columns(), reflected, dialect=Postgres)
+}</code></pre>
+        <p>Against a table that holds only <code class="inline">id</code> and <code class="inline">email</code>, the plan is four additions:</p>
+        <pre><code>fn report(diffs : Array[@moonorm.ColumnDiff]) -&gt; Unit {
+  for d in diffs {
+    match d {
+      Added(name~, col_type~) =&gt;
+        println("+ " + name + " " + col_type.sql_for(Postgres))
+      Removed(name) =&gt; println("- " + name)
+      TypeChanged(name~, from~, to~) =&gt;
+        println("~ " + name + " " + from.sql_for(Postgres) + " -&gt; " + to.sql_for(Postgres))
+    }
+  }
+}
+// + balance DOUBLE PRECISION
+// + team_id BIGINT
+// + status TEXT
+// + level INTEGER</code></pre>
+        <p><code class="inline">Migrator</code> then applies a list of <code class="inline">Migration</code> records — each a version, a name, and the up/down statements — and records what it ran.</p>
 
         <h2 id="dialects">Dialects</h2>
         <p>The <code class="inline">Dialect</code> enum fixes the spelling of types, keys and placeholders. Choose it once per session; the seam renders the rest.</p>

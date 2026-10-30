@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
- title>moonorm — the MoonBit ORM, stitched at compile time</title>
+ <title>moonorm — the MoonBit ORM, stitched at compile time</title>
   <meta name="description" content="moonorm is an ORM and SQL toolkit for MoonBit. Types are contracts; the seam that stitches them into SQL is the query.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/moonorm.css">
+  <script>try{var t=localStorage.getItem("moonorm-theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
   <header class="topbar">
@@ -28,7 +29,7 @@
       <a href="showcase.html">Showcase</a>
       <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
     </nav>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">day</button>
+    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Colour theme"><button type="button" data-set-theme="light">Light</button><button type="button" data-set-theme="dark">Dark</button></div>
   </header>
 
   <main class="wrap">
@@ -41,44 +42,59 @@
         runtime surprise; it is a <i>compile error</i>, caught on this very line.
       </p>
 
-      <!-- THE SEAM -->
-      <div class="seam-stage" aria-label="Compile-time mapping demo: MoonBit type side to SQL relation side">
-        <div class="world left">
-          <h4>MoonBit — type side</h4>
-          <pre class="src">struct User {
-  id    : Int64
-  name  : String
-  email : String
-} derive(DbModel)</pre>
-          <div class="node" data-field="id"><span class="k">id</span><span class="v">: Int64</span></div>
-          <div class="node" data-field="name"><span class="k">name</span><span class="v">: String</span></div>
-          <div class="node" data-field="email"><span class="k">email</span><span class="v">: String</span></div>
+      <!-- THE SEAM: one row per field, stitched across the gutter.
+           Each row's halves are aligned by the grid, not measured in script. -->
+      <div class="seam-stage" id="seam">
+        <div class="seam-bar">
+          <span class="seam-file">struct User &rarr; users</span>
+          <div class="seg" role="group" aria-label="SQL dialect">
+            <button type="button" data-dialect="0">SQLite</button>
+            <button type="button" data-dialect="1" class="on">PostgreSQL</button>
+            <button type="button" data-dialect="2">MySQL</button>
+          </div>
         </div>
-        <div class="seam" aria-hidden="true">
-          <div class="seam-core"></div>
-          <div class="seam-flag">seam steady</div>
-          <div class="seam-stitch"></div>
+
+        <div class="ledger-head">
+          <span class="hd left">MoonBit &mdash; type side</span>
+          <span class="hd seat" aria-hidden="true"></span>
+          <span class="hd right">relation &mdash; SQL side</span>
         </div>
-        <div class="world right">
-          <h4>relation — SQL side</h4>
-          <pre class="src">CREATE TABLE users (
-  id    BIGINT PRIMARY KEY,
-  name  TEXT,
-  email TEXT
-)</pre>
-          <div class="node" data-field="id"><span class="k">id</span><span class="v"> BIGINT</span></div>
-          <div class="node" data-field="name"><span class="k">name</span><span class="v"> TEXT</span></div>
-          <div class="node" data-field="email"><span class="k">email</span><span class="v"> TEXT</span></div>
+
+        <div class="ledger-box">
+          <div class="ledger" role="table" aria-label="Field to column mapping">
+            <div class="lrow" data-field="id" role="row">
+              <code class="cell left" role="cell"><b class="col">id</b><span class="typ">: Int64</span></code>
+              <span class="suture" role="presentation"><i></i></span>
+              <code class="cell right" role="cell"><b class="col">id</b><span class="typ">BIGINT</span><span class="flag">primary key</span></code>
+            </div>
+            <div class="lrow" data-field="name" role="row">
+              <code class="cell left" role="cell"><b class="col">name</b><span class="typ">: String</span></code>
+              <span class="suture" role="presentation"><i></i></span>
+              <code class="cell right" role="cell"><b class="col">name</b><span class="typ">TEXT</span><span class="flag">not null</span></code>
+            </div>
+            <div class="lrow" data-field="email" role="row">
+              <code class="cell left" role="cell"><b class="col">email</b><span class="typ">: String</span></code>
+              <span class="suture" role="presentation"><i></i></span>
+              <code class="cell right" role="cell"><b class="col">email</b><span class="typ">TEXT</span><span class="flag">not null unique</span></code>
+            </div>
+          </div>
+          <span class="spine" aria-hidden="true"><span class="spine-glow"></span></span>
         </div>
       </div>
 
       <div class="diagnostic ok" id="seam-diagnostic">
         <span class="badge">ok</span><span class="msg">all fields mapped, 0 errors</span>
       </div>
-      <pre class="gen-sql" id="seam-gen-sql">SELECT id, name, email
-  FROM users
- WHERE id = ?</pre>
-      <p class="faint" style="margin-top:12px">Hover a field to lock its mapping. Click <code class="inline">email</code> to watch a type mismatch break the seam. SQL is generated by this library compiled to JS — not hand-written.</p>
+
+      <figure class="gen">
+        <figcaption class="gen-cap">
+          <span id="seam-gen-label">CREATE TABLE</span>
+          <span id="seam-dialect-name">PostgreSQL</span>
+        </figcaption>
+        <pre class="gen-sql" id="seam-gen-sql">CREATE TABLE users (id BIGSERIAL PRIMARY KEY, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE)</pre>
+      </figure>
+
+      <p class="faint hero-note">Hover a field to lock its mapping. Click <code class="inline">email</code> to watch a type mismatch break the seam. Every type and every statement on the right is produced by this library, compiled to JavaScript.</p>
     </section>
 
     <!-- FOUR ACTS -->
@@ -114,18 +130,20 @@
       <p class="eyebrow">The contract ledger</p>
       <h2>MoonBit type ↔ SQL type</h2>
       <p class="muted">The strong type and the weak type, reconciled. Rows that cannot map are marked — and explained.</p>
-      <table class="map-table">
+      <div class="tbl">
+        <table class="map-table">
         <thead><tr><th>MoonBit</th><th>SQLite</th><th>PostgreSQL</th><th>MySQL</th><th>nullable</th></tr></thead>
         <tbody>
-          <tr><td>Int</td><td>INTEGER</td><td>INTEGER</td><td>INT</td><td>·</td></tr>
-          <tr><td>Int64</td><td>INTEGER</td><td>BIGINT</td><td>BIGINT</td><td>·</td></tr>
-          <tr><td>Double</td><td>REAL</td><td>DOUBLE PRECISION</td><td>DOUBLE</td><td>·</td></tr>
-          <tr><td>String</td><td>TEXT</td><td>TEXT</td><td>TEXT</td><td>·</td></tr>
-          <tr><td>Bool</td><td>INTEGER</td><td>BOOLEAN</td><td>TINYINT(1)</td><td>·</td></tr>
-          <tr><td>Bytes</td><td>BLOB</td><td>BYTEA</td><td>BLOB</td><td>·</td></tr>
-          <tr class="broken"><td>Int ↔ TEXT</td><td colspan="3">needs an explicit <code class="inline">kind=</code>; the seam will not guess</td><td>no</td></tr>
+          <tr><td>Int</td><td>INTEGER</td><td>INTEGER</td><td>INT</td><td>&middot;</td></tr>
+          <tr><td>Int64</td><td>INTEGER</td><td>BIGINT</td><td>BIGINT</td><td>&middot;</td></tr>
+          <tr><td>Double</td><td>REAL</td><td>DOUBLE PRECISION</td><td>DOUBLE</td><td>&middot;</td></tr>
+          <tr><td>String</td><td>TEXT</td><td>TEXT</td><td>TEXT</td><td>&middot;</td></tr>
+          <tr><td>Bool</td><td>INTEGER</td><td>BOOLEAN</td><td>TINYINT(1)</td><td>&middot;</td></tr>
+          <tr><td>Bytes</td><td>BLOB</td><td>BYTEA</td><td>BLOB</td><td>&middot;</td></tr>
+          <tr class="broken"><td>Int &harr; TEXT</td><td colspan="3">needs an explicit <code class="inline">kind=</code>; the seam will not guess</td><td>no</td></tr>
         </tbody>
-      </table>
+        </table>
+      </div>
     </section>
 
     <!-- CODE <-> SQL -->
@@ -168,6 +186,7 @@ let (sql, params) = q.build()
     <span><a href="https://github.com/moonbitstack/moonorm">github.com/moonbitstack/moonorm</a></span>
   </footer>
 
+  <script src="engine/moonorm.js"></script>
   <script src="assets/js/theme.js"></script>
   <script src="assets/js/seam.js"></script>
 </body>

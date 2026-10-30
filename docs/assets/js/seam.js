@@ -1,154 +1,230 @@
-// moonorm · hero seam — compile-time stitching demo (real mapping, real break)
+// moonorm · the seam — the home page's mapping ledger, driven by the library.
+//
+// Every SQL type and every statement shown here comes from
+// `globalThis.moonormDemo`, i.e. from this repository compiled to JavaScript by
+// the docs workflow. Nothing on the right-hand side is typed by hand: the static
+// markup is the PostgreSQL rendering used when the engine has not been built.
 (function () {
   "use strict";
-  var stage = document.querySelector(".seam-stage");
+
+  var stage = document.getElementById("seam");
   if (!stage) return;
 
+  var demo = window.moonormDemo;
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var leftWorld = stage.querySelector(".world.left");
-  var rightWorld = stage.querySelector(".world.right");
-  var seamCol = stage.querySelector(".seam");
-  var flag = seamCol && seamCol.querySelector(".seam-flag");
-  var stitch = seamCol && seamCol.querySelector(".seam-stitch");
+
+  var rows = [].slice.call(stage.querySelectorAll(".lrow"));
   var diag = document.getElementById("seam-diagnostic");
   var diagBadge = diag && diag.querySelector(".badge");
   var diagMsg = diag && diag.querySelector(".msg");
   var genSql = document.getElementById("seam-gen-sql");
+  var genLabel = document.getElementById("seam-gen-label");
+  var dialectName = document.getElementById("seam-dialect-name");
+  var tabs = [].slice.call(stage.querySelectorAll("[data-dialect]"));
 
-  // ordered field list: MoonBit type -> SQL type. `broken` fields fail the seam.
+  var DIALECTS = ["SQLite", "PostgreSQL", "MySQL"];
+
+  // ordered field list: the MoonBit type on the left, and the field's index on the right
   var fields = [
-    { k: "id",     lt: "Int64",  rt: "BIGINT", broken: false },
-    { k: "name",   lt: "String", rt: "TEXT",   broken: false },
-    { k: "email",  lt: "String", rt: "TEXT",   broken: false, fault: true }
+    { k: "id", lt: ": Int64" },
+    { k: "name", lt: ": String" },
+    { k: "email", lt: ": String", fault: true }
   ];
 
-  var leftNodes = {}, rightNodes = {}, beams = [];
-  // nodes are static in the HTML (works without JS); we only add decorative beams
+  var parts = {};
   fields.forEach(function (f) {
-    leftNodes[f.k] = leftWorld.querySelector('.node[data-field="' + f.k + '"]');
-    rightNodes[f.k] = rightWorld.querySelector('.node[data-field="' + f.k + '"]');
-    var b = document.createElement("div");
-    b.className = "beam"; b.dataset.field = f.k;
-    stage.appendChild(b); beams.push(b);
+    var row = stage.querySelector('.lrow[data-field="' + f.k + '"]');
+    parts[f.k] = {
+      row: row,
+      left: row.querySelector(".cell.left"),
+      right: row.querySelector(".cell.right"),
+      leftType: row.querySelector(".cell.left .typ"),
+      rightType: row.querySelector(".cell.right .typ"),
+      rightFlag: row.querySelector(".cell.right .flag"),
+      suture: row.querySelector(".suture")
+    };
   });
 
-  // position each beam at the vertical centre of its pair of nodes
-  function layout() {
-    fields.forEach(function (f) {
-      var ln = leftNodes[f.k], rn = rightNodes[f.k];
-      var y = (ln.offsetTop + ln.offsetHeight / 2 + rn.offsetTop + rn.offsetHeight / 2) / 2 - stage.offsetTop;
-      var b = beams[fields.indexOf(f)];
-      b.style.top = y + "px";
+  var dialect = 1;          // 1 = PostgreSQL, the default view
+  var broken = {};          // field -> true while its fault demo runs
+
+  // ---- render the right column from the library ----
+  // `userColumns` returns one "name|type|flags" line per column.
+  function renderColumns(d) {
+    if (!demo || !demo.userColumns) return;
+    var lines = demo.userColumns(d).split("\n");
+    fields.forEach(function (f, i) {
+      var line = lines[i];
+      if (!line) return;
+      var cols = line.split("|");
+      var p = parts[f.k];
+      p.rightType.textContent = cols[1] || "";
+      p.rightFlag.textContent = (cols[2] || "").trim();
     });
   }
-  layout();
-  window.addEventListener("resize", layout);
 
-  function setMapped(f) {
-    var ok = !f.broken;
-    leftNodes[f.k].classList.toggle("broken", !ok);
-    rightNodes[f.k].classList.toggle("broken", !ok);
-    var b = beams[fields.indexOf(f)];
-    b.classList.toggle("broken", !ok);
+  function renderDdl(d) {
+    if (!demo || !demo.userDdl) return;
+    genSql.textContent = demo.userDdl(d);
   }
 
-  // ---- diagnostic + generated SQL reflect the current state ----
-  function refreshState() {
-    var anyBroken = fields.some(function (f) { return f.broken; });
+  // ---- state ----
+  function anyBroken() {
+    return fields.some(function (f) { return broken[f.k]; });
+  }
+
+  function refresh() {
+    var bad = anyBroken();
     if (diag) {
-      if (anyBroken) {
-        diag.classList.add("err"); diag.classList.remove("ok");
-        if (diagBadge) diagBadge.textContent = "error:";
-        if (diagMsg) diagMsg.textContent = "type mismatch at field email — expected TEXT, found Int";
-      } else {
-        diag.classList.add("ok"); diag.classList.remove("err");
-        if (diagBadge) diagBadge.textContent = "✓";
-        if (diagMsg) diagMsg.textContent = "all fields mapped, 0 errors";
+      diag.classList.toggle("err", bad);
+      diag.classList.toggle("ok", !bad);
+      if (diagBadge) diagBadge.textContent = bad ? "error:" : "ok";
+      if (diagMsg) {
+        diagMsg.textContent = bad
+          ? "type mismatch at email \u2014 the column is TEXT, the field is Int"
+          : "all fields mapped, 0 errors";
       }
     }
     if (genSql) {
-      genSql.textContent = anyBroken
-        ? "-- compile aborts: field email cannot be stitched to TEXT"
-        : "SELECT id, name, email\n  FROM users\n WHERE id = ?";
+      genSql.classList.toggle("err", bad);
+      if (bad) {
+        genSql.textContent =
+          "error: cannot stitch field `email` to column `email`\n" +
+          "  expected  String  \u2192  TEXT\n" +
+          "  found     Int     \u2192  no column analogue\n" +
+          "  at        struct User, field 3";
+      } else {
+        renderDdl(dialect);
+      }
+    }
+    if (genLabel) {
+      genLabel.textContent = bad ? "compile stopped" : "CREATE TABLE";
     }
   }
 
-  // ---- hover: lock one field's mapping ----
-  fields.forEach(function (f) {
-    [leftNodes[f.k], rightNodes[f.k]].forEach(function (n) {
-      n.addEventListener("mouseenter", function () { highlight(f.k); });
-      n.addEventListener("mouseleave", function () { if (!cycling) clearHighlight(); });
+  function setDialect(d, name) {
+    dialect = d;
+    if (dialectName) dialectName.textContent = name;
+    tabs.forEach(function (b) {
+      b.classList.toggle("on", Number(b.getAttribute("data-dialect")) === d);
     });
-    // click email to trigger the fault on demand (also auto-cycles below)
-    if (f.fault) {
-      [leftNodes[f.k], rightNodes[f.k]].forEach(function (n) {
-        n.style.cursor = "pointer";
-        n.addEventListener("click", function () { toggleFault(); });
-      });
-    }
-  });
+    if (!anyBroken()) renderColumns(d);
+    refresh();
+  }
+
+  // ---- highlight one field: lock its mapping ----
   function highlight(k) {
     fields.forEach(function (f) {
       var on = f.k === k;
-      leftNodes[f.k].classList.toggle("sel", on);
-      rightNodes[f.k].classList.toggle("sel", on);
-      beams[fields.indexOf(f)].classList.toggle("lit", on);
+      var p = parts[f.k];
+      p.left.classList.toggle("sel", on);
+      p.right.classList.toggle("sel", on);
+      p.suture.classList.toggle("lit", on);
     });
   }
   function clearHighlight() {
     fields.forEach(function (f) {
-      leftNodes[f.k].classList.remove("sel");
-      rightNodes[f.k].classList.remove("sel");
-      beams[fields.indexOf(f)].classList.remove("lit");
+      var p = parts[f.k];
+      p.left.classList.remove("sel");
+      p.right.classList.remove("sel");
+      p.suture.classList.remove("lit");
     });
   }
 
-  // ---- auto cycle: stitch each field in turn ----
-  var cycling = true, idx = 0;
-  function cycle() {
-    if (reduce) return;
-    var f = fields[idx % fields.length];
-    highlight(f.k);
-    if (flag) flag.textContent = "stitching " + f.k;
-    idx++;
-    if (idx % fields.length === 0) {
-      // brief pause on the whole mapping, then a fault flash
-      setTimeout(function () {
-        if (cycling) { triggerFault(); }
-      }, 900);
+  // ---- hover ----
+  fields.forEach(function (f) {
+    var p = parts[f.k];
+    [p.left, p.right].forEach(function (el) {
+      el.addEventListener("mouseenter", function () { highlight(f.k); });
+      el.addEventListener("mouseleave", function () { if (!cycling) clearHighlight(); });
+    });
+    if (f.fault) {
+      [p.left, p.right].forEach(function (el) {
+        el.style.cursor = "pointer";
+        el.addEventListener("click", function () { toggleFault(); });
+        el.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleFault(); }
+        });
+      });
     }
-  }
-  var cycleTimer = reduce ? null : setInterval(cycle, 1400);
+  });
 
-  // ---- fault demo: flip email to Int, the seam breaks, then heals ----
-  var faultActive = false;
+  // ---- the fault: flip email to Int and show what the compiler refuses ----
+  var faultActive = false, healTimer = null;
+
   function triggerFault() {
     if (faultActive) return;
     faultActive = true;
-    var ef = fields.filter(function (f) { return f.fault; })[0];
-    ef.broken = true; ef.lt = "Int";
-    leftNodes[ef.k].querySelector(".v").textContent = ": Int";
-    setMapped(ef); refreshState();
+    var f = fields.filter(function (x) { return x.fault; })[0];
+    broken[f.k] = true;
+    var p = parts[f.k];
+    p.leftType.textContent = ": Int";
+    p.left.classList.add("bad");
+    p.right.classList.add("bad");
+    p.suture.classList.remove("lit");
+    p.suture.classList.add("bad");
     clearHighlight();
-    highlight(ef.k);
-    if (flag) flag.textContent = "✗ break at email";
-    if (stitch) stitch.style.background = "var(--broken)";
-    setTimeout(healFault, 2200);
+    highlight(f.k);
+    refresh();
+    healTimer = setTimeout(healFault, 2600);
   }
+
   function healFault() {
-    var ef = fields.filter(function (f) { return f.fault; })[0];
-    ef.broken = false; ef.lt = "String";
-    leftNodes[ef.k].querySelector(".v").textContent = ": String";
-    setMapped(ef); refreshState();
-    clearHighlight();
-    if (flag) flag.textContent = "seam steady";
+    var f = fields.filter(function (x) { return x.fault; })[0];
+    broken[f.k] = false;
     faultActive = false;
+    clearTimeout(healTimer);
+    var p = parts[f.k];
+    p.leftType.textContent = f.lt;
+    p.left.classList.remove("bad");
+    p.right.classList.remove("bad");
+    p.suture.classList.remove("bad");
+    clearHighlight();
+    refresh();
   }
+
   function toggleFault() {
-    if (cycleTimer) { clearInterval(cycleTimer); cycleTimer = null; cycling = false; }
+    stopCycle();
     if (faultActive) healFault(); else triggerFault();
   }
 
-  refreshState();
-  layout();
+  // ---- auto cycle: stitch each field in turn, then show the fault ----
+  var cycling = false, idx = 0, cycleTimer = null;
+
+  function cycle() {
+    if (faultActive) return;          // let the break finish playing
+    var f = fields[idx % fields.length];
+    highlight(f.k);
+    idx++;
+    if (idx % fields.length === 0) {
+      setTimeout(function () { if (cycling && !faultActive) triggerFault(); }, 1100);
+    }
+  }
+  function startCycle() {
+    if (reduce || !fields.length) return;
+    cycling = true;
+    cycleTimer = setInterval(cycle, 1500);
+  }
+  function stopCycle() {
+    cycling = false;
+    if (cycleTimer) { clearInterval(cycleTimer); cycleTimer = null; }
+  }
+
+  // ---- dialect tabs ----
+  tabs.forEach(function (b) {
+    b.addEventListener("click", function () {
+      stopCycle();
+      clearHighlight();
+      setDialect(Number(b.getAttribute("data-dialect")), DIALECTS[Number(b.getAttribute("data-dialect"))]);
+    });
+  });
+
+  // ---- go ----
+  if (demo && demo.userColumns) {
+    stage.setAttribute("data-live", "1");
+    if (genLabel) genLabel.textContent = "CREATE TABLE \u00b7 generated by moonorm";
+  }
+  renderColumns(dialect);
+  refresh();
+  startCycle();
 })();

@@ -11,13 +11,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/moonphase.css">
+  <script>try{var t=localStorage.getItem("moondb-theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="index.html" style="border:0">
       <svg class="glyph" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-        <circle cx="16" cy="16" r="11" fill="var(--phase-light)"/>
-        <circle cx="21" cy="16" r="11" fill="var(--phase-dark)"/>
+        <circle cx="15" cy="16" r="10" fill="currentColor"/>
+        <circle cx="21" cy="16" r="9" fill="var(--paper)"/>
       </svg>
       moondb
     </a>
@@ -28,7 +29,7 @@
       <a href="showcase.html">Showcase</a>
       <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
     </nav>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">day</button>
+    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Colour theme"><button type="button" data-set-theme="light">Light</button><button type="button" data-set-theme="dark">Dark</button></div>
   </header>
 
   <main class="wrap">
@@ -62,7 +63,7 @@
   <span class="kw">fn</span> commit(Self) -&gt; Unit <span class="kw">raise</span> DbError
   <span class="kw">fn</span> rollback(Self) -&gt; Unit <span class="kw">raise</span> DbError
   <span class="kw">fn</span> close(Self) -&gt; Unit
-  <span class="kw">fn</span> ping(Self) -&gt; Bool = _   <span class="kw">// default</span>
+  fn ping(Self) -> Bool = _                                                  <span class="kw">// default</span>
 }</pre>
     </section>
 
@@ -76,29 +77,19 @@
       </p>
       <div class="drivers">
         <div class="driver">
-          <div class="moon" data-moon="0.18,true"></div>
+          <div class="moon" data-moon="0.22,true"></div>
           <div class="phase-name">waxing crescent</div>
           <h3>moonmysql</h3>
           <p>The MySQL/MariaDB implementation of the contract.</p>
-          <div class="coverage">
-            <span class="dot green"></span>execute
-            <span class="dot green"></span>query
-            <span class="dot green"></span>transaction
-            <span class="dot green"></span>ping
-          </div>
+          <ul class="coverage"><li>execute</li><li>query</li><li>transaction</li><li>ping</li></ul>
           <a class="ghost" href="mysql.html">read the statute →</a>
         </div>
         <div class="driver">
-          <div class="moon" data-moon="0.82,true"></div>
+          <div class="moon" data-moon="0.8,true"></div>
           <div class="phase-name">waxing gibbous</div>
           <h3>moonpostgres</h3>
           <p>The PostgreSQL implementation of the contract.</p>
-          <div class="coverage">
-            <span class="dot green"></span>execute
-            <span class="dot green"></span>query
-            <span class="dot green"></span>transaction
-            <span class="dot green"></span>ping
-          </div>
+          <ul class="coverage"><li>execute</li><li>query</li><li>transaction</li><li>ping</li></ul>
           <a class="ghost" href="postgres.html">read the statute →</a>
         </div>
         <div class="driver">
@@ -106,19 +97,14 @@
           <div class="phase-name">full moon</div>
           <h3>moonsqlite</h3>
           <p>The SQLite implementation of the contract — embedded, no server.</p>
-          <div class="coverage">
-            <span class="dot green"></span>execute
-            <span class="dot green"></span>query
-            <span class="dot green"></span>transaction
-            <span class="dot green"></span>ping
-          </div>
+          <ul class="coverage"><li>execute</li><li>query</li><li>transaction</li><li>ping</li></ul>
           <a class="ghost" href="sqlite.html">read the statute →</a>
         </div>
       </div>
     </section>
 
     <div class="statusbar">
-      <span><b>moondb</b> 0.2.2</span>
+      <span><b>moondb</b> · the interface layer</span>
       <span>Apache-2.0</span>
       <span>targets: wasm-gc · js · native</span>
       <span>trait <b>Driver</b> · value <b>Value</b> · error <b>DbError</b></span>

@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/tokens.css">
   <link rel="stylesheet" href="assets/css/moonphase.css">
+  <script>try{var t=localStorage.getItem("moondb-theme");if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 </head>
 <body>
   <header class="topbar">
@@ -28,7 +29,7 @@
       <a href="showcase.html">Showcase</a>
       <a href="https://github.com/moonbitstack/moonorm" rel="noopener">GitHub</a>
     </nav>
-    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">day</button>
+    <div class="theme-toggle" id="theme-toggle" role="group" aria-label="Colour theme"><button type="button" data-set-theme="light">Light</button><button type="button" data-set-theme="dark">Dark</button></div>
   </header>
 
   <main class="wrap">
@@ -61,19 +62,63 @@
           <p class="folio">§2</p>
           <h2>Implement the trait</h2>
           <p class="muted">A driver is a struct that owns the connection handle, plus an <code class="inline">impl Driver</code> block. You must supply <code class="inline">execute</code>, <code class="inline">query</code>, <code class="inline">begin</code>, <code class="inline">commit</code>, <code class="inline">rollback</code>, and <code class="inline">close</code>.</p>
-          <pre class="signature"><span class="kw">struct</span> MyConn { handle : Handle }
+          <pre class="signature"><span class="kw">pub</span> <span class="kw">struct</span> MyConn {
+  dsn : String
+  <span class="kw">mut</span> closed : Bool
+}
 
-<span class="kw">impl</span> Driver <span class="kw">for</span> MyConn {
-  <span class="kw">fn</span> execute(self, sql, params) -&gt; ExecResult <span class="kw">raise</span> DbError {
-    <span class="kw">//</span> run a non-row statement, report rows changed + last id
+<span class="kw">pub</span> <span class="kw">fn</span> open(dsn : String) -&gt; MyConn {
+  { dsn, closed: false }
+}
+
+<span class="kw">impl</span> @moondb.Driver <span class="kw">for</span> MyConn <span class="kw">with</span> <span class="kw">fn</span> execute(
+  self,
+  sql,
+  params,
+) -&gt; @moondb.ExecResult <span class="kw">raise</span> @moondb.DbError {
+  <span class="kw">ignore</span>(params)
+  <span class="kw">if</span> self.closed {
+    <span class="kw">raise</span> @moondb.Closed
   }
-  <span class="kw">fn</span> query(self, sql, params) -&gt; Array[Row] <span class="kw">raise</span> DbError {
-    <span class="kw">//</span> run a row statement, materialise every row
+  <span class="kw">raise</span> @moondb.QueryError("execute is not wired to a backend yet: " + sql)
+}
+
+<span class="kw">impl</span> @moondb.Driver <span class="kw">for</span> MyConn <span class="kw">with</span> <span class="kw">fn</span> query(
+  self,
+  sql,
+  params,
+) -&gt; Array[@moondb.Row] <span class="kw">raise</span> @moondb.DbError {
+  <span class="kw">ignore</span>(params)
+  <span class="kw">if</span> self.closed {
+    <span class="kw">raise</span> @moondb.Closed
   }
-  <span class="kw">fn</span> begin(self) -&gt; Unit <span class="kw">raise</span> DbError { ... }
-  <span class="kw">fn</span> commit(self) -&gt; Unit <span class="kw">raise</span> DbError { ... }
-  <span class="kw">fn</span> rollback(self) -&gt; Unit <span class="kw">raise</span> DbError { ... }
-  <span class="kw">fn</span> close(self) -&gt; Unit { ... }   <span class="kw">//</span> best-effort, idempotent
+  <span class="kw">raise</span> @moondb.QueryError("query is not wired to a backend yet: " + sql)
+}
+
+<span class="kw">impl</span> @moondb.Driver <span class="kw">for</span> MyConn <span class="kw">with</span> <span class="kw">fn</span> begin(self) -&gt; Unit <span class="kw">raise</span> @moondb.DbError {
+  <span class="kw">raise</span> @moondb.QueryError("transactions are not wired yet: " + self.dsn)
+}
+
+<span class="kw">impl</span> @moondb.Driver <span class="kw">for</span> MyConn <span class="kw">with</span> <span class="kw">fn</span> commit(self) -&gt; Unit <span class="kw">raise</span> @moondb.DbError {
+  <span class="kw">raise</span> @moondb.QueryError("transactions are not wired yet: " + self.dsn)
+}
+
+<span class="kw">impl</span> @moondb.Driver <span class="kw">for</span> MyConn <span class="kw">with</span> <span class="kw">fn</span> rollback(self) -&gt; Unit <span class="kw">raise</span> @moondb.DbError {
+  <span class="kw">raise</span> @moondb.QueryError("transactions are not wired yet: " + self.dsn)
+}
+
+<span class="kw">impl</span> @moondb.Driver <span class="kw">for</span> MyConn <span class="kw">with</span> <span class="kw">fn</span> close(self) -&gt; Unit {
+  self.closed = true
+}
+
+<span class="kw">extend</span> MyConn <span class="kw">with</span> @moondb.Driver::{ping, close}
+
+<span class="kw">pub</span> <span class="kw">fn</span> healthy(conn : MyConn) -&gt; Bool {
+  conn.ping()
+}
+
+<span class="kw">pub</span> <span class="kw">fn</span> shutdown(conn : MyConn) -&gt; Unit {
+  conn.close()
 }</pre>
         </section>
 
@@ -92,10 +137,13 @@
           <p class="folio">§4</p>
           <h2>Reading rows</h2>
           <p class="muted">A <code class="inline">Row</code> is read positionally or by name, with one typed accessor per <code class="inline">Value</code> case. Each raises <code class="inline">DbError::TypeError</code> if the column is not the requested shape.</p>
-          <pre class="signature">row.int64(0)        <span class="kw">//</span> read column 0 as Int64
-row.text_by("email") <span class="kw">//</span> read by column name
-row.is_null(2)       <span class="kw">//</span> SQL NULL check
-row.width()          <span class="kw">//</span> column count</pre>
+          <pre class="signature"><span class="kw">pub</span> <span class="kw">fn</span> read(row : @moondb.Row) -&gt; Unit <span class="kw">raise</span> @moondb.DbError {
+  <span class="kw">let</span> id = row.int64(0)            <span class="kw">//</span> column 0, as Int64
+  <span class="kw">let</span> email = row.text_by("email") <span class="kw">//</span> by column name
+  <span class="kw">let</span> unset = row.is_null(2)       <span class="kw">//</span> SQL NULL check
+  <span class="kw">let</span> width = row.width()          <span class="kw">//</span> column count
+  println("\{id} \{email} \{unset} \{width}")
+}</pre>
         </section>
 
         <section class="section" id="defaults">
