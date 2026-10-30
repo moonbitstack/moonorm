@@ -1,0 +1,3 @@
+[submodule "moondb-site"]
+	path = moondb-site
+	url = https://github.com/moonbitstack/moondb.git
