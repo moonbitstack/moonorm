@@ -254,6 +254,8 @@
 /* ---- footer ---- */
 .foot { border-top: 1px solid var(--hair); padding: var(--s5) 0; color: var(--ink-faint); font-family: var(--font-mono); font-size: 12px; display: flex; flex-wrap: wrap; gap: var(--s3); justify-content: space-between; }
 .foot a { color: var(--ink-soft); border: 0; }
+.foot .cross { color: var(--ink-faint); }
+.foot .cross a { color: var(--ink-soft); }
 
 /* ---- showcase / live engine playground ---- */
 .pg-section { padding: var(--s5) 0; border-top: 1px solid var(--hair); }

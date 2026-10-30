@@ -262,9 +262,10 @@ HTML = """<!DOCTYPE html>
     </div>
   </main>
 
-  <footer class="foot">
+  <footer class="wrap foot">
     <span>moonorm · Apache-2.0 · MoonBit ORM &amp; SQL toolkit</span>
     <span><a href="https://github.com/moonbitstack/moonorm" rel="noopener">github.com/moonbitstack/moonorm</a></span>
+    <span class="cross">driver contract: <a href="https://moonbitstack.github.io/moondb/">moondb</a></span>
   </footer>
 
   <script src="assets/js/theme.js"></script>
