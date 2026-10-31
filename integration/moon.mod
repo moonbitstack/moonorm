@@ -13,9 +13,9 @@ keywords = [ "moonorm", "sqlite", "integration", "test", "moonbit" ]
 description = "End-to-end integration tests wiring published moonorm + moonsqlite against a real SQLite file. Not published; exists so CI proves the ORM runs migrations and a Session over a real backend."
 
 import {
-  "moonbitstack/moonorm@0.11.1",
-  "moonbitstack/moonsqlite@0.3.1",
-  "moonbitstack/moondb@0.2.0",
+  "moonbitstack/moonorm@0.11.3",
+  "moonbitstack/moonsqlite@0.3.3",
+  "moonbitstack/moondb@0.2.4",
 }
 
 source = "src"
