@@ -40,13 +40,10 @@ jobs:
           moon version --all
           moon update
 
-      - name: Generate .mbti for every package the two API pages list
+      - name: Generate .mbti for every package the API page lists
         run: |
           for p in src src/schema src/query src/session src/migrate; do
             moon info --target js "$p"
-          done
-          for m in db drivers/sqlite drivers/postgres drivers/mysql; do
-            (cd "$m" && moon update && moon info --target js)
           done
 
       - name: Build the showcase engine
@@ -61,7 +58,7 @@ jobs:
         run: python3 scripts/gen_api.py
 
       - name: Check the generated pages are what is committed
-        run: git diff --exit-code -- docs/api.html docs/moondb/api.html
+        run: git diff --exit-code -- docs/api.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

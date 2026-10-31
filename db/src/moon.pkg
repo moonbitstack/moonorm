@@ -1,5 +1,0 @@
-// moondb: the standard database-access interface for MoonBit — the contract that
-// sits between DB drivers and query layers (Go's database/sql/driver, Python's
-// DB-API 2.0). Zero dependencies by design: this package is pure and compiles on
-// every backend, so the interface everything else pins to never drags a backend
-// or an async runtime behind it.

@@ -2,16 +2,15 @@
 # Copyright 2026 Leo Cheng
 # SPDX-License-Identifier: Apache-2.0
 #
-# Generate the two API pages: docs/api.html from the moonorm packages, and
-# docs/moondb/api.html from moondb and its three drivers. The public surface
+# Generate docs/api.html from the moonorm packages. The public surface
 # comes from `pkg.generated.mbti` (so nothing public can be missed, type
 # parameters included), the prose from the `///` comments in the sources, which
 # the mbti format does not carry, and each page's shell from the
 # `api.template.html` beside it.
 #
-#   moon info --target js                  # in the root, db/ and each drivers/*
-#   python3 scripts/gen_api.py            # write both pages
-#   python3 scripts/gen_api.py --check    # exit 1 if either page is stale
+#   moon info --target js                  # in the root
+#   python3 scripts/gen_api.py            # write the page
+#   python3 scripts/gen_api.py --check    # exit 1 if the page is stale
 
 import glob
 import os
@@ -34,19 +33,6 @@ SITES = [
             ("src/query", "moonbitstack/moonorm/query", "query", "query"),
             ("src/session", "moonbitstack/moonorm/session", "session", "session"),
             ("src/migrate", "moonbitstack/moonorm/migrate", "migrate", "migrate"),
-        ],
-    },
-    {
-        "out": "docs/moondb/api.html",
-        "template": "docs/moondb/api.template.html",
-        "eyebrow": "folio",
-        "packages": [
-            ("db/src", "moonbitstack/moondb", "moondb", "moondb"),
-            ("db/src/pool", "moonbitstack/moondb/pool", "pool", "pool"),
-            ("drivers/sqlite/src", "moonbitstack/moonsqlite", "moonsqlite", "moonsqlite"),
-            ("drivers/postgres/src", "moonbitstack/moonpostgres", "moonpostgres", "moonpostgres"),
-            ("drivers/mysql/src", "moonbitstack/moonmysql", "moonmysql", "moonmysql"),
-            ("drivers/mysql/src/client", "moonbitstack/moonmysql/client", "client", "moonmysql-client"),
         ],
     },
 ]

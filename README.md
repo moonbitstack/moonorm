@@ -23,11 +23,11 @@ over the text protocol (see its README), so there the safety rests on the escape
 matching the server's `sql_mode`.
 
 `moonorm` owns **no driver contract of its own**. It is written entirely against
-the [`moondb`](https://moonbitstack.github.io/moonorm/moondb/) interface, so it is pure
+the [`moondb`](https://moonbitstack.github.io/moondb/) interface, so it is pure
 MoonBit with zero C and compiles on every backend (`wasm` / `wasm-gc` / `js` /
 `native`). A backend is a separate package you supply: the native SQLite driver
-lives in [`moonsqlite`](drivers/sqlite), the PostgreSQL and MySQL/MariaDB
-drivers in [`moonpostgres`](drivers/postgres) and [`moonmysql`](drivers/mysql),
+lives in [`moonsqlite`](https://github.com/moonbitstack/moondb/tree/master/drivers/sqlite), the PostgreSQL and MySQL/MariaDB
+drivers in [`moonpostgres`](https://github.com/moonbitstack/moondb/tree/master/drivers/postgres) and [`moonmysql`](https://github.com/moonbitstack/moondb/tree/master/drivers/mysql),
 and a `Session` drives any `@moondb.Driver` — including the dependency-free
 `@moondb.MockDriver`.
 
@@ -390,7 +390,7 @@ pub fn tx(sess : @moonorm.Session, stmt : @query.Insert, dialect : @query.Dialec
 - **Pure, zero C.** The library is written entirely against the `@moondb` seam, so
   it compiles on every backend (`wasm` / `wasm-gc` / `js` / `native`) and drags no
   backend behind it. The C lives where a driver needs it —
-  [`moonsqlite`](drivers/sqlite) — never here.
+  [`moonsqlite`](https://github.com/moonbitstack/moondb/tree/master/drivers/sqlite) — never here.
 - **Errors raise.** A decode mismatch or a backend rejection is a `@moondb.DbError`
   at the call site, not a zero value.
 

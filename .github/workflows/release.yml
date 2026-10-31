@@ -4,18 +4,17 @@ name: Release
 # opt-in: the publish job runs only while the organization (or repository) variable
 # MOONCAKES_PUBLISH is 'true', so a tag with the switch off only runs the tests.
 #
-# moonorm holds five modules; the tag prefix names the one to publish (moonorm-v*, moondb-v*,
-# moonsqlite-v*, moonpostgres-v*, moonmysql-v*).
+# The tag moonorm-v* publishes moonorm; moondb and its drivers live in their own repository.
 on:
   push:
-    tags: ["moonorm-v*", "moondb-v*", "moonsqlite-v*", "moonpostgres-v*", "moonmysql-v*"]
+    tags: ["moonorm-v*"]
   workflow_dispatch:
     inputs:
       module:
         description: module to publish
         required: true
         type: choice
-        options: [moonorm, moondb, moonsqlite, moonpostgres, moonmysql]
+        options: [moonorm]
 
 permissions:
   contents: read
@@ -34,10 +33,6 @@ jobs:
           name="${MODULE:-${GITHUB_REF_NAME%-v*}}"
           case "$name" in
             moonorm) dir=.; target=all ;;
-            moondb) dir=db; target=all ;;
-            moonsqlite) dir=drivers/sqlite; target=native ;;
-            moonpostgres) dir=drivers/postgres; target=all ;;
-            moonmysql) dir=drivers/mysql; target=all ;;
             *) echo "::error::unknown module $name"; exit 1 ;;
           esac
           echo "dir=$dir" >> "$GITHUB_OUTPUT"
