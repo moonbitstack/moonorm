@@ -327,7 +327,7 @@ Wire the generator into the build once. In `moon.mod`:
 
 <!-- nocheck -->
 ```
-rule(name: "orm", command: "moonx moonbitstack/moonorm/cmd/orm@0.11.2 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+rule(name: "orm", command: "moonx moonbitstack/moonorm/cmd/orm@0.11.3 -C \"$mod_dir\" \"$input\" -o \"$output\"")
 ```
 
 and in the `moon.pkg` of the package holding the structs:
