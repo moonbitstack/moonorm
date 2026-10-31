@@ -51,7 +51,7 @@ migrations. The root re-exports all of them, so `@moonorm.select` and
 | `moonorm/schema` | `ColumnType`, `Column`, `Field`, `Model`, `Relation`, `ManyToMany` | `query`, moondb |
 | `moonorm/session` | `Session`, row streams, transactions and savepoints, the unit of work, pooled sessions | `schema`, `query`, moondb |
 | `moonorm/migrate` | `Migration`, `Migrator`, `ColumnDiff`, schema reflection and diffing | `session`, `schema`, `query` |
-| `moonorm/cmd/orm` | the generator behind `#orm.table`, `#orm.column` and `#orm.skip` | moonast |
+| `moonorm/cmd/orm` | the generator behind `#orm.table`, `#orm.column`, `#orm.skip`, `#orm.index`, `#orm.has_many` and `#orm.belongs_to` | moonast |
 
 A program that only renders SQL imports `query` and nothing else.
 
@@ -307,6 +307,15 @@ type is `T?`. The table is named `name=`, or the struct's name in snake case.
 | `default` | the SQL default, written as SQL |
 | `check` | a `CHECK` constraint; repeat it for several |
 | `references` | a foreign key, `"table.column"`, with `on_delete` and `on_update` |
+| `index` | an index over this column alone |
+
+Beside `#orm.table`, a struct takes indexes and relations:
+
+| On the struct | Becomes |
+|:--:|:--|
+| `#orm.index(column="a", column="b", unique=true, name="...")` | an `Index` on the model; `Session::create_table` creates it, named `ix_<table>_<columns>` (`uq_` when unique) unless named |
+| `#orm.has_many(name="heroes", target="Hero", foreign_key="team_id")` | `Team::heroes()`, a `Relation` loaded with `Session::load`; `key=` names the field holding this side's key when the primary key is not a single field |
+| `#orm.belongs_to(name="team", target="Team", foreign_key="team_id")` | `Hero::team()`, loaded with `Session::load_one`; `key=` names the target's column when the target is not annotated in the same file |
 
 `#orm.skip` keeps a field out of the table and fills it from `Default` when a row
 is read. A field of a type of the program's own names its column type with
@@ -318,7 +327,7 @@ Wire the generator into the build once. In `moon.mod`:
 
 <!-- nocheck -->
 ```
-rule(name: "orm", command: "moonx moonbitstack/moonorm/cmd/orm@0.11.1 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+rule(name: "orm", command: "moonx moonbitstack/moonorm/cmd/orm@0.11.2 -C \"$mod_dir\" \"$input\" -o \"$output\"")
 ```
 
 and in the `moon.pkg` of the package holding the structs:

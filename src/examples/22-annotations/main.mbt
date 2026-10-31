@@ -37,7 +37,61 @@ fn main {
     let sql = Hero::model().create_table_sql_for(d)
     same("DDL", sql, hand_heroes.create_table_sql_for(d))
     println(sql)
+    let indexes = Hero::model().create_indexes_sql_for(d, if_not_exists=true)
+    same(
+      "indexes",
+      indexes.join("; "),
+      hand_heroes.create_indexes_sql_for(d, if_not_exists=true).join("; "),
+    )
+    for statement in indexes {
+      println(statement)
+    }
   }
+  let nova : Team = { id: Some(1), name: "Nova Corps", }
+  let (team_sql, team_params) = Hero::team()
+    .query({
+      id: None,
+      name: "",
+      secret: "",
+      age: None,
+      power: 0,
+      team_id: Some(1),
+      email: Email("x@y"),
+      visits: 0,
+    })
+    .build()
+  let (roster_sql, roster_params) = Team::heroes().query(nova).build()
+  same(
+    "belongs_to",
+    team_sql + render(team_params),
+    {
+      let (sql, params) = hand_team
+        .query({
+          id: None,
+          name: "",
+          secret: "",
+          age: None,
+          power: 0,
+          team_id: Some(1),
+          email: Email("x@y"),
+          visits: 0,
+        })
+        .build()
+      sql + render(params)
+    },
+  )
+  same(
+    "has_many",
+    roster_sql + render(roster_params),
+    {
+      let (sql, params) = hand_roster.query(nova).build()
+      sql + render(params)
+    },
+  )
+  println("")
+  println("-- relations")
+  println(team_sql + "  [\{render(team_params)}]")
+  println(roster_sql + "  [\{render(roster_params)}]")
   let fresh : Hero = {
     id: None,
     name: "Nova",

@@ -335,14 +335,19 @@ pub fn Session::begin_with(
 }
 
 ///|
-/// Create the table backing `model` from its declared columns (see
-/// `Model::create_table_sql`). With `if_not_exists=true` the DDL is idempotent.
+/// Create the table backing `model` from its declared columns, then its
+/// indexes (see `Model::create_table_sql` and `Model::create_indexes_sql`).
+/// With `if_not_exists=true` the DDL is idempotent.
 pub fn[T] Session::create_table(
   self : Session,
   model : @schema.Model[T],
   if_not_exists~ : Bool = false,
 ) -> @moondb.ExecResult raise @moondb.DbError {
-  self.driver.execute(model.create_table_sql(if_not_exists~), [])
+  let made = self.driver.execute(model.create_table_sql(if_not_exists~), [])
+  for statement in model.create_indexes_sql(if_not_exists~) {
+    self.driver.execute(statement, []) |> ignore
+  }
+  made
 }
 
 ///|

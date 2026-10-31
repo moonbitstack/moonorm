@@ -70,4 +70,20 @@ let hand_heroes : @moonorm.Model[Hero] = @moonorm.Model::new(
     out.push(("email", @moondb.Text(email)))
     out
   },
+  indexes=[@moonorm.index(["power"]), @moonorm.index(["name", "age"])],
+)
+
+///|
+/// The two relations, written out.
+let hand_team : @moonorm.Relation[Hero, Team] = @moonorm.belongs_to(
+  Team::model(),
+  "id",
+  h => h.team_id,
+)
+
+///|
+let hand_roster : @moonorm.Relation[Team, Hero] = @moonorm.has_many(
+  hand_heroes,
+  "team_id",
+  t => t.id,
 )

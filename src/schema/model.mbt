@@ -87,6 +87,7 @@ pub struct Model[T] {
   columns : Array[Column]
   from_row : (@moondb.Row) -> T raise @moondb.DbError
   to_columns : (T) -> Array[(String, @moondb.Value)]
+  indexes : Array[Index]
   // A session's identity map has to hang off the descriptor that carries `T`.
   // MoonBit has no downcast, so a `Session` cannot keep the records of several
   // models in one container and get them back typed; the type-indexed store is the
@@ -108,8 +109,16 @@ pub fn[T] Model::new(
   columns : Array[Column],
   from_row : (@moondb.Row) -> T raise @moondb.DbError,
   to_columns : (T) -> Array[(String, @moondb.Value)],
+  indexes? : Array[Index],
 ) -> Model[T] {
-  { table, columns, from_row, to_columns, ident: Map([]), }
+  {
+    table,
+    columns,
+    from_row,
+    to_columns,
+    indexes: indexes.unwrap_or([]),
+    ident: Map([]),
+  }
 }
 
 ///|
@@ -140,6 +149,7 @@ pub fn[T] Model::from_fields(
   table : String,
   fields : Array[Field[T]],
   from_row : (@moondb.Row) -> T raise @moondb.DbError,
+  indexes? : Array[Index],
 ) -> Model[T] {
   let columns : Array[Column] = []
   for f in fields {
@@ -155,7 +165,14 @@ pub fn[T] Model::from_fields(
     }
     out
   }
-  { table, columns, from_row, to_columns, ident: Map([]), }
+  {
+    table,
+    columns,
+    from_row,
+    to_columns,
+    indexes: indexes.unwrap_or([]),
+    ident: Map([]),
+  }
 }
 
 ///|
@@ -331,4 +348,70 @@ pub fn[T] Model::create_table_sql_for(
   }
   let tail = if dialect is Mysql { " ENGINE=InnoDB" } else { "" }
   head + self.table + " (" + defs.join(", ") + ")" + tail
+}
+
+///|
+/// An index on a model's table: on one column or several, and `unique` to
+/// enforce a key that is not the primary key, as SQLAlchemy's `Index` does.
+/// Without a `name` it is called `ix_<table>_<columns>`, or `uq_` when unique,
+/// after SQLAlchemy's naming convention.
+pub(all) struct Index {
+  name : String?
+  columns : Array[String]
+  unique : Bool
+} derive(Eq, Debug)
+
+///|
+pub extend Index with Eq::{equal, not_equal}
+
+///|
+pub extend Index with Debug::{to_repr}
+
+///|
+pub fn index(
+  columns : Array[String],
+  name? : String,
+  unique~ : Bool = false,
+) -> Index {
+  { name, columns, unique, }
+}
+
+///|
+/// The `CREATE INDEX` statements for the model's indexes, in the order given.
+/// `if_not_exists` makes them idempotent; MySQL has no such clause for an
+/// index, so it is left out there.
+pub fn[T] Model::create_indexes_sql_for(
+  self : Model[T],
+  dialect : @query.Dialect,
+  if_not_exists~ : Bool = false,
+) -> Array[String] {
+  self.indexes.map(ix => {
+    let name = match ix.name {
+      Some(n) => n
+      None =>
+        (if ix.unique { "uq_" } else { "ix_" }) +
+        self.table +
+        "_" +
+        ix.columns.join("_")
+    }
+    "CREATE " +
+    (if ix.unique { "UNIQUE " } else { "" }) +
+    "INDEX " +
+    (if if_not_exists && !(dialect is Mysql) { "IF NOT EXISTS " } else { "" }) +
+    name +
+    " ON " +
+    self.table +
+    " (" +
+    ix.columns.join(", ") +
+    ")"
+  })
+}
+
+///|
+/// `create_indexes_sql_for` in the dialect `create_table_sql` writes.
+pub fn[T] Model::create_indexes_sql(
+  self : Model[T],
+  if_not_exists~ : Bool = false,
+) -> Array[String] {
+  self.create_indexes_sql_for(Sqlite, if_not_exists~)
 }

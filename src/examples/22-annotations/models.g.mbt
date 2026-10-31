@@ -28,6 +28,11 @@ pub fn Team::model() -> @moonorm.Model[Team] {
 }
 
 ///|
+pub fn Team::heroes() -> @moonorm.Relation[Team, Hero] {
+  @moonorm.has_many(Hero::model(), "team_id", h => h.id)
+}
+
+///|
 let hero_model : @moonorm.Model[Hero] = @moonorm.Model::from_fields(
   "heroes",
   [
@@ -72,9 +77,15 @@ let hero_model : @moonorm.Model[Hero] = @moonorm.Model::from_fields(
     email: r.read(6),
     visits: Default::default(),
   },
+  indexes=[@moonorm.index(["power"]), @moonorm.index(["name", "age"])],
 )
 
 ///|
 pub fn Hero::model() -> @moonorm.Model[Hero] {
   hero_model
+}
+
+///|
+pub fn Hero::team() -> @moonorm.Relation[Hero, Team] {
+  @moonorm.belongs_to(Team::model(), "id", h => h.team_id)
 }

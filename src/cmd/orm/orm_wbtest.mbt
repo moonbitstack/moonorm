@@ -354,3 +354,145 @@ test "mistakes are reported where they are written" {
     ).contains("models.mbt:3:3: `#orm.column(type=\"text\")` does not parse"),
   )
 }
+
+///|
+test "indexes come from the struct and from a column" {
+  let code = generate(
+    (
+      #|#orm.table(name="heroes")
+      #|#orm.index(column="name", column="age", unique=true, name="uq_hero")
+      #|#orm.index(column="age")
+      #|pub struct Hero {
+      #|  #orm.column(primary_key=true)
+      #|  id : Int
+      #|  name : String
+      #|  #orm.column(index=true)
+      #|  age : Int
+      #|}
+    ),
+  )
+  assert_true(
+    code.contains(
+      flat(
+        "indexes=[@moonorm.index([\"age\"]), @moonorm.index([\"name\", \"age\"], name=\"uq_hero\", unique=true), @moonorm.index([\"age\"])]",
+      ),
+    ),
+  )
+}
+
+///|
+test "relations become functions on the struct" {
+  let code = generate(
+    (
+      #|#orm.table(name="teams")
+      #|#orm.has_many(name="heroes", target="Hero", foreign_key="team_id")
+      #|pub struct Team {
+      #|  #orm.column(name="team_key", primary_key=true)
+      #|  key : Int
+      #|}
+      #|
+      #|#orm.table(name="heroes")
+      #|#orm.belongs_to(name="team", target="Team", foreign_key="team_id")
+      #|struct Hero {
+      #|  #orm.column(primary_key=true)
+      #|  id : Int
+      #|  team_id : Int
+      #|}
+    ),
+  )
+  assert_true(
+    code.contains(
+      flat(
+        "pub fn Team::heroes() -> @moonorm.Relation[Team, Hero] { @moonorm.has_many(Hero::model(), \"team_id\", h => h.key) }",
+      ),
+    ),
+  )
+  assert_true(
+    code.contains(
+      flat(
+        "fn Hero::team() -> @moonorm.Relation[Hero, Team] { @moonorm.belongs_to(Team::model(), \"team_key\", h => h.team_id) }",
+      ),
+    ),
+  )
+  assert_true(!code.contains(flat("pub fn Hero::team")))
+}
+
+///|
+test "index and relation mistakes are reported where they are written" {
+  assert_true(
+    refused(
+      (
+        #|#orm.table
+        #|#orm.index(column="missing")
+        #|struct S {
+        #|  name : String
+        #|}
+      ),
+    ).contains("models.mbt:2:1: `S` has no column `missing`"),
+  )
+  assert_true(
+    refused(
+      (
+        #|#orm.table
+        #|#orm.index
+        #|struct S {
+        #|  name : String
+        #|}
+      ),
+    ).contains("`#orm.index` names at least one `column`"),
+  )
+  assert_true(
+    refused(
+      (
+        #|#orm.table
+        #|struct S {
+        #|  #orm.column(unique=true, index=true)
+        #|  name : String
+        #|}
+      ),
+    ).contains("a unique or primary key column is indexed already"),
+  )
+  assert_true(
+    refused(
+      (
+        #|#orm.table
+        #|#orm.has_many(name="kids", target="K", foreign_key="s_id")
+        #|struct S {
+        #|  name : String
+        #|}
+      ),
+    ).contains("`S` has no single primary key; give `key=`"),
+  )
+  assert_true(
+    refused(
+      (
+        #|#orm.table
+        #|#orm.belongs_to(name="parent", target="P", foreign_key="p_id")
+        #|struct S {
+        #|  p_id : Int
+        #|}
+      ),
+    ).contains("`P` is not annotated here; give `key=`"),
+  )
+  assert_true(
+    refused(
+      (
+        #|#orm.table
+        #|#orm.belongs_to(name="parent", target="P", foreign_key="nope", key="id")
+        #|struct S {
+        #|  p_id : Int
+        #|}
+      ),
+    ).contains("`S` has no mapped field `nope`"),
+  )
+  assert_true(
+    refused(
+      (
+        #|#orm.index(column="a")
+        #|struct S {
+        #|  a : Int
+        #|}
+      ),
+    ).contains("`S` has no `#orm.table`"),
+  )
+}

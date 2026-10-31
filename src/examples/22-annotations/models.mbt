@@ -1,7 +1,9 @@
 ///|
 /// The parent table heroes point at. An autoincrement key is `T?`: `None` until
-/// the database assigns it, and left out of the INSERT meanwhile.
+/// the database assigns it, and left out of the INSERT meanwhile. `heroes` is a
+/// relation: `Team::heroes()`, loaded with `Session::load`.
 #orm.table(name="teams")
+#orm.has_many(name="heroes", target="Hero", foreign_key="team_id")
 pub struct Team {
   #orm.column(primary_key=true, autoincrement=true)
   id : Int64?
@@ -12,8 +14,11 @@ pub struct Team {
 ///|
 /// A field without annotations is a column named after it, `NOT NULL` unless its
 /// type is `T?`. `#orm.skip` keeps a field out of the table and fills it from
-/// `Default` when a row is read.
+/// `Default` when a row is read. `#orm.index` adds an index over its columns;
+/// `index=true` on a column adds one over that column alone.
 #orm.table(name="heroes")
+#orm.index(column="name", column="age")
+#orm.belongs_to(name="team", target="Team", foreign_key="team_id")
 pub struct Hero {
   #orm.column(primary_key=true, autoincrement=true)
   id : Int64?
@@ -22,7 +27,7 @@ pub struct Hero {
   secret : String
   #orm.column(check="age >= 0", check="age < 1000")
   age : Int32?
-  #orm.column(default="0")
+  #orm.column(default="0", index=true)
   power : Double
   #orm.column(references="teams.id", on_delete="SET NULL")
   team_id : Int64?

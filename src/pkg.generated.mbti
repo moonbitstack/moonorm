@@ -10,7 +10,7 @@ import {
 }
 
 // Values
-pub fn[S, T] belongs_to(@schema.Model[T], String, (S) -> @moondb.Value) -> @schema.Relation[S, T]
+pub fn[S, T, V : @moondb.ToValue] belongs_to(@schema.Model[T], String, (S) -> V) -> @schema.Relation[S, T]
 
 pub fn case_(Array[(String, String)], else_? : String) -> String
 
@@ -26,13 +26,15 @@ pub fn[T, V : @moondb.ToValue] field(String, @schema.ColumnType, (T) -> V, prima
 
 pub fn func(String, Array[String]) -> String
 
-pub fn[S, T] has_many(@schema.Model[T], String, (S) -> @moondb.Value) -> @schema.Relation[S, T]
+pub fn[S, T, V : @moondb.ToValue] has_many(@schema.Model[T], String, (S) -> V) -> @schema.Relation[S, T]
+
+pub fn index(Array[String], name? : String, unique? : Bool) -> @schema.Index
 
 pub fn index_ddl(String, String, Array[String], unique? : Bool) -> String
 
 pub fn insert(String) -> @query.Insert
 
-pub fn[S, T] many_to_many(@schema.Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -> @moondb.Value) -> @schema.ManyToMany[S, T]
+pub fn[S, T, V : @moondb.ToValue] many_to_many(@schema.Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -> V) -> @schema.ManyToMany[S, T]
 
 pub fn reflect_columns(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
 
@@ -64,6 +66,8 @@ pub using @query {type Delete}
 pub using @query {type Dialect}
 
 pub using @schema {type Field}
+
+pub using @schema {type Index}
 
 pub using @query {type Insert}
 

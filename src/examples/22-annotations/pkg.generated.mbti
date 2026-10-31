@@ -24,11 +24,13 @@ pub struct Hero {
   visits : Int32
 }
 pub fn Hero::model() -> @schema.Model[Self]
+pub fn Hero::team() -> @schema.Relation[Self, Team]
 
 pub struct Team {
   id : Int64?
   name : String
 }
+pub fn Team::heroes() -> @schema.Relation[Self, Hero]
 pub fn Team::model() -> @schema.Model[Self]
 
 // Type aliases

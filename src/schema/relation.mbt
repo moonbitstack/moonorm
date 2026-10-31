@@ -18,26 +18,37 @@ pub struct Relation[S, T] {
 
 ///|
 /// A 1:N relationship: `parent` -> its children in `target`, matched by the child's
-/// `foreign_key` column equalling the parent key extracted by `parent_key`. Load it
-/// with `Session::load`, which returns every matching child record.
-pub fn[S, T] has_many(
+/// `foreign_key` column equalling the parent key extracted by `parent_key`, any
+/// value a column takes. Load it with `Session::load`, which returns every
+/// matching child record.
+pub fn[S, T, V : @moondb.ToValue] has_many(
   target : Model[T],
   foreign_key : String,
-  parent_key : (S) -> @moondb.Value,
+  parent_key : (S) -> V,
 ) -> Relation[S, T] {
-  { target, key_column: foreign_key, source_key: parent_key, to_many: true, }
+  {
+    target,
+    key_column: foreign_key,
+    source_key: s => parent_key(s).to_value(),
+    to_many: true,
+  }
 }
 
 ///|
 /// A N:1 relationship: `child` -> its single parent in `target`, matched by the
 /// parent's `target_key` column (usually its primary key) equalling the foreign
 /// key extracted from the child by `child_key`. Load it with `Session::load_one`.
-pub fn[S, T] belongs_to(
+pub fn[S, T, V : @moondb.ToValue] belongs_to(
   target : Model[T],
   target_key : String,
-  child_key : (S) -> @moondb.Value,
+  child_key : (S) -> V,
 ) -> Relation[S, T] {
-  { target, key_column: target_key, source_key: child_key, to_many: false, }
+  {
+    target,
+    key_column: target_key,
+    source_key: s => child_key(s).to_value(),
+    to_many: false,
+  }
 }
 
 ///|
@@ -117,15 +128,22 @@ pub struct ManyToMany[S, T] {
 ///|
 /// Define a many-to-many relationship through `junction`. `source_fk` / `target_fk`
 /// are the junction columns pointing at the source key and the `target_key`.
-pub fn[S, T] many_to_many(
+pub fn[S, T, V : @moondb.ToValue] many_to_many(
   target : Model[T],
   junction~ : String,
   source_fk~ : String,
   target_fk~ : String,
   target_key~ : String,
-  source_key~ : (S) -> @moondb.Value,
+  source_key~ : (S) -> V,
 ) -> ManyToMany[S, T] {
-  { target, junction, source_fk, target_fk, target_key, source_key, }
+  {
+    target,
+    junction,
+    source_fk,
+    target_fk,
+    target_key,
+    source_key: s => source_key(s).to_value(),
+  }
 }
 
 ///|
