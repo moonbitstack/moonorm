@@ -1,0 +1,23 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonorm/mapper"
+
+import {
+  "moonbitstack/moondb",
+}
+
+// Values
+pub fn[T : @moondb.FromValue] column(@moondb.Row, String) -> T raise @moondb.DbError
+
+pub fn[T : @moondb.FromValue] first(@moondb.Row) -> T raise @moondb.DbError
+
+pub fn one(Array[@moondb.Row]) -> @moondb.Row raise @moondb.DbError
+
+pub fn optional(Array[@moondb.Row]) -> @moondb.Row? raise @moondb.DbError
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

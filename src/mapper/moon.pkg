@@ -1,0 +1,10 @@
+// The runtime of `#sql.*`, MyBatis-style mappers: reading rows into what a mapper
+// function returns.
+import {
+  "moonbitstack/moondb",
+}
+
+import {
+  "moonbitstack/moonorm/mapper",
+  "moonbitstack/moondb",
+} for "test"

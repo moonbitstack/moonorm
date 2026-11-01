@@ -1,0 +1,10 @@
+// SQL written as annotations on declared functions. `mapper.g.mbt` comes from
+// `cmd/sql`; a project wires it as a dev_build rule.
+import {
+  "moonbitstack/moonorm/mapper",
+  "moonbitstack/moondb",
+}
+
+pkgtype(kind: "executable")
+
+formatter(ignore: [ "mapper.g.mbt" ])

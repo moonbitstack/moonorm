@@ -1,6 +1,6 @@
 name = "moonbitstack/moonorm"
 
-version = "0.11.3"
+version = "0.11.4"
 
 readme = "README.md"
 
@@ -21,7 +21,7 @@ description = "An ORM and SQL toolkit for MoonBit."
 
 import {
   "moonbitstack/moondb@0.2.4",
-  "moonbitstack/moonast@0.2.2",
+  "moonbitstack/moonast@0.2.3",
   "moonbitlang/parser@0.4.6",
   "moonbitlang/async@0.22.5",
 }

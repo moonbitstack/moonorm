@@ -327,7 +327,7 @@ Wire the generator into the build once. In `moon.mod`:
 
 <!-- nocheck -->
 ```
-rule(name: "orm", command: "moonx moonbitstack/moonorm/cmd/orm@0.11.3 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+rule(name: "orm", command: "moonx moonbitstack/moonorm/cmd/orm@0.11.4 -C \"$mod_dir\" \"$input\" -o \"$output\"")
 ```
 
 and in the `moon.pkg` of the package holding the structs:
@@ -340,6 +340,69 @@ formatter(ignore: [ "models.g.mbt" ])
 
 `moon check`, `moon build` and `moon run` regenerate `models.g.mbt` whenever
 `models.mbt` changes; `--check` reports a stale file instead of writing it.
+
+### SQL mappers
+
+When the query is the point, write it. `#sql.*` goes on a `declare fn`, and the
+generator gives the function its body:
+
+```moonbit
+pub struct User {
+  id : Int64
+  name : String
+  age : Int32?
+}
+
+#sql.select("SELECT id, name, age FROM user WHERE age > #{age}")
+declare fn adults(db : &@moondb.Driver, age : Int32) -> Array[User] raise
+
+#sql.select("SELECT id, name, age FROM user WHERE id = #{id}")
+declare fn find(db : &@moondb.Driver, id : Int64) -> User? raise
+
+#sql.insert("INSERT INTO user(name, age) VALUES(#{u.name}, #{u.age})")
+declare fn add(db : &@moondb.Driver, u : User) -> Int64 raise
+
+#sql.delete("DELETE FROM user WHERE id = #{id}")
+declare fn remove(db : &@moondb.Driver, id : Int64) -> Unit raise
+```
+
+`#{name}` and `#{name.field}` are bound values, in the order they appear, and
+there is no way to splice text into a statement: a `${...}` or a placeholder written
+by hand is refused when the code is generated. `dialect="postgres"` numbers the
+placeholders, and `sqlite` and `mysql` write `?`.
+
+| Annotation | Means |
+|:--:|:--|
+| `#sql.select(sql)` | runs a query; what the function returns says how the rows are read |
+| `#sql.insert(sql, returning="id")` | an `Int64` return is the new id, by `RETURNING` when asked and the driver's last id otherwise |
+| `#sql.update(sql)`, `#sql.delete(sql)` | an `Int64` return is the rows touched, `Unit` drops it |
+| `#sql.results(column="user_name", field="name")` | a column with another name than its field |
+
+| A select returning | Reads |
+|:--:|:--|
+| `Array[T]` | every row |
+| `T?` | at most one row, more is an error |
+| `T` | exactly one row, anything else is an error |
+| a struct | each field from the column of its name |
+| `Int64`, `String` and the other column types | the first column |
+
+A struct field the `SELECT` does not list is refused at generation, unless it is
+`T?`. Dynamic SQL belongs to the query builder, which every other part of this
+library uses. `async` works the same way, on `declare async fn` and a
+`&@moondb.AsyncDriver`. Run a mapper inside a transaction by passing the session's
+driver.
+
+The generator wires in like the other one, with `cmd/sql` and the package importing
+`moonbitstack/moonorm/mapper`:
+
+<!-- nocheck -->
+```
+rule(name: "sql", command: "moonx moonbitstack/moonorm/cmd/sql@0.11.4 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+dev_build(rule: "sql", input: "models.mbt", output: "mapper.g.mbt")
+```
+
+[`23-sql-mapper`](src/examples/23-sql-mapper/) runs each of these against a driver
+that logs what it is asked.
 
 ### Batch loading
 

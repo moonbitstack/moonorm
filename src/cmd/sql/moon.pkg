@@ -1,0 +1,16 @@
+// The generator behind `#sql.select` and its kin: the body of each annotated
+// `declare fn`. moonx runs it as a dev_build rule; see the README.
+supported_targets = "+native+wasm"
+
+pkgtype(kind: "executable")
+
+import {
+  "moonbitstack/moonast/quote",
+  "moonbitstack/moonast/attr",
+  "moonbitstack/moonast/gen",
+  "moonbitstack/moonast/cli",
+  "moonbitlang/parser/attribute",
+  "moonbitlang/core/list",
+  "moonbitlang/async",
+  "moonbitlang/core/env",
+}

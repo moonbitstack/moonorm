@@ -62,6 +62,10 @@ jobs:
       - name: generated annotations are fresh
         run: moon run src/cmd/orm --target native -- -C . src/examples/22-annotations/models.mbt -o src/examples/22-annotations/models.g.mbt --check
 
+      - name: generated mappers are fresh
+        if: runner.os == 'Linux'
+        run: moon run src/cmd/sql --target native -- -C . src/examples/23-sql-mapper/models.mbt -o src/examples/23-sql-mapper/mapper.g.mbt --check
+
       - name: lint (fmt is clean)
         run: |
           moon fmt && git diff --exit-code
