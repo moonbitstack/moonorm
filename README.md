@@ -64,6 +64,30 @@ nothing gives the type, annotate or name the subpackage:
 
 ## Quickstart
 
+A table is an annotated struct, and a statement an annotated function:
+
+```moonbit
+#orm.table(name="heroes")
+pub struct Hero {
+  #orm.column(primary_key=true, autoincrement=true)
+  id : Int64?
+  name : String
+  #orm.column(index=true)
+  power : Double
+}
+
+#sql.select("SELECT id, name, power FROM heroes WHERE power > #{power}")
+declare fn strong(db : &@moondb.Driver, power : Double) -> Array[Hero] raise
+```
+
+`Hero::model()` is the table for a session and for migrations, and `strong` runs its
+statement with `power` bound. Both come from generators run as build rules: see
+[Annotations](#annotations) and [SQL mappers](#sql-mappers).
+
+### The query builder
+
+For a query that is put together at run time:
+
 ```moonbit
 pub fn quickstart() -> Unit {
   let (sql, params) = @moonorm.select("users")

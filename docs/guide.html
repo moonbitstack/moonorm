@@ -61,7 +61,22 @@ moon add moonbitstack/moondb</code></pre>
         <p class="faint">moonorm builds the query and schema layer; <a href="https://moonbitstack.github.io/moondb/"><code class="inline">moondb</code></a> is the contract a backend (SQLite, PostgreSQL, MySQL) implements. Values cross that boundary as <code class="inline">Value</code>, never as SQL text.</p>
 
         <h2 id="model">2 · Declare a model</h2>
-        <p>A model is a MoonBit struct, the columns that store it, and the two directions of the mapping. Declare the columns once and keep them — the migration section reuses them.</p>
+        <p>A model is a MoonBit struct with annotations on it. The generator reads them at build time and writes <code class="inline">Account::model()</code>; a field without one is a column named after it, and <code class="inline">T?</code> is nullable.</p>
+        <pre><code>#orm.table(name="accounts")
+pub struct Account {
+  #orm.column(primary_key=true, autoincrement=true)
+  id : Int64?
+  #orm.column(unique=true)
+  email : String
+  balance : Double
+  #orm.column(references="teams.id", on_delete="SET NULL")
+  team_id : Int64
+  #orm.column(default="'active'")
+  status : String
+  #orm.column(check="level &gt;= 0")
+  level : Int32
+}</code></pre>
+        <p>The annotations generate what you would otherwise write by hand: the columns, and the two directions of the mapping.</p>
         <pre><code>struct Account {
   id : Int64?
   email : String
