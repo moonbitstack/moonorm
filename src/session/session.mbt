@@ -13,6 +13,7 @@
 /// `&@moondb.Driver` trait object, so one `Session` type drives every backend.
 pub struct Session {
   driver : &@moondb.Driver
+  dialect : @query.Dialect
   // Currently open nested savepoints, so `begin_nested` can auto-name and track
   // depth the way SQLAlchemy's `begin_nested()` does (the caller never spells a
   // savepoint name). `sp_seq` only ever increases, giving each savepoint a name
@@ -36,11 +37,16 @@ pub struct Session {
 let session_seq : Ref[Int32] = Ref(0)
 
 ///|
-/// Wrap a connected driver in a session.
-pub fn Session::new(driver : &@moondb.Driver) -> Session {
+/// Wrap a connected driver in a session. `dialect` is what the session renders its statements
+/// for, since a driver only takes SQL; it says SQLite unless told otherwise.
+pub fn Session::new(
+  driver : &@moondb.Driver,
+  dialect~ : @query.Dialect = Sqlite,
+) -> Session {
   session_seq.val = session_seq.val + 1
   {
     driver,
+    dialect,
     sp_depth: 0,
     sp_seq: 0,
     id: session_seq.val,
@@ -83,14 +89,13 @@ pub fn Session::query(
 /// never touches the unit of work. To queue a record instead and let `flush` order
 /// and emit it, use `add_record`.
 ///
-/// This renders the SQLite/PostgreSQL form (`ON CONFLICT` upserts, `RETURNING`); for
-/// a MySQL upsert build the dialect form explicitly —
-/// `session.execute(stmt.build_for(Mysql))`.
+/// Rendered for the session's dialect, which is what decides between `ON CONFLICT` and
+/// `ON DUPLICATE KEY UPDATE`.
 pub fn Session::add(
   self : Session,
   stmt : @query.Insert,
 ) -> @moondb.ExecResult raise @moondb.DbError {
-  let (sql, params) = stmt.build()
+  let (sql, params) = stmt.build_for(self.dialect)
   self.driver.execute(sql, params)
 }
 
@@ -150,7 +155,7 @@ pub fn Session::modify(
   self : Session,
   stmt : @query.Update,
 ) -> @moondb.ExecResult raise @moondb.DbError {
-  let (sql, params) = stmt.build()
+  let (sql, params) = stmt.build_for(self.dialect)
   self.driver.execute(sql, params)
 }
 
@@ -160,7 +165,7 @@ pub fn Session::remove(
   self : Session,
   stmt : @query.Delete,
 ) -> @moondb.ExecResult raise @moondb.DbError {
-  let (sql, params) = stmt.build()
+  let (sql, params) = stmt.build_for(self.dialect)
   self.driver.execute(sql, params)
 }
 
@@ -311,17 +316,15 @@ fn tx_opts_before_begin(dialect : @query.Dialect) -> Bool {
 ///|
 /// Begin a transaction with explicit isolation / read-only options. It brackets the
 /// driver's `begin` with the `SET TRANSACTION` (or `PRAGMA`) statements `opts`
-/// renders for `dialect`, ordered so each backend accepts them: before `BEGIN` for
-/// MySQL and SQLite, after `BEGIN` for PostgreSQL (see `TxOptions::to_sql`). `dialect`
-/// defaults to `Postgres`, whose `SET TRANSACTION ISOLATION LEVEL` spelling is the
-/// ANSI-standard one. Commit or roll back with the usual `commit`/`rollback`.
+/// renders for the session's dialect, ordered so each backend accepts them: before `BEGIN` for
+/// MySQL and SQLite, after `BEGIN` for PostgreSQL (see `TxOptions::to_sql`). Commit or roll back
+/// with the usual `commit`/`rollback`.
 pub fn Session::begin_with(
   self : Session,
   opts : TxOptions,
-  dialect~ : @query.Dialect = Postgres,
 ) -> Unit raise @moondb.DbError {
-  let stmts = opts.to_sql(dialect)
-  if tx_opts_before_begin(dialect) {
+  let stmts = opts.to_sql(self.dialect)
+  if tx_opts_before_begin(self.dialect) {
     for s in stmts {
       self.driver.execute(s, []) |> ignore
     }
@@ -360,7 +363,7 @@ pub fn[T] Session::insert_record(
   model : @schema.Model[T],
   record : T,
 ) -> @moondb.ExecResult raise @moondb.DbError {
-  let (sql, params) = model.insert_of(record).build()
+  let (sql, params) = model.insert_of(record).build_for(self.dialect)
   self.driver.execute(sql, params)
 }
 

@@ -53,8 +53,8 @@ fn main {
   // begin_with issues those statements around the transaction bracket.
   try {
     let drv = @moondb.MockDriver::new()
-    let sess = @moonorm.Session::new(drv)
-    sess.begin_with(serializable, dialect=Postgres)
+    let sess = @moonorm.Session::new(drv, dialect=Postgres)
+    sess.begin_with(serializable)
     sess.add(@moonorm.insert("t").set("n", @moondb.Int(233))) |> ignore
     sess.commit()
     println("")

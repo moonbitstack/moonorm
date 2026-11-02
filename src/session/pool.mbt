@@ -11,8 +11,9 @@
 pub fn[D : @moondb.Driver, T] Session::with_pool(
   pool : @pool.Pool[D],
   f : (Session) -> T raise,
+  dialect~ : @query.Dialect = Sqlite,
 ) -> T raise {
   let conn = pool.acquire()
   defer pool.release(conn)
-  f(Session::new(conn))
+  f(Session::new(conn, dialect~))
 }

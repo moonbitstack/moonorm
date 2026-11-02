@@ -184,7 +184,7 @@ pub fn[T] Session::add_record(
   self.pending.push({
     table: model.table,
     parents: model.parent_tables(),
-    emit: () => model.insert_of(record).build(),
+    emit: () => model.insert_of(record).build_for(self.dialect),
     settle: () => self.remember(model, record),
     done: false,
   })
@@ -229,7 +229,7 @@ pub fn[T] Session::update_record(
   self.dirty.push({
     table: model.table,
     parents: model.parent_tables(),
-    emit: () => q.build(),
+    emit: () => q.build_for(self.dialect),
     settle: () => self.remember(model, record),
     done: false,
   })
@@ -259,7 +259,7 @@ pub fn[T] Session::delete_record(
   self.deleted.push({
     table: model.table,
     parents: model.parent_tables(),
-    emit: () => q.build(),
+    emit: () => q.build_for(self.dialect),
     settle: () => self.slot(model).remove(identity_key(key)),
     done: false,
   })

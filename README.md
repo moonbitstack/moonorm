@@ -159,6 +159,10 @@ pub fn demo() -> Unit raise @moondb.DbError {
 `rollback` (delegated to the driver's transaction bracket), nested transactions
 via `savepoint` / `rollback_to` / `release`, and raw `execute` / `query`.
 
+A session renders for one dialect, SQLite unless told otherwise, because a driver takes SQL and
+says nothing about what it speaks. `Session::new(driver, dialect=Mysql)` gives the
+`ON DUPLICATE KEY UPDATE` form and no `RETURNING`, and `Session::with_pool` takes the same label.
+
 ## Models & relationships
 
 A `Model[T]` is the explicit mapping between a table and a MoonBit record: the
@@ -421,7 +425,7 @@ The generator wires in like the other one, with `cmd/sql` and the package import
 
 <!-- nocheck -->
 ```
-rule(name: "sql", command: "moonx moonbitstack/moonorm/cmd/sql@0.11.4 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+rule(name: "sql", command: "moonx moonbitstack/moonorm/cmd/sql@0.11.5 -C \"$mod_dir\" \"$input\" -o \"$output\"")
 dev_build(rule: "sql", input: "models.mbt", output: "mapper.g.mbt")
 ```
 

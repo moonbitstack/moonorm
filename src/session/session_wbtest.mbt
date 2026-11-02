@@ -328,10 +328,10 @@ test "begin_nested: release and rollback are idempotent and terminal" {
 test "begin_with: SET TRANSACTION lands after BEGIN on Postgres, before it on MySQL" {
   let opts = { isolation: Some(Serializable), read_only: false, }
   let pg = SpyDriver::new([])
-  Session::new(pg).begin_with(opts)
+  Session::new(pg, dialect=Postgres).begin_with(opts)
   assert_eq(pg.log, ["BEGIN", "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE"])
   let my = SpyDriver::new([])
-  Session::new(my).begin_with(opts, dialect=Mysql)
+  Session::new(my, dialect=Mysql).begin_with(opts)
   assert_eq(my.log, ["SET TRANSACTION ISOLATION LEVEL SERIALIZABLE", "BEGIN"])
 }
 
@@ -576,4 +576,64 @@ test "identity: expunge drops the record, so the next get reads a fresh one" {
   assert_eq(b.name, "avengers")
   assert_eq(tap.sql.length(), 2)
   sess.close()
+}
+
+// --- the session's dialect -------------------------------------------------------
+
+///|
+fn upsert() -> @query.Insert {
+  @query.insert("t")
+  .set("id", Int(1))
+  .set("n", Int(2))
+  .on_conflict(["id"])
+  .do_update("n", Int(3))
+}
+
+///|
+test "a session renders statements for its dialect" {
+  let lite = SpyDriver::new([])
+  ignore(Session::new(lite).add(upsert()))
+  assert_true(lite.log[0].contains("ON CONFLICT"))
+  let pg = SpyDriver::new([])
+  ignore(Session::new(pg, dialect=Postgres).add(upsert()))
+  assert_true(pg.log[0].contains("ON CONFLICT"))
+  let my = SpyDriver::new([])
+  ignore(Session::new(my, dialect=Mysql).add(upsert()))
+  assert_true(my.log[0].contains("ON DUPLICATE KEY UPDATE"))
+  assert_false(my.log[0].contains("ON CONFLICT"))
+}
+
+///|
+test "a session's default dialect is what it always rendered" {
+  let drv = SpyDriver::new([])
+  ignore(Session::new(drv).add(upsert()))
+  let (sql, _) = upsert().build()
+  assert_eq(drv.log[0], sql)
+}
+
+///|
+test "an update and a delete render for the session's dialect" {
+  let change = @query.update("t").set("n", Int(1)).returning("id")
+  let gone = @query.delete("t").returning("id")
+  let lite = SpyDriver::new([])
+  ignore(Session::new(lite).modify(change))
+  ignore(Session::new(lite).remove(gone))
+  assert_true(lite.log[0].contains("RETURNING"))
+  assert_true(lite.log[1].contains("RETURNING"))
+  let my = SpyDriver::new([])
+  ignore(Session::new(my, dialect=Mysql).modify(change))
+  ignore(Session::new(my, dialect=Mysql).remove(gone))
+  assert_false(my.log[0].contains("RETURNING"))
+  assert_false(my.log[1].contains("RETURNING"))
+}
+
+///|
+test "with_pool passes the dialect to its session" {
+  let pool : @pool.Pool[@moondb.MockDriver] = @pool.Pool::new(() => {
+    @moondb.MockDriver::new()
+  })
+  let plain = Session::with_pool(pool, sess => sess.dialect)
+  let chosen = Session::with_pool(pool, sess => sess.dialect, dialect=Mysql)
+  assert_true(plain == Sqlite)
+  assert_true(chosen == Mysql)
 }
