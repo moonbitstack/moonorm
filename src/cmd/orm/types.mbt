@@ -3,11 +3,11 @@
 fn inner_option(ty : String) -> String? {
   let ty = ty.trim(chars=" ")
   if ty.has_suffix("?") {
-    Some(ty.view(end_offset=ty.length() - 1).trim(chars=" ").to_owned())
+    Some(ty.exact_view(end=ty.length() - 1).trim(chars=" ").to_owned())
   } else if ty.has_prefix("Option[") && ty.has_suffix("]") {
     Some(
       ty
-      .view(start_offset="Option[".length(), end_offset=ty.length() - 1)
+      .exact_view(start="Option[".length(), end=ty.length() - 1)
       .trim(chars=" ")
       .to_owned(),
     )
@@ -52,10 +52,7 @@ fn column_named(name : String) -> String? {
       guard name.has_prefix("varchar(") && name.has_suffix(")") else {
         return None
       }
-      let n = name.view(
-        start_offset="varchar(".length(),
-        end_offset=name.length() - 1,
-      )
+      let n = name.exact_view(start="varchar(".length(), end=name.length() - 1)
       let n = @string.parse_int(n) catch { _ => return None }
       if n > 0 {
         Some("VarcharType(\{n})")

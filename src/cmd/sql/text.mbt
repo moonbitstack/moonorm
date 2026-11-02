@@ -166,7 +166,7 @@ fn inside(ty : String, head : String) -> String? {
   if ty.has_prefix(head) && ty.has_suffix("]") {
     Some(
       ty
-      .view(start_offset=head.length(), end_offset=ty.length() - 1)
+      .exact_view(start=head.length(), end=ty.length() - 1)
       .trim(chars=" ")
       .to_owned(),
     )
@@ -179,7 +179,7 @@ fn inside(ty : String, head : String) -> String? {
 /// The type inside `T?`.
 fn optional_of(ty : String) -> String? {
   if ty.has_suffix("?") {
-    Some(ty.view(end_offset=ty.length() - 1).trim(chars=" ").to_owned())
+    Some(ty.exact_view(end=ty.length() - 1).trim(chars=" ").to_owned())
   } else {
     inside(ty, "Option[")
   }
