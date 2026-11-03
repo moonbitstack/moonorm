@@ -6,9 +6,11 @@
 supported_targets = "native"
 
 import {
-  "moonbitstack/moonorm" @orm,
+  "moonbitstack/moonorm" @moonorm,
   "moonbitstack/moonorm/session",
   "moonbitstack/moonsqlite" @sqlite,
   "moonbitstack/moondb",
   "moonbitstack/moondb/pool",
 }
+
+formatter(ignore: [ "models.g.mbt" ])

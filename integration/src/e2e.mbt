@@ -5,8 +5,9 @@
 // against a genuine SQLite file (not :memory:, not the MockDriver). One test walks
 // the whole stack — versioned migrations up, a Session doing CRUD through a declared
 // Model, a CTE + IN-subquery SELECT, an optimistic-locked update that both succeeds
-// and then catches a stale write, and migrations down. Every step is asserted, so a
-// regression anywhere in the published chain turns this red.
+// and then catches a stale write, and migrations down. A second drives an annotated
+// `#orm` model whose autoincrement key the database assigns on insert. Every step is
+// asserted, so a regression anywhere in the published chain turns this red.
 
 ///|
 priv struct Team {
@@ -24,12 +25,12 @@ priv struct Hero {
 
 ///|
 /// The team model: id + name, id being the rowid primary key.
-fn team_model() -> @orm.Model[Team] {
-  @orm.Model::new(
+fn team_model() -> @moonorm.Model[Team] {
+  @moonorm.Model::new(
     "team",
     [
-      @orm.column("id", IntType, primary_key=true),
-      @orm.column("name", TextType, nullable=false),
+      @moonorm.column("id", IntType, primary_key=true),
+      @moonorm.column("name", TextType, nullable=false),
     ],
     r => { id: r.int(0), name: r.text(1), },
     t => [("id", @moondb.Int(t.id)), ("name", @moondb.Text(t.name))],
@@ -39,14 +40,14 @@ fn team_model() -> @orm.Model[Team] {
 ///|
 /// The hero model, with a foreign key to team and a version column for optimistic
 /// locking.
-fn hero_model() -> @orm.Model[Hero] {
-  @orm.Model::new(
+fn hero_model() -> @moonorm.Model[Hero] {
+  @moonorm.Model::new(
     "hero",
     [
-      @orm.column("id", IntType, primary_key=true),
-      @orm.column("name", TextType, nullable=false),
-      @orm.column("team_id", IntType, references=("team", "id")),
-      @orm.column("version", IntType, nullable=false),
+      @moonorm.column("id", IntType, primary_key=true),
+      @moonorm.column("name", TextType, nullable=false),
+      @moonorm.column("team_id", IntType, references=("team", "id")),
+      @moonorm.column("version", IntType, nullable=false),
     ],
     r => {
       id: r.int(0),
@@ -67,7 +68,7 @@ fn hero_model() -> @orm.Model[Hero] {
 
 ///|
 /// The migration set: create team, then hero, then an index on hero.team_id.
-fn migrations() -> Array[@orm.Migration] {
+fn migrations() -> Array[@moonorm.Migration] {
   [
     {
       version: 1,
@@ -102,10 +103,10 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
   )
   setup.close()
   let db = @sqlite.SqliteDriver::open(path)
-  let sess = @orm.Session::new(db)
+  let sess = @moonorm.Session::new(db)
 
   // --- migrations up -------------------------------------------------------
-  let migrator = @orm.Migrator::new()
+  let migrator = @moonorm.Migrator::new()
   let applied = migrator.up(sess, migrations())
   assert_eq(applied, 3)
   assert_eq(migrator.current_version(sess), 3)
@@ -142,10 +143,10 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
 
   // --- CTE + IN-subquery ---------------------------------------------------
   // Teams that have at least one hero, via a CTE feeding an IN subquery.
-  let with_heroes = @orm.select("team")
+  let with_heroes = @moonorm.select("team")
     .column("name")
-    .with_cte("teamed", @orm.select("hero").column("team_id"))
-    .where_in("id", @orm.select("teamed").column("team_id"))
+    .with_cte("teamed", @moonorm.select("hero").column("team_id"))
+    .where_in("id", @moonorm.select("teamed").column("team_id"))
     .order_by("name", Asc)
   let rows = sess.fetch(with_heroes)
   assert_eq(rows.length(), 2)
@@ -155,7 +156,7 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
   // --- optimistic lock -----------------------------------------------------
   // Bump ironman from version 1 -> 2, guarded on the current version.
   let ok = sess.modify_versioned(
-    @orm.update("hero")
+    @moonorm.update("hero")
     .set("name", @moondb.Text("iron man"))
     .set("version", @moondb.Int(2))
     .where_("id", "=", @moondb.Int(1))
@@ -166,7 +167,7 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
   // raise LostUpdate rather than silently updating nothing.
   let stale = try {
     sess.modify_versioned(
-      @orm.update("hero")
+      @moonorm.update("hero")
       .set("name", @moondb.Text("stale"))
       .set("version", @moondb.Int(3))
       .where_("id", "=", @moondb.Int(1))
@@ -189,7 +190,7 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
   // real backend: avengers (id 1) has two heroes, x-men (id 2) has one.
   let teams_all = sess.all(teams)
   assert_eq(teams_all.length(), 2)
-  let children : @orm.Relation[Team, Hero] = @orm.has_many(heroes, "team_id", (
+  let children : @moonorm.Relation[Team, Hero] = @moonorm.has_many(heroes, "team_id", (
     t : Team,
   ) => @moondb.Int(t.id))
   let by_team = sess.load_batch(teams_all, children)
@@ -199,7 +200,7 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
   assert_eq(by_team[1][0].name, "wolverine")
   // The N:1 direction, batched: each hero resolves to its team in one query.
   let all_heroes2 = sess.all(heroes)
-  let parent : @orm.Relation[Hero, Team] = @orm.belongs_to(teams, "id", (
+  let parent : @moonorm.Relation[Hero, Team] = @moonorm.belongs_to(teams, "id", (
     h : Hero,
   ) => @moondb.Int(h.team_id))
   let teams_of = sess.load_one_batch(all_heroes2, parent)
@@ -221,5 +222,34 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
     _ => false
   }
   assert_eq(gone, true)
+  sess.close()
+}
+
+
+///|
+test "e2e: an annotated model round-trips through real SQLite with a DB-assigned key" {
+  let path = ".moonorm_e2e_widget.db"
+  let reset = @sqlite.SqliteDriver::open(path)
+  reset.exec_script("DROP TABLE IF EXISTS widgets;")
+  reset.close()
+  let db = @sqlite.SqliteDriver::open(path)
+  let sess = @moonorm.Session::new(db)
+  let widgets = Widget::model()
+  sess.create_table(widgets, if_not_exists=true) |> ignore
+  // id is None: the INSERT omits the key column and SQLite assigns the rowid.
+  let made = sess.insert_record(widgets, { id: None, name: "gear", qty: Some(3) })
+  assert_eq(made.last_insert_id > 0L, true)
+  let rows = sess.all(widgets)
+  assert_eq(rows.length(), 1)
+  assert_eq(rows[0].name, "gear")
+  assert_eq(rows[0].qty == Some(3), true)
+  match rows[0].id {
+    Some(n) => assert_eq(n > 0L, true)
+    None => abort("the database did not assign the autoincrement id")
+  }
+  // A second insert gets a fresh key, again assigned by SQLite.
+  let made2 = sess.insert_record(widgets, { id: None, name: "sprocket", qty: None })
+  assert_eq(made2.last_insert_id > made.last_insert_id, true)
+  assert_eq(sess.all(widgets).length(), 2)
   sess.close()
 }
