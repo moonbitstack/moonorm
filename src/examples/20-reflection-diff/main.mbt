@@ -24,6 +24,7 @@ fn type_name(t : @moonorm.ColumnType) -> String {
     TimeType => "time"
     UuidType => "uuid"
     JsonType => "json"
+    UserType(c) => c.sqlite
   }
 }
 

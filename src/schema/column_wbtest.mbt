@@ -97,3 +97,31 @@ test "BigIntType autoincrement takes each engine's 64-bit idiom" {
   assert_eq(small.ddl_for(Postgres), "id SERIAL PRIMARY KEY")
   assert_eq(small.ddl_for(Mysql), "id INT AUTO_INCREMENT PRIMARY KEY")
 }
+
+///|
+test "user_type renders each dialect's own spelling" {
+  let citext = user_type(
+    sqlite="TEXT",
+    postgres="CITEXT",
+    mysql="VARCHAR(255)",
+  )
+  assert_eq(citext.sql_for(Sqlite), "TEXT")
+  assert_eq(citext.sql_for(Postgres), "CITEXT")
+  assert_eq(citext.sql_for(Mysql), "VARCHAR(255)")
+  // The DDL path goes through the same per-dialect spelling.
+  assert_eq(column("handle", citext).ddl_for(Sqlite), "handle TEXT")
+  assert_eq(column("handle", citext).ddl_for(Postgres), "handle CITEXT")
+  assert_eq(column("handle", citext).ddl_for(Mysql), "handle VARCHAR(255)")
+}
+
+///|
+test "user_type compares by spelling, and is distinct from built-in variants" {
+  let a = user_type(sqlite="INTEGER", postgres="BIGINT", mysql="INT")
+  let b = user_type(sqlite="INTEGER", postgres="BIGINT", mysql="INT")
+  let c = user_type(sqlite="INTEGER", postgres="BIGINT", mysql="BIGINT")
+  assert_eq(a == b, true)
+  assert_eq(a == c, false)
+  // Even the same storage spelling is a different type from the built-in one.
+  assert_eq(a == IntType, false)
+  assert_eq(user_type(sqlite="TEXT", postgres="TEXT", mysql="TEXT") == TextType, false)
+}

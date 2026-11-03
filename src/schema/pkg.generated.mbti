@@ -12,6 +12,8 @@ pub fn[S, T, V : @moondb.ToValue] belongs_to(Model[T], String, (S) -> V) -> Rela
 
 pub fn column(String, ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Column
 
+pub fn custom_column_type(sqlite~ : String, postgres~ : String, mysql~ : String) -> CustomColumnType
+
 pub fn[T, V : @moondb.ToValue] field(String, ColumnType, (T) -> V, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Field[T]
 
 pub fn[S, T, V : @moondb.ToValue] has_many(Model[T], String, (S) -> V) -> Relation[S, T]
@@ -19,6 +21,8 @@ pub fn[S, T, V : @moondb.ToValue] has_many(Model[T], String, (S) -> V) -> Relati
 pub fn index(Array[String], name? : String, unique? : Bool) -> Index
 
 pub fn[S, T, V : @moondb.ToValue] many_to_many(Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -> V) -> ManyToMany[S, T]
+
+pub fn user_type(sqlite~ : String, postgres~ : String, mysql~ : String) -> ColumnType
 
 // Errors
 
@@ -39,6 +43,7 @@ pub(all) struct Column {
 pub fn Column::ddl(Self, inline_pk? : Bool) -> String
 pub fn Column::ddl_for(Self, @query.Dialect, inline_pk? : Bool) -> String
 
+#derive(Eq)
 pub(all) enum ColumnType {
   IntType
   BigIntType
@@ -53,10 +58,20 @@ pub(all) enum ColumnType {
   TimeType
   UuidType
   JsonType
-} derive(Eq)
+  UserType(CustomColumnType)
+}
 pub fn ColumnType::equal(Self, Self) -> Bool
 pub fn ColumnType::not_equal(Self, Self) -> Bool
 pub fn ColumnType::sql_for(Self, @query.Dialect) -> String
+
+#derive(Eq)
+pub(all) struct CustomColumnType {
+  sqlite : String
+  postgres : String
+  mysql : String
+}
+pub fn CustomColumnType::equal(Self, Self) -> Bool
+pub fn CustomColumnType::not_equal(Self, Self) -> Bool
 
 pub struct Field[T] {
   column : Column
@@ -64,11 +79,12 @@ pub struct Field[T] {
 }
 pub fn[T] Field::name(Self[T]) -> String
 
+#derive(Eq, @debug.Debug)
 pub(all) struct Index {
   name : String?
   columns : Array[String]
   unique : Bool
-} derive(Eq, @debug.Debug)
+}
 pub fn Index::equal(Self, Self) -> Bool
 pub fn Index::not_equal(Self, Self) -> Bool
 pub fn Index::to_repr(Self) -> @debug.Repr

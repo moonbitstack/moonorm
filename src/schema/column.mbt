@@ -1,8 +1,44 @@
 ///|
+/// A user-defined SQL storage type: the declared type keyword each of the three
+/// dialects emits for it. This is the extension point for a storage type the built-in
+/// `ColumnType` variants do not name — a `citext`, a `tsvector`, a domain type. Pair
+/// it with `ToValue`/`FromValue` on the field's type so values still bind and read,
+/// and the column stores in whatever native type each backend is told to use.
+#derive(Eq)
+pub(all) struct CustomColumnType {
+  sqlite : String
+  postgres : String
+  mysql : String
+}
+
+///|
+/// Declare a user-defined storage type from its per-dialect SQL spelling.
+pub fn custom_column_type(
+  sqlite~ : String,
+  postgres~ : String,
+  mysql~ : String,
+) -> CustomColumnType {
+  { sqlite, postgres, mysql }
+}
+
+///|
+/// A `ColumnType` for a user-defined storage type — the open counterpart of the
+/// built-in variants. It renders `sqlite` on SQLite, `postgres` on PostgreSQL and
+/// `mysql` on MySQL.
+pub fn user_type(
+  sqlite~ : String,
+  postgres~ : String,
+  mysql~ : String,
+) -> ColumnType {
+  UserType({ sqlite, postgres, mysql })
+}
+
+///|
 /// A column's SQL storage type. These map onto SQLite's type affinities when a
 /// `Model` renders `CREATE TABLE` DDL: `IntType`/`BoolType` -> INTEGER, `TextType`
 /// -> TEXT, `RealType` -> REAL, `BlobType` -> BLOB. `BoolType` is a distinct
 /// declared type so DDL reads intently, but binds and reads as an integer `0`/`1`.
+#derive(Eq)
 pub(all) enum ColumnType {
   IntType
   // A 64-bit integer: `Int64` fields. SQLite's INTEGER is already 64-bit.
@@ -21,7 +57,10 @@ pub(all) enum ColumnType {
   TimeType
   UuidType
   JsonType
-} derive(Eq)
+  // A type the caller names: the per-dialect spelling `user_type` supplies, so a
+  // store the built-in variants do not cover is still expressible.
+  UserType(CustomColumnType)
+}
 
 ///|
 /// The SQLite declared type keyword for a `ColumnType`.
@@ -42,6 +81,7 @@ fn ColumnType::sql(self : ColumnType) -> String {
     // renders UUID / JSONB natively — see sql_for).
     UuidType => "TEXT"
     JsonType => "TEXT"
+    UserType(c) => c.sqlite
   }
 }
 
@@ -183,6 +223,9 @@ pub fn ColumnType::sql_for(
     (JsonType, Postgres) => "JSONB"
     (JsonType, Mysql) => "JSON"
     (JsonType, _) => "TEXT"
+    (UserType(c), Sqlite) => c.sqlite
+    (UserType(c), Postgres) => c.postgres
+    (UserType(c), Mysql) => c.mysql
     (TextType, _) => "TEXT"
   }
 }
@@ -242,3 +285,6 @@ pub fn Column::ddl_for(
 
 ///|
 pub extend ColumnType with Eq::{not_equal, equal}
+
+///|
+pub extend CustomColumnType with Eq::{not_equal, equal}
