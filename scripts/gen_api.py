@@ -115,7 +115,10 @@ def _key(decl):
 def parse_docs(pkg_dir):
     """key -> list of doc lines, harvested from the `///` blocks in the sources."""
     docs = {}
-    paths = sorted(glob.glob(os.path.join(pkg_dir, "**", "*.mbt"), recursive=True))
+    # A MoonBit package's files sit directly in its directory; a subdirectory is a
+    # separate package, so scanning recursively would pull another package's prose
+    # into this one (e.g. an example's `insert` over the builder's).
+    paths = sorted(glob.glob(os.path.join(pkg_dir, "*.mbt")))
     for path in paths:
         if path.endswith("_test.mbt") or path.endswith("_wbtest.mbt"):
             continue
@@ -213,8 +216,11 @@ def build(site):
     # the façade re-exports its members, so a name documented in `schema` must be
     # documented on the façade page too: one map for the whole repository
     docs = {}
+    per_pkg = {}
     for pkg_dir, _full, _label, _anchor in site["packages"]:
-        for key, text in parse_docs(os.path.join(ROOT, pkg_dir)).items():
+        local = parse_docs(os.path.join(ROOT, pkg_dir))
+        per_pkg[pkg_dir] = local
+        for key, text in local.items():
             docs.setdefault(key, text)
 
     for pkg_dir, full, label, anchor in site["packages"]:
@@ -222,10 +228,15 @@ def build(site):
         if not os.path.exists(mbti):
             sys.stderr.write(f"warn: missing {pkg_dir}/pkg.generated.mbti, skipping\n")
             continue
+        # The façade page documents re-exports from one merged map; a subpackage page
+        # reads its own docs first, so two packages may each document a same-named
+        # member (schema's `column` and mapper's `column`) without one overwriting the
+        # other.
+        page_docs = docs if pkg_dir == "src" else {**docs, **per_pkg[pkg_dir]}
         entries = [e for e in parse_mbti(mbti)
-                   if not (e[1].split("::")[-1] in DERIVED and not docs.get(e[1]))]
+                   if not (e[1].split("::")[-1] in DERIVED and not page_docs.get(e[1]))]
         total += len(entries)
-        sections.append(section(full, label, anchor, entries, docs, first, site["eyebrow"]))
+        sections.append(section(full, label, anchor, entries, page_docs, first, site["eyebrow"]))
         first = False
         nav.append(f'<a href="#{anchor}">{label}<span class="n">{len(entries)}</span></a>')
     return "\n".join(nav), "\n".join(sections), total, len(nav)
