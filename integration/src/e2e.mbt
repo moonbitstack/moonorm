@@ -190,9 +190,11 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
   // real backend: avengers (id 1) has two heroes, x-men (id 2) has one.
   let teams_all = sess.all(teams)
   assert_eq(teams_all.length(), 2)
-  let children : @moonorm.Relation[Team, Hero] = @moonorm.has_many(heroes, "team_id", (
-    t : Team,
-  ) => @moondb.Int(t.id))
+  let children : @moonorm.Relation[Team, Hero] = @moonorm.has_many(
+    heroes,
+    "team_id",
+    (t : Team) => @moondb.Int(t.id),
+  )
   let by_team = sess.load_batch(teams_all, children)
   assert_eq(by_team.length(), 2)
   assert_eq(by_team[0].length(), 2) // avengers
@@ -200,9 +202,11 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
   assert_eq(by_team[1][0].name, "wolverine")
   // The N:1 direction, batched: each hero resolves to its team in one query.
   let all_heroes2 = sess.all(heroes)
-  let parent : @moonorm.Relation[Hero, Team] = @moonorm.belongs_to(teams, "id", (
-    h : Hero,
-  ) => @moondb.Int(h.team_id))
+  let parent : @moonorm.Relation[Hero, Team] = @moonorm.belongs_to(
+    teams,
+    "id",
+    (h : Hero) => @moondb.Int(h.team_id),
+  )
   let teams_of = sess.load_one_batch(all_heroes2, parent)
   assert_eq(teams_of.length(), 3)
   for t in teams_of {
@@ -225,7 +229,6 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
   sess.close()
 }
 
-
 ///|
 test "e2e: an annotated model round-trips through real SQLite with a DB-assigned key" {
   let path = ".moonorm_e2e_widget.db"
@@ -237,7 +240,11 @@ test "e2e: an annotated model round-trips through real SQLite with a DB-assigned
   let widgets = Widget::model()
   sess.create_table(widgets, if_not_exists=true) |> ignore
   // id is None: the INSERT omits the key column and SQLite assigns the rowid.
-  let made = sess.insert_record(widgets, { id: None, name: "gear", qty: Some(3) })
+  let made = sess.insert_record(widgets, {
+    id: None,
+    name: "gear",
+    qty: Some(3),
+  })
   assert_eq(made.last_insert_id > 0L, true)
   let rows = sess.all(widgets)
   assert_eq(rows.length(), 1)
@@ -248,7 +255,11 @@ test "e2e: an annotated model round-trips through real SQLite with a DB-assigned
     None => abort("the database did not assign the autoincrement id")
   }
   // A second insert gets a fresh key, again assigned by SQLite.
-  let made2 = sess.insert_record(widgets, { id: None, name: "sprocket", qty: None })
+  let made2 = sess.insert_record(widgets, {
+    id: None,
+    name: "sprocket",
+    qty: None,
+  })
   assert_eq(made2.last_insert_id > made.last_insert_id, true)
   assert_eq(sess.all(widgets).length(), 2)
   sess.close()

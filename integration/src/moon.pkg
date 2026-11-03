@@ -6,7 +6,7 @@
 supported_targets = "native"
 
 import {
-  "moonbitstack/moonorm" @moonorm,
+  "moonbitstack/moonorm",
   "moonbitstack/moonorm/session",
   "moonbitstack/moonsqlite" @sqlite,
   "moonbitstack/moondb",
