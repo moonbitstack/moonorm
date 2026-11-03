@@ -31,6 +31,7 @@ pub using @query {
 pub using @schema {
   type Column,
   type ColumnType,
+  type CustomColumnType,
   type Field,
   type Index,
   type ManyToMany,
@@ -38,10 +39,12 @@ pub using @schema {
   type Relation,
   belongs_to,
   column,
+  custom_column_type,
   field,
   index,
   has_many,
   many_to_many,
+  user_type,
 }
 
 ///|
@@ -66,6 +69,14 @@ pub using @migrate {
   reflect_columns_pg,
   reflect_table,
   reflect_table_for,
+}
+
+///|
+pub using @engine {
+  type Dsn,
+  type DsnError,
+  type Engine,
+  parse_dsn,
 }
 
 ///|

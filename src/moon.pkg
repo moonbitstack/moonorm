@@ -11,5 +11,6 @@ import {
   "moonbitstack/moonorm/schema",
   "moonbitstack/moonorm/session",
   "moonbitstack/moonorm/migrate",
+  "moonbitstack/moonorm/engine",
   "moonbitstack/moondb",
 }

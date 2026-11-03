@@ -58,6 +58,12 @@ pub fn Session::new(
 }
 
 ///|
+/// The dialect this session renders its statements for.
+pub fn Session::dialect(self : Session) -> @query.Dialect {
+  self.dialect
+}
+
+///|
 /// How many nested savepoints opened via `begin_nested` are currently active.
 pub fn Session::savepoint_depth(self : Session) -> Int32 {
   self.sp_depth

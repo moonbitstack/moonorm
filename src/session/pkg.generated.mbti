@@ -71,6 +71,7 @@ pub fn Session::commit(Self) -> Unit raise @moondb.DbError
 pub fn[T] Session::create_table(Self, @schema.Model[T], if_not_exists? : Bool) -> @moondb.ExecResult raise @moondb.DbError
 pub fn[T] Session::delete_record(Self, @schema.Model[T], T) -> Unit raise @moondb.DbError
 pub fn Session::deleted_count(Self) -> Int32
+pub fn Session::dialect(Self) -> @query.Dialect
 pub fn Session::dirty_count(Self) -> Int32
 pub fn Session::execute(Self, String, Array[@moondb.Value]) -> @moondb.ExecResult raise @moondb.DbError
 pub fn[T] Session::expunge(Self, @schema.Model[T], T) -> Unit

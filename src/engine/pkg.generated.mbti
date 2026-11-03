@@ -1,0 +1,46 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonorm/engine"
+
+import {
+  "moonbitstack/moondb",
+  "moonbitstack/moonorm/query",
+  "moonbitstack/moonorm/session",
+}
+
+// Values
+pub fn parse_dsn(String) -> Dsn raise DsnError
+
+// Errors
+pub(all) suberror DsnError {
+  DsnError(String)
+}
+pub fn DsnError::output(Self, &Logger) -> Unit
+pub fn DsnError::to_string(Self) -> String
+pub impl Show for DsnError
+
+// Types and methods
+pub(all) struct Dsn {
+  scheme : String
+  driver : String
+  dialect : @query.Dialect
+  user : String?
+  password : String?
+  host : String?
+  port : Int32?
+  database : String?
+  params : Map[String, String]
+}
+
+pub struct Engine {
+  dsn : Dsn
+}
+pub fn Engine::dialect(Self) -> @query.Dialect
+pub fn Engine::driver(Self) -> String
+pub fn Engine::dsn(Self) -> Dsn
+pub fn Engine::from_dsn(Dsn) -> Self
+pub fn Engine::new(String) -> Self raise DsnError
+pub fn Engine::session(Self, &@moondb.Driver) -> @session.Session
+
+// Type aliases
+
+// Traits

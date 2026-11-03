@@ -3,6 +3,7 @@ package "moonbitstack/moonorm"
 
 import {
   "moonbitstack/moondb",
+  "moonbitstack/moonorm/engine",
   "moonbitstack/moonorm/migrate",
   "moonbitstack/moonorm/query",
   "moonbitstack/moonorm/schema",
@@ -17,6 +18,8 @@ pub fn case_(Array[(String, String)], else_? : String) -> String
 pub fn cast(String, String) -> String
 
 pub fn column(String, @schema.ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> @schema.Column
+
+pub fn custom_column_type(sqlite~ : String, postgres~ : String, mysql~ : String) -> @schema.CustomColumnType
 
 pub fn delete(String) -> @query.Delete
 
@@ -36,6 +39,8 @@ pub fn insert(String) -> @query.Insert
 
 pub fn[S, T, V : @moondb.ToValue] many_to_many(@schema.Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -> V) -> @schema.ManyToMany[S, T]
 
+pub fn parse_dsn(String) -> @engine.Dsn raise @engine.DsnError
+
 pub fn reflect_columns(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
 
 pub fn reflect_columns_mysql(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
@@ -50,6 +55,8 @@ pub fn[S : @query.AsSource] select(S) -> @query.Select
 
 pub fn update(String) -> @query.Update
 
+pub fn user_type(sqlite~ : String, postgres~ : String, mysql~ : String) -> @schema.ColumnType
+
 // Errors
 
 // Types and methods
@@ -61,9 +68,17 @@ pub using @migrate {type ColumnDiff}
 
 pub using @schema {type ColumnType}
 
+pub using @schema {type CustomColumnType}
+
 pub using @query {type Delete}
 
 pub using @query {type Dialect}
+
+pub using @engine {type Dsn}
+
+pub using @engine {type DsnError}
+
+pub using @engine {type Engine}
 
 pub using @schema {type Field}
 
