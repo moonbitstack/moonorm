@@ -34,6 +34,7 @@ pub using @schema {
   type CustomColumnType,
   type Field,
   type Index,
+  type LoadStrategy,
   type ManyToMany,
   type Model,
   type Relation,

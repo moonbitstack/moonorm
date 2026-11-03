@@ -407,8 +407,14 @@ pub fn[S, T] Session::load(
   self : Session,
   source : S,
   rel : @schema.Relation[S, T],
+  strategy~ : @schema.LoadStrategy = @schema.SubqueryLoad,
 ) -> Array[T] raise @moondb.DbError {
-  let (sql, params) = rel.query(source).build()
+  let (sql, params) = match strategy {
+    @schema.RaiseLoad =>
+      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+    @schema.SubqueryLoad => rel.query(source).build()
+    @schema.JoinedLoad => rel.joined_sql([source])
+  }
   rel.target.map_rows(self.driver.query(sql, params))
 }
 
@@ -420,8 +426,17 @@ pub fn[S, T] Session::load_one(
   self : Session,
   source : S,
   rel : @schema.Relation[S, T],
+  strategy~ : @schema.LoadStrategy = @schema.SubqueryLoad,
 ) -> T? raise @moondb.DbError {
-  let (sql, params) = rel.query(source).limit(1).build()
+  let (sql, params) = match strategy {
+    @schema.RaiseLoad =>
+      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+    @schema.SubqueryLoad => rel.query(source).limit(1).build()
+    @schema.JoinedLoad => {
+      let (sql, params) = rel.joined_sql([source])
+      (sql + " LIMIT 1", params)
+    }
+  }
   let rows = self.driver.query(sql, params)
   if rows.length() == 0 {
     None
@@ -463,6 +478,7 @@ pub fn[S, T] Session::load_batch(
   self : Session,
   sources : Array[S],
   rel : @schema.Relation[S, T],
+  strategy~ : @schema.LoadStrategy = @schema.SubqueryLoad,
 ) -> Array[Array[T]] raise @moondb.DbError {
   let result : Array[Array[T]] = []
   for _ in sources {
@@ -471,7 +487,12 @@ pub fn[S, T] Session::load_batch(
   if sources.length() == 0 {
     return result
   }
-  let (sql, params) = rel.batch_query(sources).build()
+  let (sql, params) = match strategy {
+    @schema.RaiseLoad =>
+      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+    @schema.SubqueryLoad => rel.batch_query(sources).build()
+    @schema.JoinedLoad => rel.joined_sql(sources)
+  }
   let rows = self.driver.query(sql, params)
   // Bucket every fetched child to the sources it belongs to. The child's foreign
   // key lives in the row under `key_column`; a source claims the child when its
@@ -504,6 +525,7 @@ pub fn[S, T] Session::load_one_batch(
   self : Session,
   sources : Array[S],
   rel : @schema.Relation[S, T],
+  strategy~ : @schema.LoadStrategy = @schema.SubqueryLoad,
 ) -> Array[T?] raise @moondb.DbError {
   let result : Array[T?] = []
   for _ in sources {
@@ -512,7 +534,12 @@ pub fn[S, T] Session::load_one_batch(
   if sources.length() == 0 {
     return result
   }
-  let (sql, params) = rel.batch_query(sources).build()
+  let (sql, params) = match strategy {
+    @schema.RaiseLoad =>
+      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+    @schema.SubqueryLoad => rel.batch_query(sources).build()
+    @schema.JoinedLoad => rel.joined_sql(sources)
+  }
   let rows = self.driver.query(sql, params)
   for row in rows {
     let parent_key = match row.by_name(rel.key_column) {
@@ -550,9 +577,60 @@ pub fn[S, T] Session::load_many(
   self : Session,
   source : S,
   rel : @schema.ManyToMany[S, T],
+  strategy~ : @schema.LoadStrategy = @schema.SubqueryLoad,
 ) -> Array[T] raise @moondb.DbError {
-  let (sql, params) = rel.query(source).build()
+  let (sql, params) = match strategy {
+    @schema.RaiseLoad =>
+      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+    @schema.SubqueryLoad => rel.query(source).build()
+    @schema.JoinedLoad => rel.joined_sql([source])
+  }
   rel.target.map_rows(self.driver.query(sql, params))
+}
+
+///|
+/// Eagerly load an N:M relationship for many sources in a single query, bucketing the
+/// fetched targets to their sources in memory. The counterpart of `load_batch` for a
+/// junction-table relation; `strategy` chooses an `IN` query or a JOIN. Returns an
+/// array index-aligned with `sources`.
+pub fn[S, T] Session::load_many_batch(
+  self : Session,
+  sources : Array[S],
+  rel : @schema.ManyToMany[S, T],
+  strategy~ : @schema.LoadStrategy = @schema.SubqueryLoad,
+) -> Array[Array[T]] raise @moondb.DbError {
+  let result : Array[Array[T]] = []
+  for _ in sources {
+    result.push([])
+  }
+  if sources.length() == 0 {
+    return result
+  }
+  let (sql, params) = match strategy {
+    @schema.RaiseLoad =>
+      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+    @schema.SubqueryLoad => rel.batch_sql(sources)
+    @schema.JoinedLoad => rel.joined_sql(sources)
+  }
+  let rows = self.driver.query(sql, params)
+  // The junction's source key rides along as `moonorm_src`, so a fetched target row
+  // buckets to every source whose extracted key matches it.
+  for row in rows {
+    let src = match row.by_name("moonorm_src") {
+      Some(v) => v
+      None =>
+        raise @moondb.QueryError(
+          "load_many_batch: fetched row has no moonorm_src",
+        )
+    }
+    let record = rel.target.map_row(row)
+    for i = 0; i < sources.length(); i = i + 1 {
+      if canonical_key(rel.source_value(sources[i])) == canonical_key(src) {
+        result[i].push(record)
+      }
+    }
+  }
+  result
 }
 
 ///|

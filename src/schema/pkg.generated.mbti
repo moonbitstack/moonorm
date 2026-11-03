@@ -89,6 +89,12 @@ pub fn Index::equal(Self, Self) -> Bool
 pub fn Index::not_equal(Self, Self) -> Bool
 pub fn Index::to_repr(Self) -> @debug.Repr
 
+pub(all) enum LoadStrategy {
+  SubqueryLoad
+  JoinedLoad
+  RaiseLoad
+}
+
 pub struct ManyToMany[S, T] {
   target : Model[T]
   junction : String
@@ -97,7 +103,10 @@ pub struct ManyToMany[S, T] {
   target_key : String
   source_key : (S) -> @moondb.Value
 }
+pub fn[S, T] ManyToMany::batch_sql(Self[S, T], Array[S]) -> (String, Array[@moondb.Value])
+pub fn[S, T] ManyToMany::joined_sql(Self[S, T], Array[S]) -> (String, Array[@moondb.Value])
 pub fn[S, T] ManyToMany::query(Self[S, T], S) -> @query.Select
+pub fn[S, T] ManyToMany::source_value(Self[S, T], S) -> @moondb.Value
 
 pub struct Model[T] {
   table : String
@@ -130,6 +139,7 @@ pub struct Relation[S, T] {
   to_many : Bool
 }
 pub fn[S, T] Relation::batch_query(Self[S, T], Array[S]) -> @query.Select
+pub fn[S, T] Relation::joined_sql(Self[S, T], Array[S]) -> (String, Array[@moondb.Value])
 pub fn[S, T] Relation::query(Self[S, T], S) -> @query.Select
 pub fn[S, T] Relation::source_value(Self[S, T], S) -> @moondb.Value
 

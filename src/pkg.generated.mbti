@@ -88,6 +88,8 @@ pub using @query {type Insert}
 
 pub using @session {type IsolationLevel}
 
+pub using @schema {type LoadStrategy}
+
 pub using @query {type LockClause}
 
 pub using @query {type LockMode}

@@ -640,3 +640,183 @@ test "with_pool passes the dialect to its session" {
   assert_true(plain == Sqlite)
   assert_true(chosen == Mysql)
 }
+
+
+// --- relationship loading strategies -------------------------------------------
+
+///|
+fn tagged_row(
+  id : Int32,
+  title : String,
+  author_id : Int32,
+  src : Int32,
+) -> @moondb.Row {
+  {
+    columns: ["id", "title", "author_id", "moonorm_src"],
+    values: [Int(id), Text(title), Int(author_id), Int(src)],
+  }
+}
+
+///|
+test "joined_sql: 1:N joins target to the distinct source keys" {
+  let children : @schema.Relation[Author, Book] = @schema.has_many(
+    book_model(),
+    "author_id",
+    a => Int(a.id),
+  )
+  let sources : Array[Author] = [
+    { id: 1, name: "a", },
+    { id: 2, name: "b", },
+    { id: 1, name: "c", },
+  ]
+  let (sql, params) = children.joined_sql(sources)
+  assert_eq(
+    sql,
+    "SELECT books.id, books.title, books.author_id FROM books JOIN (SELECT ? AS moonorm_key UNION ALL SELECT ? AS moonorm_key) AS moonorm_src ON books.author_id = moonorm_src.moonorm_key",
+  )
+  assert_eq(params.length(), 2)
+  assert_eq(params[0] == Int(1), true)
+  assert_eq(params[1] == Int(2), true)
+}
+
+///|
+test "load_batch joined: one JOIN query, same buckets" {
+  let spy = SpyDriver::new([
+    book_row(10, "A1", 1),
+    book_row(11, "A2", 1),
+    book_row(12, "B1", 2),
+  ])
+  let sess = Session::new(spy)
+  let children : @schema.Relation[Author, Book] = @schema.has_many(
+    book_model(),
+    "author_id",
+    a => Int(a.id),
+  )
+  let authors : Array[Author] = [
+    { id: 1, name: "asimov", },
+    { id: 2, name: "banks", },
+    { id: 3, name: "clarke", },
+  ]
+  let loaded = sess.load_batch(authors, children, strategy=@schema.JoinedLoad)
+  assert_eq(spy.queries, 1)
+  assert_eq(loaded[0].length(), 2)
+  assert_eq(loaded[1].length(), 1)
+  assert_eq(loaded[2].length(), 0)
+}
+
+///|
+test "load joined: a single source loads through a JOIN, not a WHERE" {
+  let spy = SpyDriver::new([book_row(10, "A1", 1)])
+  let sess = Session::new(spy)
+  let children : @schema.Relation[Author, Book] = @schema.has_many(
+    book_model(),
+    "author_id",
+    a => Int(a.id),
+  )
+  let author : Author = { id: 1, name: "asimov", }
+  let loaded = sess.load(author, children, strategy=@schema.JoinedLoad)
+  assert_eq(loaded.length(), 1)
+}
+
+///|
+test "raiseload: the load refuses without querying" {
+  let spy = SpyDriver::new([])
+  let sess = Session::new(spy)
+  let children : @schema.Relation[Author, Book] = @schema.has_many(
+    book_model(),
+    "author_id",
+    a => Int(a.id),
+  )
+  let author : Author = { id: 1, name: "asimov", }
+  let mut refused = false
+  try {
+    sess.load(author, children, strategy=@schema.RaiseLoad) |> ignore
+  } catch {
+    _ => refused = true
+  }
+  assert_eq(refused, true)
+  assert_eq(spy.queries, 0)
+}
+
+///|
+test "many_to_many batch_sql: junction key rides along as moonorm_src" {
+  let m2m : @schema.ManyToMany[Author, Book] = @schema.many_to_many(
+    book_model(),
+    junction="author_books",
+    source_fk="author_id",
+    target_fk="book_id",
+    target_key="id",
+    source_key=a => Int(a.id),
+  )
+  let sources : Array[Author] = [
+    { id: 1, name: "a", },
+    { id: 2, name: "b", },
+  ]
+  let (sql, params) = m2m.batch_sql(sources)
+  assert_eq(
+    sql,
+    "SELECT books.id, books.title, books.author_id, author_books.author_id AS moonorm_src FROM books JOIN author_books ON author_books.book_id = books.id WHERE author_books.author_id IN (?, ?)",
+  )
+  assert_eq(params.length(), 2)
+  assert_eq(params[1] == Int(2), true)
+  let (jsql, jparams) = m2m.joined_sql(sources)
+  assert_eq(
+    jsql,
+    "SELECT books.id, books.title, books.author_id, author_books.author_id AS moonorm_src FROM books JOIN author_books ON author_books.book_id = books.id JOIN (SELECT ? AS moonorm_key UNION ALL SELECT ? AS moonorm_key) AS moonorm_keys ON author_books.author_id = moonorm_keys.moonorm_key",
+  )
+  assert_eq(jparams.length(), 2)
+}
+
+///|
+test "load_many_batch: targets bucket to their sources in one query" {
+  let spy = SpyDriver::new([
+    tagged_row(10, "A1", 1, 1),
+    tagged_row(11, "A2", 1, 1),
+    tagged_row(12, "B1", 2, 2),
+  ])
+  let sess = Session::new(spy)
+  let m2m : @schema.ManyToMany[Author, Book] = @schema.many_to_many(
+    book_model(),
+    junction="author_books",
+    source_fk="author_id",
+    target_fk="book_id",
+    target_key="id",
+    source_key=a => Int(a.id),
+  )
+  let authors : Array[Author] = [
+    { id: 1, name: "asimov", },
+    { id: 2, name: "banks", },
+    { id: 3, name: "clarke", },
+  ]
+  let loaded = sess.load_many_batch(authors, m2m)
+  assert_eq(spy.queries, 1)
+  assert_eq(loaded.length(), 3)
+  assert_eq(loaded[0].length(), 2)
+  assert_eq(loaded[1].length(), 1)
+  assert_eq(loaded[2].length(), 0)
+}
+
+///|
+test "load_many_batch joined: one JOIN query, same buckets" {
+  let spy = SpyDriver::new([
+    tagged_row(10, "A1", 1, 1),
+    tagged_row(12, "B1", 2, 2),
+  ])
+  let sess = Session::new(spy)
+  let m2m : @schema.ManyToMany[Author, Book] = @schema.many_to_many(
+    book_model(),
+    junction="author_books",
+    source_fk="author_id",
+    target_fk="book_id",
+    target_key="id",
+    source_key=a => Int(a.id),
+  )
+  let authors : Array[Author] = [
+    { id: 1, name: "asimov", },
+    { id: 2, name: "banks", },
+  ]
+  let loaded = sess.load_many_batch(authors, m2m, strategy=@schema.JoinedLoad)
+  assert_eq(spy.queries, 1)
+  assert_eq(loaded[0].length(), 1)
+  assert_eq(loaded[1].length(), 1)
+}
