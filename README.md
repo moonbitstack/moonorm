@@ -425,7 +425,7 @@ The generator wires in like the other one, with `cmd/sql` and the package import
 
 <!-- nocheck -->
 ```
-rule(name: "sql", command: "moonx moonbitstack/moonorm/cmd/sql@0.11.5 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+rule(name: "sql", command: "moonx moonbitstack/moonorm/cmd/sql@0.11.6 -C \"$mod_dir\" \"$input\" -o \"$output\"")
 dev_build(rule: "sql", input: "models.mbt", output: "mapper.g.mbt")
 ```
 

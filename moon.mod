@@ -1,6 +1,6 @@
 name = "moonbitstack/moonorm"
 
-version = "0.11.5"
+version = "0.11.6"
 
 readme = "README.md"
 
@@ -9,11 +9,24 @@ repository = "https://github.com/moonbitstack/moonorm"
 license = "Apache-2.0"
 
 keywords = [
-  "sqlalchemy",
   "orm",
   "sql",
-  "query-builder",
   "database",
+  "query-builder",
+  "sql-toolkit",
+  "mapper",
+  "data-mapper",
+  "migration",
+  "migrations",
+  "schema",
+  "session",
+  "unit-of-work",
+  "sqlite",
+  "postgres",
+  "postgresql",
+  "mysql",
+  "sqlalchemy",
+  "moondb",
   "moonbit",
 ]
 
