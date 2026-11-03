@@ -32,7 +32,9 @@ SITES = [
             ("src/schema", "moonbitstack/moonorm/schema", "schema", "schema"),
             ("src/query", "moonbitstack/moonorm/query", "query", "query"),
             ("src/session", "moonbitstack/moonorm/session", "session", "session"),
+            ("src/engine", "moonbitstack/moonorm/engine", "engine", "engine"),
             ("src/migrate", "moonbitstack/moonorm/migrate", "migrate", "migrate"),
+            ("src/mapper", "moonbitstack/moonorm/mapper", "mapper", "mapper"),
         ],
     },
 ]

@@ -319,3 +319,16 @@
   * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--ink) 22%, transparent) transparent; }
   html:not(.scrolling) { scrollbar-color: transparent transparent; }
 }
+
+/* ---- guide writing-style switch: annotated / functional / class ---- */
+.style-bar { display: flex; align-items: center; gap: 12px; margin: 22px 0 10px; flex-wrap: wrap; }
+.style-bar .style-label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-faint); }
+.style-switch { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--hair); border-radius: 999px; background: var(--paper-2); }
+.style-switch button { border: 0; background: transparent; color: var(--ink-soft); font: inherit; font-size: 13px; padding: 5px 13px; border-radius: 999px; cursor: pointer; }
+.style-switch button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.style-switch button:focus-visible { outline: 2px solid var(--mapped); outline-offset: 2px; }
+.variants .variant[hidden] { display: none; }
+.style-note { font-size: 14px; color: var(--ink-soft); margin: 6px 0 0; }
+html[data-style="annotated"] .variants .variant:not([data-style="annotated"]),
+html[data-style="functional"] .variants .variant:not([data-style="functional"]),
+html[data-style="class"] .variants .variant:not([data-style="class"]) { display: none; }

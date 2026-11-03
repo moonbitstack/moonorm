@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="light" data-style="annotated">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -54,6 +54,15 @@
           <span>driver contract <b>moondb</b></span>
         </div>
 
+        <div class="style-bar">
+          <span class="style-label">Writing style</span>
+          <div class="style-switch" role="group" aria-label="Writing style">
+            <button type="button" data-set-style="annotated" aria-pressed="true">Annotated</button>
+            <button type="button" data-set-style="functional" aria-pressed="false">Functional</button>
+            <button type="button" data-set-style="class" aria-pressed="false">Class</button>
+          </div>
+        </div>
+
         <h2 id="install">1 · Install</h2>
         <p>Add the toolkit and its driver contract:</p>
         <pre><code>moon add moonbitstack/moonorm
@@ -62,6 +71,8 @@ moon add moonbitstack/moondb</code></pre>
 
         <h2 id="model">2 · Declare a model</h2>
         <p>A model is a MoonBit struct with annotations on it. The generator reads them at build time and writes <code class="inline">Account::model()</code>; a field without one is a column named after it, and <code class="inline">T?</code> is nullable.</p>
+        <div class="variants">
+          <div class="variant" data-style="annotated">
         <pre><code>#orm.table(name="accounts")
 pub struct Account {
   #orm.column(primary_key=true, autoincrement=true)
@@ -75,8 +86,49 @@ pub struct Account {
   status : String
   #orm.column(check="level &gt;= 0")
   level : Int32
+}
+
+// The generator writes Account::model(); this makes it the accessor the rest of
+// the guide calls.
+fn account() -&gt; @moonorm.Model[Account] {
+  Account::model()
 }</code></pre>
-        <p>The annotations generate what you would otherwise write by hand: the columns, and the two directions of the mapping.</p>
+          </div>
+          <div class="variant" data-style="functional">
+        <pre><code>struct Account {
+  id : Int64?
+  email : String
+  balance : Double
+  team_id : Int64
+  status : String
+  level : Int
+}
+
+fn account() -&gt; @moonorm.Model[Account] {
+  @moonorm.Model::from_fields(
+    "accounts",
+    [
+      @moonorm.field("id", BigIntType, a =&gt; a.id, primary_key=true, autoincrement=true),
+      @moonorm.field("email", TextType, a =&gt; a.email, nullable=false, unique=true),
+      @moonorm.field("balance", RealType, a =&gt; a.balance),
+      @moonorm.field("team_id", BigIntType, a =&gt; a.team_id, references=("teams", "id"), on_delete="SET NULL"),
+      @moonorm.field("status", TextType, a =&gt; a.status, nullable=false, default="'active'"),
+      @moonorm.field("level", IntType, a =&gt; a.level, checks=["level &gt;= 0"]),
+    ],
+    (r) =&gt; {
+      {
+        id: r.read(0),
+        email: r.read(1),
+        balance: r.read(2),
+        team_id: r.read(3),
+        status: r.read(4),
+        level: r.read(5),
+      }
+    },
+  )
+}</code></pre>
+          </div>
+          <div class="variant" data-style="class">
         <pre><code>struct Account {
   id : Int64?
   email : String
@@ -129,6 +181,9 @@ fn account() -&gt; @moonorm.Model[Account] {
     },
   )
 }</code></pre>
+          </div>
+        </div>
+        <p class="style-note">The three styles differ only in how <code class="inline">account()</code> is built. The DDL, query, insert and migrate sections below call it and are identical in all three.</p>
         <p><code class="inline">id</code> is <code class="inline">Int64?</code> because the database assigns it: <code class="inline">None</code> binds as <code class="inline">NULL</code>, and the server fills the key.</p>
 
         <h2 id="ddl">3 · Generate DDL</h2>
@@ -177,9 +232,9 @@ fn account() -&gt; @moonorm.Model[Account] {
 
         <h2 id="migrate">6 · Migrate</h2>
         <p>Read what the database actually has, diff it against the columns you declared, and let each difference become a step. Reflected-only columns are <code class="inline">Removed</code>; declared-only ones are <code class="inline">Added</code>.</p>
-        <pre><code>pub fn plan_for(db : &amp;@moondb.Driver) -&gt; Array[@moonorm.ColumnDiff] raise @moondb.DbError {
+        <pre><code>pub fn plan_for(db : &amp;@moondb.Driver, declared : Array[@moonorm.Column]) -&gt; Array[@moonorm.ColumnDiff] raise @moondb.DbError {
   let reflected = @moonorm.reflect_table(db, "accounts")
-  @moonorm.diff_schema(account_columns(), reflected, dialect=Postgres)
+  @moonorm.diff_schema(declared, reflected, dialect=Postgres)
 }</code></pre>
         <p>Against a table that holds only <code class="inline">id</code> and <code class="inline">email</code>, the plan is four additions:</p>
         <pre><code>fn report(diffs : Array[@moonorm.ColumnDiff]) -&gt; Unit {
@@ -222,6 +277,7 @@ fn account() -&gt; @moonorm.Model[Account] {
     <span class="cross">driver contract: <a href="https://moonbitstack.github.io/moondb/">moondb</a></span>
   </footer>
 
+  <script type="module" src="assets/js/style.js"></script>
   <script src="assets/js/theme.js"></script>
 </body>
 </html>

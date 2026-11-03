@@ -51,6 +51,8 @@ migrations. The root re-exports all of them, so `@moonorm.select` and
 | `moonorm/schema` | `ColumnType`, `Column`, `Field`, `Model`, `Relation`, `ManyToMany` | `query`, moondb |
 | `moonorm/session` | `Session`, row streams, transactions and savepoints, the unit of work, pooled sessions | `schema`, `query`, moondb |
 | `moonorm/migrate` | `Migration`, `Migrator`, `ColumnDiff`, schema reflection and diffing | `session`, `schema`, `query` |
+| `moonorm/engine` | `Engine`, `Dsn`, `DsnError`: a connection string names the driver and the dialect | `query`, `session`, moondb |
+| `moonorm/mapper` | the runtime behind `#sql.*`: reads a row into what a mapper function returns | moondb |
 | `moonorm/cmd/orm` | the generator behind `#orm.table`, `#orm.column`, `#orm.skip`, `#orm.index`, `#orm.has_many` and `#orm.belongs_to` | moonast |
 
 A program that only renders SQL imports `query` and nothing else.
@@ -162,6 +164,21 @@ via `savepoint` / `rollback_to` / `release`, and raw `execute` / `query`.
 A session renders for one dialect, SQLite unless told otherwise, because a driver takes SQL and
 says nothing about what it speaks. `Session::new(driver, dialect=Mysql)` gives the
 `ON DUPLICATE KEY UPDATE` form and no `RETURNING`, and `Session::with_pool` takes the same label.
+
+### A connection string picks the driver and dialect
+
+An `Engine` parses a URL and remembers the dialect its sessions render for. The
+scheme names the driver — `sqlite`, `postgresql` (or `postgres`), `mysql` — and a
+`+driver` suffix overrides the driver name without changing the dialect. moonorm
+supplies no driver, so the session still takes the one you opened:
+
+```moonbit
+pub fn from_url(driver : &@moondb.Driver) -> @moonorm.Session raise @moonorm.DsnError {
+  let engine = @moonorm.Engine::new("postgresql://user:pass@db:5432/app?sslmode=require")
+  // engine.driver() == "postgresql"; engine.dialect() == Postgres
+  engine.session(driver) // a Session that renders for Postgres
+}
+```
 
 ## Models & relationships
 
@@ -286,6 +303,19 @@ pub fn declarative() -> @moonorm.Model[Hero] {
 An autoincrement key that is still `None` is left out of the `INSERT`, so the
 database assigns it.
 
+A storage type the built-in `ColumnType` variants do not name is declared from its
+three spellings. Values still bind through `ToValue`/`FromValue`, so the type is
+open end to end:
+
+```moonbit
+pub fn handle_column() -> @moonorm.ColumnType {
+  @moonorm.user_type(sqlite="TEXT", postgres="CITEXT", mysql="VARCHAR(255)")
+}
+```
+
+An explicit model takes it as a field's column type; the annotated form keeps its
+fixed `kind=` list.
+
 ### Annotations
 
 `#orm` annotations write that model for you. The generator reads a struct and
@@ -368,6 +398,65 @@ formatter(ignore: [ "models.g.mbt" ])
 
 `moon check`, `moon build` and `moon run` regenerate `models.g.mbt` whenever
 `models.mbt` changes; `--check` reports a stale file instead of writing it.
+
+### Without annotations
+
+The generator emits `Model::from_fields`; writing that yourself is the functional
+form. The class-style form writes `Model::new` with both mapping closures out in the
+open. All three produce the same `Model[T]`, so the rest of a program is unchanged.
+
+Functional — a field list plus one row decoder:
+
+```moonbit
+pub struct Hero {
+  id : Int64?
+  name : String
+  power : Double
+}
+
+pub fn hero_model() -> @moonorm.Model[Hero] {
+  @moonorm.Model::from_fields(
+    "heroes",
+    [
+      @moonorm.field("id", BigIntType, h => h.id, primary_key=true, autoincrement=true),
+      @moonorm.field("name", TextType, h => h.name, nullable=false),
+      @moonorm.field("power", RealType, h => h.power),
+    ],
+    (r) => { { id: r.read(0), name: r.read(1), power: r.read(2) } },
+  )
+}
+```
+
+Class-style — the same model with both directions written out:
+
+```moonbit
+pub struct Hero {
+  id : Int64?
+  name : String
+  power : Double
+}
+
+pub fn hero_model() -> @moonorm.Model[Hero] {
+  @moonorm.Model::new(
+    "heroes",
+    [
+      @moonorm.column("id", BigIntType, primary_key=true, autoincrement=true),
+      @moonorm.column("name", TextType, nullable=false),
+      @moonorm.column("power", RealType),
+    ],
+    (r) => { { id: r.read(0), name: r.read(1), power: r.read(2) } },
+    (h) => {
+      let out : Array[(String, @moondb.Value)] = []
+      if h.id is Some(v) {
+        out.push(("id", @moondb.Int64(v)))
+      }
+      out.push(("name", @moondb.Text(h.name)))
+      out.push(("power", @moondb.Double(h.power)))
+      out
+    },
+  )
+}
+```
 
 ### SQL mappers
 
@@ -460,6 +549,17 @@ pub fn batch(
   let children = @moonorm.has_many(heroes, "team_id", (t : Team) => @moondb.Int(t.id))
   sess.load_batch(teams, children) // one query; result[0] is the first team's heroes
 }
+```
+
+`load`, `load_one`, `load_batch`, `load_one_batch` and `load_many` take a
+`strategy` — `SubqueryLoad` (the default, one `IN` query), `JoinedLoad` (a JOIN
+against a derived table of the source keys) or `RaiseLoad` (refuse, so a caller can
+assert a relation is not touched here). `load_many_batch` batches an N:M relation
+through its junction the same way:
+
+<!-- nocheck -->
+```moonbit
+sess.load_batch(teams, children, strategy=JoinedLoad)
 ```
 
 ### Nested transactions & isolation

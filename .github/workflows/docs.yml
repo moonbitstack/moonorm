@@ -42,7 +42,7 @@ jobs:
 
       - name: Generate .mbti for every package the API page lists
         run: |
-          for p in src src/schema src/query src/session src/migrate; do
+          for p in src src/schema src/query src/session src/engine src/migrate src/mapper; do
             moon info --target js "$p"
           done
 
