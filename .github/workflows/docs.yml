@@ -57,8 +57,11 @@ jobs:
       - name: Generate the API page
         run: python3 scripts/gen_api.py
 
+      - name: Generate the guide page
+        run: python3 scripts/gen_guide.py
+
       - name: Check the generated pages are what is committed
-        run: git diff --exit-code -- docs/api.html
+        run: git diff --exit-code -- docs/api.html docs/guide.html
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

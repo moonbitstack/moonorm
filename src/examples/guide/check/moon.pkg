@@ -1,0 +1,8 @@
+import {
+  "moonbitstack/moonorm/examples/guide/annotated",
+  "moonbitstack/moonorm/examples/guide/functional",
+  "moonbitstack/moonorm/examples/guide/class",
+  "moonbitstack/moonorm/examples/guide/report",
+}
+
+pkgtype(kind: "executable")

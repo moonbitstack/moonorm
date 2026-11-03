@@ -1,0 +1,4 @@
+import {
+  "moonbitstack/moonorm",
+  "moonbitstack/moonorm/examples/guide/report",
+}

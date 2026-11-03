@@ -73,7 +73,7 @@ moon add moonbitstack/moondb</code></pre>
         <p>A model is a MoonBit struct with annotations on it. The generator reads them at build time and writes <code class="inline">Account::model()</code>; a field without one is a column named after it, and <code class="inline">T?</code> is nullable.</p>
         <div class="variants">
           <div class="variant" data-style="annotated">
-        <pre><code>#orm.table(name="accounts")
+        <pre><code><!-- guide:model:annotated -->#orm.table(name="accounts")
 pub struct Account {
   #orm.column(primary_key=true, autoincrement=true)
   id : Int64?
@@ -81,106 +81,131 @@ pub struct Account {
   email : String
   balance : Double
   #orm.column(references="teams.id", on_delete="SET NULL")
-  team_id : Int64
+  team_id : Int64?
   #orm.column(default="'active'")
   status : String
   #orm.column(check="level &gt;= 0")
   level : Int32
 }
 
-// The generator writes Account::model(); this makes it the accessor the rest of
-// the guide calls.
 fn account() -&gt; @moonorm.Model[Account] {
   Account::model()
-}</code></pre>
+}<!-- /guide:model:annotated --></code></pre>
           </div>
           <div class="variant" data-style="functional">
-        <pre><code>struct Account {
+        <pre><code><!-- guide:model:functional -->pub struct Account {
   id : Int64?
   email : String
   balance : Double
-  team_id : Int64
+  team_id : Int64?
   status : String
-  level : Int
+  level : Int32
 }
 
 fn account() -&gt; @moonorm.Model[Account] {
   @moonorm.Model::from_fields(
     "accounts",
     [
-      @moonorm.field("id", BigIntType, a =&gt; a.id, primary_key=true, autoincrement=true),
-      @moonorm.field("email", TextType, a =&gt; a.email, nullable=false, unique=true),
-      @moonorm.field("balance", RealType, a =&gt; a.balance),
-      @moonorm.field("team_id", BigIntType, a =&gt; a.team_id, references=("teams", "id"), on_delete="SET NULL"),
-      @moonorm.field("status", TextType, a =&gt; a.status, nullable=false, default="'active'"),
-      @moonorm.field("level", IntType, a =&gt; a.level, checks=["level &gt;= 0"]),
+      @moonorm.field(
+        "id",
+        BigIntType,
+        a =&gt; a.id,
+        primary_key=true,
+        autoincrement=true,
+      ),
+      @moonorm.field(
+        "email",
+        TextType,
+        a =&gt; a.email,
+        nullable=false,
+        unique=true,
+      ),
+      @moonorm.field("balance", RealType, a =&gt; a.balance, nullable=false),
+      @moonorm.field(
+        "team_id",
+        BigIntType,
+        a =&gt; a.team_id,
+        references=("teams", "id"),
+        on_delete="SET NULL",
+      ),
+      @moonorm.field(
+        "status",
+        TextType,
+        a =&gt; a.status,
+        nullable=false,
+        default="'active'",
+      ),
+      @moonorm.field("level", IntType, a =&gt; a.level, nullable=false, checks=[
+        "level &gt;= 0",
+      ]),
     ],
-    (r) =&gt; {
-      {
-        id: r.read(0),
-        email: r.read(1),
-        balance: r.read(2),
-        team_id: r.read(3),
-        status: r.read(4),
-        level: r.read(5),
-      }
+    r =&gt; {
+      id: r.read(0),
+      email: r.read(1),
+      balance: r.read(2),
+      team_id: r.read(3),
+      status: r.read(4),
+      level: r.read(5),
     },
   )
-}</code></pre>
+}<!-- /guide:model:functional --></code></pre>
           </div>
           <div class="variant" data-style="class">
-        <pre><code>struct Account {
+        <pre><code><!-- guide:model:class -->pub struct Account {
   id : Int64?
   email : String
   balance : Double
-  team_id : Int64
+  team_id : Int64?
   status : String
-  level : Int
-}
-
-fn account_columns() -&gt; Array[@moonorm.Column] {
-  [
-    @moonorm.column("id", BigIntType, primary_key=true, autoincrement=true),
-    @moonorm.column("email", TextType, nullable=false, unique=true),
-    @moonorm.column("balance", RealType),
-    @moonorm.column("team_id", BigIntType, references=("teams", "id"), on_delete="SET NULL"),
-    @moonorm.column("status", TextType, nullable=false, default="'active'"),
-    @moonorm.column("level", IntType, checks=["level &gt;= 0"]),
-  ]
+  level : Int32
 }
 
 fn account() -&gt; @moonorm.Model[Account] {
   @moonorm.Model::new(
     "accounts",
-    account_columns(),
-    (r) =&gt; {
-      {
-        id: r.read(0),
-        email: r.read(1),
-        balance: r.read(2),
-        team_id: r.read(3),
-        status: r.read(4),
-        level: r.read(5),
-      }
+    [
+      @moonorm.column("id", BigIntType, primary_key=true, autoincrement=true),
+      @moonorm.column("email", TextType, nullable=false, unique=true),
+      @moonorm.column("balance", RealType, nullable=false),
+      @moonorm.column(
+        "team_id",
+        BigIntType,
+        references=("teams", "id"),
+        on_delete="SET NULL",
+      ),
+      @moonorm.column("status", TextType, nullable=false, default="'active'"),
+      @moonorm.column("level", IntType, nullable=false, checks=["level &gt;= 0"]),
+    ],
+    r =&gt; {
+      id: r.read(0),
+      email: r.read(1),
+      balance: r.read(2),
+      team_id: r.read(3),
+      status: r.read(4),
+      level: r.read(5),
     },
-    (a) =&gt; {
-      [
+    a =&gt; {
+      let out : Array[(String, @moondb.Value)] = []
+      if a.id is Some(v) {
+        out.push(("id", @moondb.Int64(v)))
+      }
+      out.push(("email", @moondb.Text(a.email)))
+      out.push(("balance", @moondb.Double(a.balance)))
+      out.push(
         (
-          "id",
-          match a.id {
+          "team_id",
+          match a.team_id {
             Some(v) =&gt; @moondb.Int64(v)
             None =&gt; @moondb.Null
           },
         ),
-        ("email", @moondb.Text(a.email)),
-        ("balance", @moondb.Double(a.balance)),
-        ("team_id", @moondb.Int64(a.team_id)),
-        ("status", @moondb.Text(a.status)),
-        ("level", @moondb.Int(a.level)),
-      ]
+      )
+      out.push(("status", @moondb.Text(a.status)))
+      out.push(("level", @moondb.Int(a.level)))
+      out
     },
   )
-}</code></pre>
+}<!-- /guide:model:class --></code></pre>
           </div>
         </div>
         <p class="style-note">The three styles differ only in how <code class="inline">account()</code> is built. The DDL, query, insert and migrate sections below call it and are identical in all three.</p>
@@ -188,54 +213,82 @@ fn account() -&gt; @moonorm.Model[Account] {
 
         <h2 id="ddl">3 · Generate DDL</h2>
         <p>One model, three dialects. Each of these is a single statement, printed verbatim:</p>
-        <pre><code>fn print_ddl() -&gt; Unit {
-  println(account().create_table_sql_for(Sqlite))
-  println(account().create_table_sql_for(Postgres))
-  println(account().create_table_sql_for(Mysql))
-}
-// CREATE TABLE accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, balance REAL, team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INTEGER CHECK (level &gt;= 0))
-// CREATE TABLE accounts (id BIGSERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE, balance DOUBLE PRECISION, team_id BIGINT REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INTEGER CHECK (level &gt;= 0))
-// CREATE TABLE accounts (id BIGINT AUTO_INCREMENT PRIMARY KEY, email TEXT NOT NULL UNIQUE, balance DOUBLE, team_id BIGINT REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INT CHECK (level &gt;= 0)) ENGINE=InnoDB</code></pre>
+        <pre><code><!-- guide:ddl-code -->pub fn[T] ddl(model : @moonorm.Model[T]) -&gt; String {
+  model.create_table_sql_for(Sqlite) +
+  "\n" +
+  model.create_table_sql_for(Postgres) +
+  "\n" +
+  model.create_table_sql_for(Mysql)
+}<!-- /guide:ddl-code --></code></pre>
+        <p>Against the model above, the three dialects render:</p>
+        <pre><code><!-- guide:ddl-out -->CREATE TABLE accounts (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, balance REAL NOT NULL, team_id INTEGER REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INTEGER NOT NULL CHECK (level &gt;= 0))
+CREATE TABLE accounts (id BIGSERIAL PRIMARY KEY, email TEXT NOT NULL UNIQUE, balance DOUBLE PRECISION NOT NULL, team_id BIGINT REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INTEGER NOT NULL CHECK (level &gt;= 0))
+CREATE TABLE accounts (id BIGINT AUTO_INCREMENT PRIMARY KEY, email TEXT NOT NULL UNIQUE, balance DOUBLE NOT NULL, team_id BIGINT REFERENCES teams(id) ON DELETE SET NULL, status TEXT NOT NULL DEFAULT 'active', level INT NOT NULL CHECK (level &gt;= 0)) ENGINE=InnoDB<!-- /guide:ddl-out --></code></pre>
         <p>The differences are the ones that matter: <code class="inline">INTEGER PRIMARY KEY AUTOINCREMENT</code>, <code class="inline">BIGSERIAL</code>, <code class="inline">BIGINT AUTO_INCREMENT</code>, and MySQL's <code class="inline">ENGINE=InnoDB</code> suffix. Pass <code class="inline">if_not_exists=true</code> to prefix <code class="inline">CREATE TABLE IF NOT EXISTS</code> on every dialect.</p>
 
         <h2 id="query">4 · Build a query</h2>
         <p>A query is a MoonBit expression that renders to dialect SQL. Every value in the predicate is bound; the statement keeps a placeholder.</p>
-        <pre><code>fn build_query() -&gt; (String, Array[@moondb.Value]) {
-  account()
+        <pre><code><!-- guide:query-code -->pub fn[T] query(model : @moonorm.Model[T]) -&gt; String {
+  let (sql, params) = model
     .select()
     .where_("email", "=", @moondb.Text("ada@x.io"))
     .order_by("level", Asc)
     .limit(10)
     .build()
-}
-// SELECT id, email, balance, team_id, status, level FROM accounts
-//   WHERE email = ? ORDER BY level ASC LIMIT 10
-// params: [Text("ada@x.io")]</code></pre>
+  sql + "\n" + params_text(params)
+}<!-- /guide:query-code --></code></pre>
+        <pre><code><!-- guide:query-out -->SELECT id, email, balance, team_id, status, level FROM accounts WHERE email = ? ORDER BY level ASC LIMIT 10
+params: [Text("ada@x.io")]<!-- /guide:query-out --></code></pre>
         <p>The value travels in <code class="inline">params</code> as a <code class="inline">Value</code>, so no quoting is possible. <code class="inline">limit</code> takes an integer, not a value, and is written into the statement as a literal.</p>
 
         <h2 id="insert">5 · Insert a row</h2>
-        <pre><code>fn build_insert() -&gt; (String, Array[@moondb.Value]) {
-  let row : Account = {
-    id: None,
-    email: "ada@x.io",
-    balance: 0.0,
-    team_id: 2,
-    status: "active",
-    level: 1,
-  }
-  account().insert_of(row).build_for(Postgres)
-}
-// INSERT INTO accounts (id, email, balance, team_id, status, level)
-//   VALUES (?, ?, ?, ?, ?, ?)
-// params: [Null, Text("ada@x.io"), Double(0), Int64(2), Text("active"), Int(1)]</code></pre>
-        <p>The key is bound as <code class="inline">NULL</code> rather than omitted, so one statement serves both an assigned key and a generated one.</p>
+        <pre><code><!-- guide:insert-code -->pub fn[T] insert(model : @moonorm.Model[T], row : T) -&gt; String {
+  let (sql, params) = model.insert_of(row).build_for(Postgres)
+  sql + "\n" + params_text(params)
+}<!-- /guide:insert-code --></code></pre>
+        <pre><code><!-- guide:insert-out -->INSERT INTO accounts (email, balance, team_id, status, level) VALUES (?, ?, ?, ?, ?)
+params: [Text("ada@x.io"), Double(0), Int64(2), Text("active"), Int(1)]<!-- /guide:insert-out --></code></pre>
+        <p>While the key is <code class="inline">None</code> it is left out of the INSERT, so the database assigns it; the same call writes it once it is set.</p>
 
         <h2 id="migrate">6 · Migrate</h2>
-        <p>Read what the database actually has, diff it against the columns you declared, and let each difference become a step. Reflected-only columns are <code class="inline">Removed</code>; declared-only ones are <code class="inline">Added</code>.</p>
-        <pre><code>pub fn plan_for(db : &amp;@moondb.Driver, declared : Array[@moonorm.Column]) -&gt; Array[@moonorm.ColumnDiff] raise @moondb.DbError {
-  let reflected = @moonorm.reflect_table(db, "accounts")
-  @moonorm.diff_schema(declared, reflected, dialect=Postgres)
-}</code></pre>
+        <p>Compare the columns a live table reports with the ones you declared, and let each difference become a step. Reflected-only columns are <code class="inline">Removed</code>; declared-only ones are <code class="inline">Added</code>.</p>
+        <pre><code><!-- guide:diff-code -->pub fn diff() -&gt; String {
+  let declared : Array[@moonorm.Column] = [
+    @moonorm.column("id", BigIntType, primary_key=true),
+    @moonorm.column("email", TextType, nullable=false),
+    @moonorm.column("balance", RealType),
+    @moonorm.column("team_id", BigIntType),
+    @moonorm.column("status", TextType),
+    @moonorm.column("level", IntType),
+  ]
+  let reflected : Array[@moonorm.Column] = [
+    @moonorm.column("id", BigIntType, primary_key=true),
+    @moonorm.column("email", TextType, nullable=false),
+  ]
+  let diffs = @moonorm.diff_schema(declared, reflected, dialect=Postgres)
+  let lines : Array[String] = []
+  for d in diffs {
+    match d {
+      Added(name~, col_type~) =&gt;
+        lines.push("+ " + name + " " + col_type.sql_for(Postgres))
+      Removed(name) =&gt; lines.push("- " + name)
+      TypeChanged(name~, from~, to~) =&gt;
+        lines.push(
+          "~ " +
+          name +
+          " " +
+          from.sql_for(Postgres) +
+          " -&gt; " +
+          to.sql_for(Postgres),
+        )
+    }
+  }
+  lines.join("\n")
+}<!-- /guide:diff-code --></code></pre>
+        <pre><code><!-- guide:diff-out -->+ balance DOUBLE PRECISION
++ team_id BIGINT
++ status TEXT
++ level INTEGER<!-- /guide:diff-out --></code></pre>
         <p>Against a table that holds only <code class="inline">id</code> and <code class="inline">email</code>, the plan is four additions:</p>
         <pre><code>fn report(diffs : Array[@moonorm.ColumnDiff]) -&gt; Unit {
   for d in diffs {

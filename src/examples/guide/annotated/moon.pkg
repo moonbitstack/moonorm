@@ -1,0 +1,6 @@
+import {
+  "moonbitstack/moonorm",
+  "moonbitstack/moonorm/examples/guide/report",
+}
+
+formatter(ignore: [ "models.g.mbt" ])
