@@ -1,4 +1,4 @@
-# The SQLite amalgamation is vendored (upstream C, not this project's language).
-# Marked from the repo root so GitHub Linguist keeps moonorm reported as MoonBit.
-drivers/sqlite/sqlite/sqlite3.c linguist-vendored
-drivers/sqlite/sqlite/sqlite3.h linguist-vendored
+* text=auto eol=lf
+*.mbt text eol=lf
+*.mbti text eol=lf
+*.py text eol=lf
