@@ -641,7 +641,6 @@ test "with_pool passes the dialect to its session" {
   assert_true(chosen == Mysql)
 }
 
-
 // --- relationship loading strategies -------------------------------------------
 
 ///|
@@ -671,8 +670,7 @@ test "joined_sql: 1:N joins target to the distinct source keys" {
   ]
   let (sql, params) = children.joined_sql(sources)
   assert_eq(
-    sql,
-    "SELECT books.id, books.title, books.author_id FROM books JOIN (SELECT ? AS moonorm_key UNION ALL SELECT ? AS moonorm_key) AS moonorm_src ON books.author_id = moonorm_src.moonorm_key",
+    sql, "SELECT books.id, books.title, books.author_id FROM books JOIN (SELECT ? AS moonorm_key UNION ALL SELECT ? AS moonorm_key) AS moonorm_src ON books.author_id = moonorm_src.moonorm_key",
   )
   assert_eq(params.length(), 2)
   assert_eq(params[0] == Int(1), true)
@@ -729,9 +727,7 @@ test "raiseload: the load refuses without querying" {
   )
   let author : Author = { id: 1, name: "asimov", }
   let mut refused = false
-  try {
-    sess.load(author, children, strategy=@schema.RaiseLoad) |> ignore
-  } catch {
+  try sess.load(author, children, strategy=@schema.RaiseLoad) |> ignore catch {
     _ => refused = true
   }
   assert_eq(refused, true)
@@ -748,21 +744,16 @@ test "many_to_many batch_sql: junction key rides along as moonorm_src" {
     target_key="id",
     source_key=a => Int(a.id),
   )
-  let sources : Array[Author] = [
-    { id: 1, name: "a", },
-    { id: 2, name: "b", },
-  ]
+  let sources : Array[Author] = [{ id: 1, name: "a", }, { id: 2, name: "b", }]
   let (sql, params) = m2m.batch_sql(sources)
   assert_eq(
-    sql,
-    "SELECT books.id, books.title, books.author_id, author_books.author_id AS moonorm_src FROM books JOIN author_books ON author_books.book_id = books.id WHERE author_books.author_id IN (?, ?)",
+    sql, "SELECT books.id, books.title, books.author_id, author_books.author_id AS moonorm_src FROM books JOIN author_books ON author_books.book_id = books.id WHERE author_books.author_id IN (?, ?)",
   )
   assert_eq(params.length(), 2)
   assert_eq(params[1] == Int(2), true)
   let (jsql, jparams) = m2m.joined_sql(sources)
   assert_eq(
-    jsql,
-    "SELECT books.id, books.title, books.author_id, author_books.author_id AS moonorm_src FROM books JOIN author_books ON author_books.book_id = books.id JOIN (SELECT ? AS moonorm_key UNION ALL SELECT ? AS moonorm_key) AS moonorm_keys ON author_books.author_id = moonorm_keys.moonorm_key",
+    jsql, "SELECT books.id, books.title, books.author_id, author_books.author_id AS moonorm_src FROM books JOIN author_books ON author_books.book_id = books.id JOIN (SELECT ? AS moonorm_key UNION ALL SELECT ? AS moonorm_key) AS moonorm_keys ON author_books.author_id = moonorm_keys.moonorm_key",
   )
   assert_eq(jparams.length(), 2)
 }

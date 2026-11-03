@@ -100,11 +100,7 @@ test "BigIntType autoincrement takes each engine's 64-bit idiom" {
 
 ///|
 test "user_type renders each dialect's own spelling" {
-  let citext = user_type(
-    sqlite="TEXT",
-    postgres="CITEXT",
-    mysql="VARCHAR(255)",
-  )
+  let citext = user_type(sqlite="TEXT", postgres="CITEXT", mysql="VARCHAR(255)")
   assert_eq(citext.sql_for(Sqlite), "TEXT")
   assert_eq(citext.sql_for(Postgres), "CITEXT")
   assert_eq(citext.sql_for(Mysql), "VARCHAR(255)")
@@ -123,5 +119,8 @@ test "user_type compares by spelling, and is distinct from built-in variants" {
   assert_eq(a == c, false)
   // Even the same storage spelling is a different type from the built-in one.
   assert_eq(a == IntType, false)
-  assert_eq(user_type(sqlite="TEXT", postgres="TEXT", mysql="TEXT") == TextType, false)
+  assert_eq(
+    user_type(sqlite="TEXT", postgres="TEXT", mysql="TEXT") == TextType,
+    false,
+  )
 }

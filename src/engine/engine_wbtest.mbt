@@ -55,9 +55,7 @@ test "mysql: dialect, driver, password presence" {
 ///|
 test "an unknown scheme is refused" {
   let mut refused = false
-  try {
-    parse_dsn("oracle://host/db") |> ignore
-  } catch {
+  try parse_dsn("oracle://host/db") |> ignore catch {
     _ => refused = true
   }
   assert_eq(refused, true)
@@ -66,9 +64,7 @@ test "an unknown scheme is refused" {
 ///|
 test "a string with no scheme is refused" {
   let mut refused = false
-  try {
-    parse_dsn("just-a-file.db") |> ignore
-  } catch {
+  try parse_dsn("just-a-file.db") |> ignore catch {
     _ => refused = true
   }
   assert_eq(refused, true)

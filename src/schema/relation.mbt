@@ -174,7 +174,6 @@ pub fn[S, T] ManyToMany::query(
   .where_(self.junction + "." + self.source_fk, "=", (self.source_key)(source))
 }
 
-
 ///|
 /// How a relationship is loaded. `SubqueryLoad` is the default: one `IN` query for a
 /// whole list of sources (`selectinload`). `JoinedLoad` fetches through a JOIN against

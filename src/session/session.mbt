@@ -411,7 +411,9 @@ pub fn[S, T] Session::load(
 ) -> Array[T] raise @moondb.DbError {
   let (sql, params) = match strategy {
     @schema.RaiseLoad =>
-      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+      raise @moondb.QueryError(
+        "raiseload: the relation was not loaded explicitly",
+      )
     @schema.SubqueryLoad => rel.query(source).build()
     @schema.JoinedLoad => rel.joined_sql([source])
   }
@@ -430,7 +432,9 @@ pub fn[S, T] Session::load_one(
 ) -> T? raise @moondb.DbError {
   let (sql, params) = match strategy {
     @schema.RaiseLoad =>
-      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+      raise @moondb.QueryError(
+        "raiseload: the relation was not loaded explicitly",
+      )
     @schema.SubqueryLoad => rel.query(source).limit(1).build()
     @schema.JoinedLoad => {
       let (sql, params) = rel.joined_sql([source])
@@ -489,7 +493,9 @@ pub fn[S, T] Session::load_batch(
   }
   let (sql, params) = match strategy {
     @schema.RaiseLoad =>
-      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+      raise @moondb.QueryError(
+        "raiseload: the relation was not loaded explicitly",
+      )
     @schema.SubqueryLoad => rel.batch_query(sources).build()
     @schema.JoinedLoad => rel.joined_sql(sources)
   }
@@ -536,7 +542,9 @@ pub fn[S, T] Session::load_one_batch(
   }
   let (sql, params) = match strategy {
     @schema.RaiseLoad =>
-      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+      raise @moondb.QueryError(
+        "raiseload: the relation was not loaded explicitly",
+      )
     @schema.SubqueryLoad => rel.batch_query(sources).build()
     @schema.JoinedLoad => rel.joined_sql(sources)
   }
@@ -581,7 +589,9 @@ pub fn[S, T] Session::load_many(
 ) -> Array[T] raise @moondb.DbError {
   let (sql, params) = match strategy {
     @schema.RaiseLoad =>
-      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+      raise @moondb.QueryError(
+        "raiseload: the relation was not loaded explicitly",
+      )
     @schema.SubqueryLoad => rel.query(source).build()
     @schema.JoinedLoad => rel.joined_sql([source])
   }
@@ -608,7 +618,9 @@ pub fn[S, T] Session::load_many_batch(
   }
   let (sql, params) = match strategy {
     @schema.RaiseLoad =>
-      raise @moondb.QueryError("raiseload: the relation was not loaded explicitly")
+      raise @moondb.QueryError(
+        "raiseload: the relation was not loaded explicitly",
+      )
     @schema.SubqueryLoad => rel.batch_sql(sources)
     @schema.JoinedLoad => rel.joined_sql(sources)
   }

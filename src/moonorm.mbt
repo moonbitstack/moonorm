@@ -73,12 +73,7 @@ pub using @migrate {
 }
 
 ///|
-pub using @engine {
-  type Dsn,
-  type DsnError,
-  type Engine,
-  parse_dsn,
-}
+pub using @engine {type Dsn, type DsnError, type Engine, parse_dsn}
 
 ///|
 pub using @moondb {type Value, trait ToValue, trait FromValue}

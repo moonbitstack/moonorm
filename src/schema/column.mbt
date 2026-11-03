@@ -18,7 +18,7 @@ pub fn custom_column_type(
   postgres~ : String,
   mysql~ : String,
 ) -> CustomColumnType {
-  { sqlite, postgres, mysql }
+  { sqlite, postgres, mysql, }
 }
 
 ///|
@@ -30,7 +30,7 @@ pub fn user_type(
   postgres~ : String,
   mysql~ : String,
 ) -> ColumnType {
-  UserType({ sqlite, postgres, mysql })
+  UserType({ sqlite, postgres, mysql, })
 }
 
 ///|

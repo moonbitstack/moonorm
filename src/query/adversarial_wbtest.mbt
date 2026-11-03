@@ -33,11 +33,7 @@ test "adversarial: a value is a bound parameter in every statement kind" {
 ///|
 test "adversarial: quotes and backslashes in a value stay data" {
   let samples : Array[String] = [
-    "O'Brien",
-    "a\"b",
-    "back\\slash",
-    "semi;colon",
-    "line\nbreak",
+    "O'Brien", "a\"b", "back\\slash", "semi;colon", "line\nbreak",
   ]
   for s in samples {
     let (sql, params) = select("t").eq("c", Text(s)).build()

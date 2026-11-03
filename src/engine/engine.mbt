@@ -32,7 +32,7 @@ pub(all) struct Dsn {
   user : String?
   password : String?
   host : String?
-  port : Int?
+  port : Int32?
   // The database name (PostgreSQL/MySQL) or file path (SQLite). `None` is an
   // in-memory SQLite database.
   database : String?
@@ -66,10 +66,11 @@ pub fn parse_dsn(dsn : String) -> Dsn raise DsnError {
       }
   }
   let (scheme, driver) = match index_of(scheme_part, "+") {
-    Some(i) => (
-      slice(scheme_part, 0, i),
-      slice(scheme_part, i + 1, scheme_part.length()),
-    )
+    Some(i) =>
+      (
+        slice(scheme_part, 0, i),
+        slice(scheme_part, i + 1, scheme_part.length()),
+      )
     None => (scheme_part, scheme_part)
   }
   let dialect = match scheme {
@@ -101,7 +102,11 @@ fn parse_sqlite(
   } else {
     path_part
   }
-  let database = if path == "" || path == ":memory:" { None } else { Some(path) }
+  let database = if path == "" || path == ":memory:" {
+    None
+  } else {
+    Some(path)
+  }
   {
     scheme,
     driver,
@@ -129,10 +134,11 @@ fn parse_network(
   }
   let (database_part, query_part) = split_query(after)
   let (userinfo, hostport) = match index_of(authority, "@") {
-    Some(i) => (
-      Some(slice(authority, 0, i)),
-      slice(authority, i + 1, authority.length()),
-    )
+    Some(i) =>
+      (
+        Some(slice(authority, 0, i)),
+        slice(authority, i + 1, authority.length()),
+      )
     None => (None, authority)
   }
   let (user, password) = match userinfo {
@@ -169,7 +175,7 @@ fn split_query(s : String) -> (String, String) {
 
 ///|
 /// `host[:port]`, with IPv6 bracketed as `[addr]` or `[addr]:port`.
-fn parse_hostport(hp : String) -> (String?, Int?) {
+fn parse_hostport(hp : String) -> (String?, Int32?) {
   if hp == "" {
     return (None, None)
   }
@@ -188,10 +194,8 @@ fn parse_hostport(hp : String) -> (String?, Int?) {
     }
   } else {
     match index_of(hp, ":") {
-      Some(i) => (
-        Some(slice(hp, 0, i)),
-        parse_port(slice(hp, i + 1, hp.length())),
-      )
+      Some(i) =>
+        (Some(slice(hp, 0, i)), parse_port(slice(hp, i + 1, hp.length())))
       None => (Some(hp), None)
     }
   }
@@ -199,7 +203,7 @@ fn parse_hostport(hp : String) -> (String?, Int?) {
 
 ///|
 /// A decimal port, or `None` when `s` is not all digits.
-fn parse_port(s : String) -> Int? {
+fn parse_port(s : String) -> Int32? {
   if s.length() == 0 {
     return None
   }
@@ -239,7 +243,7 @@ fn parse_params(query : String) -> Map[String, String] {
 
 ///|
 /// The byte offset of `needle` in `s`, or `None`. An empty needle matches at 0.
-fn index_of(s : String, needle : String) -> Int? {
+fn index_of(s : String, needle : String) -> Int32? {
   let n = s.length()
   let m = needle.length()
   if m == 0 {
@@ -266,11 +270,11 @@ fn index_of(s : String, needle : String) -> Int? {
 
 ///|
 /// The substring `s[start..end]`, empty when the range is empty.
-fn slice(s : String, start : Int, end : Int) -> String {
+fn slice(s : String, start : Int32, end : Int32) -> String {
   if start >= end {
     ""
   } else {
-    s.exact_view(start=start, end=end).to_owned()
+    s.exact_view(start~, end~).to_owned()
   }
 }
 
@@ -284,7 +288,7 @@ pub struct Engine {
 ///|
 /// Parse `dsn` into an `Engine`. The URL's scheme picks the driver and the dialect.
 pub fn Engine::new(dsn : String) -> Engine raise DsnError {
-  { dsn: parse_dsn(dsn) }
+  { dsn: parse_dsn(dsn), }
 }
 
 ///|
@@ -314,6 +318,9 @@ pub fn Engine::driver(self : Engine) -> String {
 ///|
 /// Wrap `driver` in a session that renders for this engine's dialect. moonorm owns
 /// no driver contract, so the concrete backend is the caller's to supply.
-pub fn Engine::session(self : Engine, driver : &@moondb.Driver) -> @session.Session {
+pub fn Engine::session(
+  self : Engine,
+  driver : &@moondb.Driver,
+) -> @session.Session {
   @session.Session::new(driver, dialect=self.dsn.dialect)
 }
