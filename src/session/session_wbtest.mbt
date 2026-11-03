@@ -70,10 +70,11 @@ pub extend FixedDriver with @moondb.Driver::{
 ///|
 /// An author has many books; a book belongs to one author. Fresh domain names so
 /// these coexist with the Team/Hero models the other whitebox tests declare.
+#derive(Eq, Debug)
 struct Author {
   id : Int32
   name : String
-} derive(Eq, Debug)
+}
 
 ///|
 /// The author model built the declarative way — from a list of `Field`s, with no
@@ -103,17 +104,19 @@ pub extend Author with Debug::{to_repr}
 pub extend Author with Eq::{not_equal, equal}
 
 ///|
+#derive(Eq, Debug)
 struct Team {
   id : Int32
   name : String
-} derive(Eq, Debug)
+}
 
 ///|
+#derive(Eq, Debug)
 struct Hero {
   id : Int32
   name : String
   team_id : Int32
-} derive(Eq, Debug)
+}
 
 ///|
 fn team_model() -> @schema.Model[Team] {

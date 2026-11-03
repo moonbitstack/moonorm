@@ -11,7 +11,8 @@ import {
 // Errors
 
 // Types and methods
-pub struct Email(String) derive(Eq, @debug.Debug)
+#derive(Eq, @debug.Debug)
+pub struct Email(String)
 
 pub struct Hero {
   id : Int64?

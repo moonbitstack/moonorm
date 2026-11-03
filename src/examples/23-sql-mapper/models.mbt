@@ -3,11 +3,12 @@
 
 ///|
 /// A row. Nothing here is annotated: a mapper reads a struct by its field names.
+#derive(Eq, Debug)
 pub struct User {
   id : Int64
   name : String
   age : Int32?
-} derive(Eq, Debug)
+}
 
 ///|
 /// `#{...}` binds a value; nothing is spliced into the statement. The function is

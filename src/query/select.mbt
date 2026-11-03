@@ -24,21 +24,23 @@ pub struct Select {
 
 ///|
 /// The kind of row lock a `FOR UPDATE` / `FOR SHARE` clause takes.
+#derive(Eq, Debug)
 pub(all) enum LockMode {
   ForUpdate
   ForShare
-} derive(Eq, Debug)
+}
 
 ///|
 /// A row-locking clause on a `SELECT` (SQLAlchemy `with_for_update`): the lock
 /// `mode`, the tables it is restricted to (`OF …`, empty = all), and whether it
 /// fails rather than waits (`NOWAIT`) or skips locked rows (`SKIP LOCKED`).
+#derive(Eq, Debug)
 pub(all) struct LockClause {
   mode : LockMode
   of : Array[String]
   nowait : Bool
   skip_locked : Bool
-} derive(Eq, Debug)
+}
 
 ///|
 /// Start a SELECT over `src` — a table name, or a `Source` for a derived table,

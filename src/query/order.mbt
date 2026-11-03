@@ -1,20 +1,22 @@
 ///|
 /// Sort direction for an ORDER BY term.
+#derive(Eq)
 pub(all) enum Order {
   Asc
   Desc
-} derive(Eq)
+}
 
 ///|
 /// Where NULLs sort in an ORDER BY term (SQLAlchemy's `nulls_first()` /
 /// `nulls_last()`). `Auto` emits nothing and leaves the placement to the server,
 /// which differs: PostgreSQL sorts NULLs last ascending, SQLite first. `First` /
 /// `Last` say it explicitly; MySQL has no such syntax and rejects it.
+#derive(Eq)
 pub(all) enum Nulls {
   Auto
   First
   Last
-} derive(Eq)
+}
 
 ///|
 fn order_sql(o : Order) -> String {

@@ -19,12 +19,13 @@ pub fn LostUpdate::to_string(Self) -> String
 pub impl Show for LostUpdate
 
 // Types and methods
+#derive(Eq)
 pub(all) enum IsolationLevel {
   ReadUncommitted
   ReadCommitted
   RepeatableRead
   Serializable
-} derive(Eq)
+}
 pub fn IsolationLevel::equal(Self, Self) -> Bool
 pub fn IsolationLevel::keyword(Self) -> String
 pub fn IsolationLevel::not_equal(Self, Self) -> Bool

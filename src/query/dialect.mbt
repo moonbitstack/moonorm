@@ -14,11 +14,12 @@ pub using @moondb {type Value}
 /// exists on SQLite and PostgreSQL but not MySQL. `build_for` takes a `Dialect` so
 /// those render correctly; the no-argument `build` renders the SQLite/PostgreSQL
 /// form, which is also what the `?`-placeholder default targets.
+#derive(Eq)
 pub(all) enum Dialect {
   Sqlite
   Postgres
   Mysql
-} derive(Eq)
+}
 
 ///|
 pub extend Dialect with Eq::{not_equal, equal}

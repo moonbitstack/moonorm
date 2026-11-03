@@ -65,12 +65,13 @@ pub fn Savepoint::rollback(self : Savepoint) -> Unit raise @moondb.DbError {
 /// A SQL transaction isolation level, in the four-rung ANSI ladder from weakest to
 /// strongest. Passed via `TxOptions` to `Session::begin_with`, which renders the
 /// backend's `SET TRANSACTION` (or SQLite `PRAGMA`) statement.
+#derive(Eq)
 pub(all) enum IsolationLevel {
   ReadUncommitted
   ReadCommitted
   RepeatableRead
   Serializable
-} derive(Eq)
+}
 
 ///|
 /// The ANSI keyword for an isolation level (`"READ COMMITTED"`, `"SERIALIZABLE"`, …).

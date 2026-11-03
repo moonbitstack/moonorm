@@ -258,6 +258,7 @@ pub fn reflect_table(
 /// style): a column `Added` in the model but absent in the database, one `Removed`
 /// from the model but still present, or one whose `TypeChanged`. Compared by column
 /// name; ordering follows the declared columns, then the leftover reflected ones.
+#derive(Eq)
 pub(all) enum ColumnDiff {
   Added(name~ : String, col_type~ : @schema.ColumnType)
   Removed(String)
@@ -266,7 +267,7 @@ pub(all) enum ColumnDiff {
     from~ : @schema.ColumnType,
     to~ : @schema.ColumnType
   )
-} derive(Eq)
+}
 
 ///|
 /// The first column named `name`, or `None`.

@@ -48,11 +48,12 @@ pub fn Delete::where_in(Self, String, Select) -> Self
 pub fn Delete::where_not_in(Self, String, Select) -> Self
 pub fn Delete::where_pred(Self, Predicate) -> Self
 
+#derive(Eq)
 pub(all) enum Dialect {
   Sqlite
   Postgres
   Mysql
-} derive(Eq)
+}
 pub fn Dialect::equal(Self, Self) -> Bool
 pub fn Dialect::not_equal(Self, Self) -> Bool
 
@@ -77,36 +78,40 @@ pub fn Insert::values(Self, Array[@moondb.Value]) -> Self
 
 type JoinClause
 
+#derive(Eq, @debug.Debug)
 pub(all) struct LockClause {
   mode : LockMode
   of : Array[String]
   nowait : Bool
   skip_locked : Bool
-} derive(Eq, @debug.Debug)
+}
 pub fn LockClause::equal(Self, Self) -> Bool
 pub fn LockClause::not_equal(Self, Self) -> Bool
 pub fn LockClause::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug)
 pub(all) enum LockMode {
   ForUpdate
   ForShare
-} derive(Eq, @debug.Debug)
+}
 pub fn LockMode::equal(Self, Self) -> Bool
 pub fn LockMode::not_equal(Self, Self) -> Bool
 pub fn LockMode::to_repr(Self) -> @debug.Repr
 
+#derive(Eq)
 pub(all) enum Nulls {
   Auto
   First
   Last
-} derive(Eq)
+}
 pub fn Nulls::equal(Self, Self) -> Bool
 pub fn Nulls::not_equal(Self, Self) -> Bool
 
+#derive(Eq)
 pub(all) enum Order {
   Asc
   Desc
-} derive(Eq)
+}
 pub fn Order::equal(Self, Self) -> Bool
 pub fn Order::not_equal(Self, Self) -> Bool
 

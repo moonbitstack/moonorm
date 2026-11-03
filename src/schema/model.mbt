@@ -355,11 +355,12 @@ pub fn[T] Model::create_table_sql_for(
 /// enforce a key that is not the primary key, as SQLAlchemy's `Index` does.
 /// Without a `name` it is called `ix_<table>_<columns>`, or `uq_` when unique,
 /// after SQLAlchemy's naming convention.
+#derive(Eq, Debug)
 pub(all) struct Index {
   name : String?
   columns : Array[String]
   unique : Bool
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend Index with Eq::{equal, not_equal}

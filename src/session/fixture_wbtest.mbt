@@ -1,9 +1,10 @@
 ///|
+#derive(Eq, Debug)
 struct Book {
   id : Int32
   title : String
   author_id : Int32
-} derive(Eq, Debug)
+}
 
 ///|
 fn book_model() -> @schema.Model[Book] {
@@ -157,10 +158,11 @@ impl @moondb.Driver for Tap with fn close(self : Tap) -> Unit {
 /// `name` is mutable so a test can prove two `get`s handed back one instance without
 /// leaning on `physical_equal`, whose result the compiler does not promise to keep
 /// stable across backends.
+#derive(Eq, Debug)
 struct Squad {
   id : Int32
   mut name : String
-} derive(Eq, Debug)
+}
 
 ///|
 fn squad_model() -> @schema.Model[Squad] {

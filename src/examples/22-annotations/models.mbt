@@ -40,7 +40,8 @@ pub struct Hero {
 ///|
 /// A type of the program's own: stored as text, refused on the way back when it
 /// has no `@`.
-pub struct Email(String) derive(Eq, Debug)
+#derive(Eq, Debug)
+pub struct Email(String)
 
 ///|
 impl @moonorm.ToValue for Email with fn to_value(self) {

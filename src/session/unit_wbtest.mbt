@@ -1,9 +1,10 @@
 ///|
+#derive(Eq, Debug)
 struct Member {
   id : Int32
   name : String
   squad_id : Int32
-} derive(Eq, Debug)
+}
 
 ///|
 fn member_model() -> @schema.Model[Member] {
