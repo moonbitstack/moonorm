@@ -10,12 +10,19 @@ impl @gen.Generator for Orm with fn name(_) {
 }
 
 ///|
-let table_spec : @attr.Spec = @attr.Spec::new("orm.table").optional("name", Str)
+let table_spec : @attr.Spec = @attr.Spec::new("orm.table").positional(
+  "name",
+  Str,
+  optional=true,
+)
 
 ///|
 let column_spec : @attr.Spec = @attr.Spec::new("orm.column")
   .optional("name", Str)
   .optional("kind", Str)
+  .optional("sqlite", Str)
+  .optional("postgres", Str)
+  .optional("mysql", Str)
   .optional("primary_key", Bool)
   .optional("autoincrement", Bool)
   .optional("unique", Bool)
@@ -64,10 +71,8 @@ fn orm_attrs(
   attrs : @list.List[@attribute.Attribute],
   file : String,
 ) -> Array[@attribute.Attribute] raise {
-  for attr in attrs {
-    if @attr.name_of(attr) is None && attr.raw.has_prefix("#orm.") {
-      fail("\{at(attr, file)}: `\{attr.raw}` does not parse as an annotation")
-    }
+  for attr in @attr.malformed(attrs, "orm") {
+    fail("\{at(attr, file)}: `\{attr.raw}` does not parse as an annotation")
   }
   @attr.under(attrs, "orm")
 }
@@ -134,15 +139,33 @@ fn column(
     Some(inner) => (inner, true)
     None => (field.ty, false)
   }
+  let storage = [
+    args_str(args, "sqlite"),
+    args_str(args, "postgres"),
+    args_str(args, "mysql"),
+  ]
+  if storage.iter().any(s => s is Some(_)) && args_str(args, "kind") is Some(_) {
+    fail(
+      "\{where_}: \{what}: give `kind`, or `sqlite`, `postgres` and `mysql`, not both",
+    )
+  }
   let col_type = match args_str(args, "kind") {
+    // A call names a column type the program defines, for one it uses on several fields.
+    Some(call) if call.has_suffix("()") => call
     Some(name) =>
       match column_named(name) {
         Some(c) => c
         None =>
           fail(
-            "\{where_}: \{what}: `kind=\{quoted(name)}` is not a column type",
+            "\{where_}: \{what}: `kind=\{quoted(name)}` is not a column type; a type of the program's own is `kind=\"its_function()\"`",
           )
       }
+    None if storage is [Some(sqlite), Some(postgres), Some(mysql)] =>
+      "@moonorm.user_type(sqlite=\{quoted(sqlite)}, postgres=\{quoted(postgres)}, mysql=\{quoted(mysql)})"
+    None if storage.iter().any(s => s is Some(_)) =>
+      fail(
+        "\{where_}: \{what}: a storage type of the program's own names all of `sqlite`, `postgres` and `mysql`",
+      )
     None =>
       match column_of(base) {
         Some(c) => c

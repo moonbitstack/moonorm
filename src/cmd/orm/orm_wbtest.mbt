@@ -496,3 +496,71 @@ test "index and relation mistakes are reported where they are written" {
     ).contains("`S` has no `#orm.table`"),
   )
 }
+
+///|
+test "a column type of the program's own is a call, or three storage types" {
+  let code = generate(
+    (
+      #|#orm.table("heroes")
+      #|struct Hero {
+      #|  #orm.column(primary_key=true)
+      #|  id : Int
+      #|  #orm.column(kind="handle_column()")
+      #|  handle : Handle
+      #|  #orm.column(sqlite="TEXT", postgres="CITEXT", mysql="VARCHAR(255)")
+      #|  nick : Handle
+      #|}
+    ),
+  )
+  assert_true(code.contains("\"heroes\""))
+  assert_true(code.contains("handle_column()"))
+  assert_true(
+    code.contains(
+      "@moonorm.user_type(sqlite=\"TEXT\",postgres=\"CITEXT\",mysql=\"VARCHAR(255)\")",
+    ),
+  )
+}
+
+///|
+test "storage types come all together, and not beside a kind" {
+  assert_true(
+    refused(
+      (
+        #|#orm.table
+        #|struct Hero {
+        #|  #orm.column(primary_key=true)
+        #|  id : Int
+        #|  #orm.column(sqlite="TEXT")
+        #|  nick : Handle
+        #|}
+      ),
+    ).contains("names all of"),
+  )
+  assert_true(
+    refused(
+      (
+        #|#orm.table
+        #|struct Hero {
+        #|  #orm.column(primary_key=true)
+        #|  id : Int
+        #|  #orm.column(kind="text", sqlite="TEXT", postgres="TEXT", mysql="TEXT")
+        #|  nick : String
+        #|}
+      ),
+    ).contains("not both"),
+  )
+}
+
+///|
+test "an annotation that does not parse is refused rather than skipped" {
+  assert_true(
+    refused(
+      (
+        #|#orm.table(type="x")
+        #|struct Hero {
+        #|  id : Int
+        #|}
+      ),
+    ).contains("does not parse"),
+  )
+}

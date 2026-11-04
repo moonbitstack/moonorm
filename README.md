@@ -313,8 +313,9 @@ pub fn handle_column() -> @moonorm.ColumnType {
 }
 ```
 
-An explicit model takes it as a field's column type; the annotated form keeps its
-fixed `kind=` list.
+An explicit model takes it as a field's column type, and the annotated form names it with
+`kind="handle_column()"`, or writes the storage on the field with `sqlite=`, `postgres=` and `mysql=`
+together.
 
 ### Annotations
 
@@ -377,7 +378,8 @@ Beside `#orm.table`, a struct takes indexes and relations:
 
 `#orm.skip` keeps a field out of the table and fills it from `Default` when a row
 is read. A field of a type of the program's own names its column type with
-`kind=` and implements `@moonorm.ToValue` and `@moonorm.FromValue`; see
+`kind="its_function()"`, or with `sqlite=`, `postgres=` and `mysql=`, and implements
+`@moonorm.ToValue` and `@moonorm.FromValue`; see
 [`22-annotations`](src/examples/22-annotations/), which also checks the generated
 model against the same model written by hand.
 
