@@ -119,3 +119,75 @@ jobs:
 
   # The PostgreSQL driver's real round trip runs on native and wasm against a
   # live postgres:16. Service containers are Linux-only, so this job is ubuntu-only.
+
+  # The migration runner, the hybrids and the inheritance mappings against three real
+  # databases at once: SQLite in-process, PostgreSQL and MySQL as service containers.
+  # The module under test is the working tree, so the run has to see it as a workspace
+  # member; `moon.work` is generated here rather than committed, because a checkout
+  # without it must still build the library on its own.
+  realdb:
+    name: real databases (SQLite, PostgreSQL, MySQL)
+    runs-on: ubuntu-26.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: pw
+          POSTGRES_USER: orm
+          POSTGRES_DB: orm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U orm"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: pw
+          MYSQL_DATABASE: orm
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -upw -ppw"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: install moon
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: post install
+        run: |
+          moon version --all
+          moon update
+
+      - name: make the working tree a workspace member
+        run: printf 'members = [\n  ".",\n  "./integration/realdb",\n]\n' > moon.work
+
+      - name: moon test (native, three real databases)
+        working-directory: integration/realdb
+        env:
+          MOONORM_LIVE: "1"
+          PGHOST: 127.0.0.1
+          PGPORT: "5432"
+          PGUSER: orm
+          PGPASSWORD: pw
+          PGDATABASE: orm
+          MYSQLHOST: 127.0.0.1
+          MYSQLPORT: "3306"
+          MYSQLUSER: root
+          MYSQLPASSWORD: pw
+          MYSQLDATABASE: orm
+        run: moon test --target native
+
+      - name: lint (fmt is clean)
+        run: |
+          moon fmt && git diff --exit-code

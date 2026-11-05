@@ -1,0 +1,21 @@
+// Real-database round trips for the revision migrator, the hybrids and the
+// inheritance mappings. SQLite links the vendored amalgamation; PostgreSQL and MySQL
+// ride moonbitlang/async sockets. Native only, on all three.
+supported_targets = "native"
+
+import {
+  "moonbitstack/moonorm/migrate",
+  "moonbitstack/moonorm/query",
+  "moonbitstack/moonorm/schema",
+  "moonbitstack/moonorm/session",
+  "moonbitstack/moonsqlite" @sqlite,
+  "moonbitstack/moonpostgres" @pg,
+  "moonbitstack/moonmysql/client" @mysql,
+  "moonbitstack/moondb",
+  "moonbitlang/async",
+  "moonbitlang/core/env",
+}
+
+import {
+  "moonbitlang/async",
+} for "test"
