@@ -324,7 +324,12 @@ params: [Text("ada@x.io"), Double(0), Int64(2), Text("active"), Int(1)]<!-- /gui
       id="0002",
       parents=["0001"],
       name="add_updated_by",
-      up=[@moonorm.add_column("accounts", @schema.column("updated_by", @schema.TextType))],
+      up=[
+        @moonorm.add_column(
+          "accounts",
+          @schema.column("updated_by", @schema.TextType),
+        ),
+      ],
       down=[@moonorm.drop_column("accounts", "updated_by")],
     ),
   ]
@@ -351,19 +356,16 @@ INSERT INTO moonorm_revisions (id, name) VALUES (?, ?)<!-- /guide:revision-out -
     // A creation stamp: the row is mutable here, and what is left behind is written.
     ctx.set_column("updated_by", @moondb.Text("import"))
   })
-  sess.on(@session.AfterInsert, ctx =&gt; {
-    println(ctx.sql)
-  })<!-- /guide:hooks-code --></code></pre>
+  sess.on(@session.AfterInsert, ctx =&gt; println(ctx.sql))<!-- /guide:hooks-code --></code></pre>
         <pre><code><!-- guide:hooks-out -->INSERT INTO accounts (id, email, updated_by) VALUES (?, ?, ?)<!-- /guide:hooks-out --></code></pre>
 
         <h2 id="hybrid">8 · Compute an attribute</h2>
         <p>A hybrid is one definition read two ways: as SQL inside a predicate or an <code class="inline">ORDER BY</code>, and as a value computed off a record. <code class="inline">{t}</code> is the table qualifier, filled in from the query's own table.</p>
-        <pre><code><!-- guide:hybrid-code -->  let statement = @moonorm
-    .select("people")
+        <pre><code><!-- guide:hybrid-code -->  let statement = @moonorm.select("people")
     .where_hybrid(full_name(), "=", @moondb.Text("Ada Lovelace"))
     .build()
   // The same definition, read off a record instead of by the database.
-  let person : Person = { first: "Ada", last: "Lovelace" }
+  let person : Person = { first: "Ada", last: "Lovelace", }
   println(full_name().value(person).to_string())
   statement.0<!-- /guide:hybrid-code --></code></pre>
         <pre><code><!-- guide:hybrid-out -->Text("Ada Lovelace")
@@ -376,8 +378,10 @@ SELECT * FROM people WHERE people.first || ' ' || people.last = ?<!-- /guide:hyb
     @moonorm.field("name", @schema.TextType, e =&gt; e.name, nullable=false),
     @moonorm.field("engineer_name", @schema.TextType, e =&gt; e.engineer_name),
   ]
-  let model = @moonorm.Model::from_fields("engineer", fields, engineer_row)
-    .joined(parent_table="person", parent_columns=["id", "name"])
+  let model = @moonorm.Model::from_fields("engineer", fields, engineer_row).joined(
+    parent_table="person",
+    parent_columns=["id", "name"],
+  )
   model.select().build().0<!-- /guide:inherit-code --></code></pre>
         <pre><code><!-- guide:inherit-out -->SELECT person.id, person.name, engineer.engineer_name FROM engineer JOIN person ON person.id = engineer.id<!-- /guide:inherit-out --></code></pre>
 
