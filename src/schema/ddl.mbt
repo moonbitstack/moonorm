@@ -82,21 +82,30 @@ pub fn create_index_sql(
 }
 
 ///|
-/// `DROP INDEX`. SQLite and PostgreSQL name an index on its own; MySQL names it as
-/// `table.index`, which is why `table` is required there.
+/// `DROP INDEX`. SQLite and PostgreSQL name an index on its own; MySQL spells it
+/// `DROP INDEX name ON table`, so there the table is part of the statement and leaving
+/// it out raises rather than emitting SQL the server would reject.
 pub fn drop_index_sql(
   name : String,
   table : String?,
   if_exists~ : Bool = false,
   dialect~ : @query.Dialect = Sqlite,
-) -> String {
-  let d = if if_exists { "DROP INDEX IF EXISTS " } else { "DROP INDEX " }
+) -> String raise @moondb.DbError {
+  let head = if if_exists { "DROP INDEX IF EXISTS " } else { "DROP INDEX " }
   match (dialect, table) {
-    (Mysql, Some(t)) => d + t + "." + name
+    (Mysql, Some(t)) =>
+      "DROP INDEX " +
+      (if if_exists { "IF EXISTS " } else { "" }) +
+      name +
+      " ON " +
+      t
     (Mysql, None) =>
-      // No table, no valid MySQL spelling: the caller has to name one.
-      d + name
-    _ => d + name
+      raise @moondb.QueryError(
+        "MySQL drops an index with DROP INDEX name ON table: name the table " +
+        name +
+        " sits on",
+      )
+    _ => head + name
   }
 }
 

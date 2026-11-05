@@ -75,6 +75,8 @@ pub fn revision_bases(Array[Revision]) -> Array[String]
 
 pub fn revision_heads(Array[Revision]) -> Array[String]
 
+pub fn revisions_table_sql(String) -> String raise @moondb.DbError
+
 pub fn sqlite_columns_query(String) -> String raise @moondb.DbError
 
 pub fn sqlite_index_info_query(String) -> String raise @moondb.DbError

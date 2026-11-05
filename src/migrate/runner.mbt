@@ -62,13 +62,21 @@ pub fn Migrator::ensure_revisions_table(
   self : Migrator,
   sess : @session.Session,
 ) -> Unit raise @moondb.DbError {
-  sess.execute(
-    "CREATE TABLE IF NOT EXISTS " +
-    self.revisions_table +
-    " (id VARCHAR(255) PRIMARY KEY, name TEXT NOT NULL)",
-    [],
-  )
-  |> ignore
+  sess.execute(revisions_table_sql(self.revisions_table), []) |> ignore
+}
+
+///|
+/// The `CREATE TABLE IF NOT EXISTS` for a revisions table. Public because a caller that
+/// executes a plan itself — an offline run, or a driver that lives behind the async
+/// seam — has no `Session` to call `ensure_revisions_table` on, and the bookkeeping
+/// table has to exist before the plan's inserts run.
+pub fn revisions_table_sql(table : String) -> String raise @moondb.DbError {
+  guard @query.is_ident(table) else {
+    raise @moondb.QueryError("invalid revisions table name: " + table)
+  }
+  "CREATE TABLE IF NOT EXISTS " +
+  table +
+  " (id VARCHAR(255) PRIMARY KEY, name TEXT NOT NULL)"
 }
 
 ///|

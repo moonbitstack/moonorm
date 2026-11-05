@@ -164,7 +164,7 @@ test "indexes: created with IF NOT EXISTS where the engine takes it, dropped per
     "DROP INDEX ix_heroes_name",
   ])
   assert_eq(drop_index("ix_heroes_name", table="heroes").to_sql(Mysql), [
-    "DROP INDEX heroes.ix_heroes_name",
+    "DROP INDEX ix_heroes_name ON heroes",
   ])
 }
 

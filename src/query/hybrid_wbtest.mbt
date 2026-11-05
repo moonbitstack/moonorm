@@ -1,8 +1,7 @@
 ///|
 /// A record with the two columns a name is built from, so the hybrid can be read both
 /// ways without a database.
-#derive(Eq, Debug)
-struct Person {
+priv struct Person {
   first : String
   last : String
 }
@@ -55,17 +54,19 @@ fn substr(s : String) -> String {
 }
 
 ///|
-test "where_hybrid renders the expression as the left-hand side and binds the value" {
+test "where_hybrid qualifies with the query's own table and binds the value" {
   let h = full_name()
   let (sql, params) = select("people")
     .where_hybrid(h, "=", @moondb.Text("Ada Lovelace"))
     .build()
-  assert_eq(sql, "SELECT * FROM people WHERE {t}.first || ' ' || {t}.last = ?")
+  assert_eq(
+    sql, "SELECT * FROM people WHERE people.first || ' ' || people.last = ?",
+  )
   assert_eq(params, [@moondb.Text("Ada Lovelace")])
-  // Qualified, for a query that joins another table with the same column names.
+  // A joined query is the same statement: the qualifier is already explicit.
   let (joined, _) = select("people")
     .join("teams", "teams.id = people.team_id")
-    .where_hybrid(h, "=", @moondb.Text("Ada Lovelace"), table="people")
+    .where_hybrid(h, "=", @moondb.Text("Ada Lovelace"))
     .build()
   assert_eq(
     joined, "SELECT * FROM people JOIN teams ON teams.id = people.team_id WHERE people.first || ' ' || people.last = ?",
@@ -73,18 +74,34 @@ test "where_hybrid renders the expression as the left-hand side and binds the va
 }
 
 ///|
+test "where_hybrid refuses a query with no table to qualify by" {
+  let h = full_name()
+  let refused = try {
+    select(Sub(select("people")))
+    .where_hybrid(h, "=", @moondb.Text("Ada Lovelace"))
+    .build()
+    |> ignore
+    false
+  } catch {
+    @moondb.QueryError(message) => message.contains("name a table")
+    _ => false
+  }
+  assert_eq(refused, true)
+}
+
+///|
 test "order_hybrid sorts by the computed expression" {
   let h = full_name()
   let (sql, _) = select("people").order_hybrid(h, Desc).build()
   assert_eq(
-    sql, "SELECT * FROM people ORDER BY {t}.first || ' ' || {t}.last DESC",
+    sql, "SELECT * FROM people ORDER BY people.first || ' ' || people.last DESC",
   )
 }
 
 ///|
 test "project_hybrid labels the computed value with the attribute's name" {
   let h = full_name()
-  let (sql, _) = select("people").project_hybrid(h, table="people").build()
+  let (sql, _) = select("people").project_hybrid(h).build()
   assert_eq(
     sql, "SELECT people.first || ' ' || people.last AS full_name FROM people",
   )

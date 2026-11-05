@@ -63,10 +63,14 @@ pub fn postgres_columns_query() -> String {
 }
 
 ///|
-/// Every index in the current PostgreSQL schema, one row per indexed column:
-/// `tablename, indexname, indisunique, attname`.
+/// Every index in the current PostgreSQL schema that was created as an index, one row
+/// per indexed column: `tablename, indexname, is_unique, attname`.
+///
+/// PostgreSQL backs a PRIMARY KEY or UNIQUE constraint with an index, and those are not
+/// indexes the schema declares — reporting them would make every key look like a stray
+/// index autogenerate wants to drop.
 pub fn postgres_indexes_query() -> String {
-  "SELECT t.relname, i.relname, ix.indisunique, a.attname FROM pg_index ix JOIN pg_class i ON i.oid = ix.indexrelid JOIN pg_class t ON t.oid = ix.indrelid JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY (ix.indkey) WHERE t.relkind = 'r' AND t.relnamespace = current_schema::regnamespace ORDER BY t.relname, i.relname, array_position(ix.indkey, a.attnum)"
+  "SELECT t.relname, i.relname, ix.indisunique AS is_unique, a.attname FROM pg_index ix JOIN pg_class i ON i.oid = ix.indexrelid JOIN pg_class t ON t.oid = ix.indrelid JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = ANY (ix.indkey) WHERE t.relkind = 'r' AND t.relnamespace = current_schema::regnamespace AND NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conindid = ix.indexrelid) ORDER BY t.relname, i.relname, array_position(ix.indkey, a.attnum)"
 }
 
 ///|

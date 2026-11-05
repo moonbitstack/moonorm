@@ -11,6 +11,18 @@ import {
 }
 
 // Values
+pub fn add_column(String, @schema.Column) -> @migrate.Op
+
+pub fn add_foreign_key(String, String, Array[String], String, Array[String], on_delete? : String, on_update? : String) -> @migrate.Op
+
+pub fn alter_column(String, String, new_name? : String, col_type? : @schema.ColumnType, nullable? : Bool, default? : String, drop_default? : Bool) -> @migrate.Op
+
+pub fn autogenerate(Array[@schema.TableSpec], Array[@schema.TableSpec], dialect? : @query.Dialect) -> Array[@migrate.Op]
+
+pub fn autogenerate_changes(Array[@schema.TableSpec], Array[@schema.TableSpec], dialect? : @query.Dialect) -> Array[@migrate.Change]
+
+pub fn autogenerate_revision(id~ : String, parents? : Array[String], name~ : String, Array[@schema.TableSpec], Array[@schema.TableSpec], dialect? : @query.Dialect) -> @migrate.Revision
+
 pub fn[S, T, V : @moondb.ToValue] belongs_to(@schema.Model[T], String, (S) -> V) -> @schema.Relation[S, T]
 
 pub fn case_(Array[(String, String)], else_? : String) -> String
@@ -19,11 +31,25 @@ pub fn cast(String, String) -> String
 
 pub fn column(String, @schema.ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> @schema.Column
 
+pub fn create_index(String, String, Array[String], unique? : Bool, if_not_exists? : Bool) -> @migrate.Op
+
+pub fn create_table(String, Array[@schema.Column], if_not_exists? : Bool) -> @migrate.Op
+
 pub fn custom_column_type(sqlite~ : String, postgres~ : String, mysql~ : String) -> @schema.CustomColumnType
 
 pub fn delete(String) -> @query.Delete
 
 pub fn diff_schema(Array[@schema.Column], Array[@schema.Column], dialect? : @query.Dialect) -> Array[@migrate.ColumnDiff]
+
+pub fn drop_column(String, String) -> @migrate.Op
+
+pub fn drop_foreign_key(String, String) -> @migrate.Op
+
+pub fn drop_index(String, table? : String, if_exists? : Bool) -> @migrate.Op
+
+pub fn drop_table(String, if_exists? : Bool) -> @migrate.Op
+
+pub fn execute(String) -> @migrate.Op
 
 pub fn[T, V : @moondb.ToValue] field(String, @schema.ColumnType, (T) -> V, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> @schema.Field[T]
 
@@ -31,15 +57,33 @@ pub fn func(String, Array[String]) -> String
 
 pub fn[S, T, V : @moondb.ToValue] has_many(@schema.Model[T], String, (S) -> V) -> @schema.Relation[S, T]
 
+pub fn[T] hybrid(String, String, (T) -> @moondb.Value) -> @query.Hybrid[T]
+
 pub fn index(Array[String], name? : String, unique? : Bool) -> @schema.Index
 
 pub fn index_ddl(String, String, Array[String], unique? : Bool) -> String
+
+pub fn indexes_of_rows(Array[@moondb.Row]) -> Array[@migrate.ReflectedIndex] raise @moondb.DbError
 
 pub fn insert(String) -> @query.Insert
 
 pub fn[S, T, V : @moondb.ToValue] many_to_many(@schema.Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -> V) -> @schema.ManyToMany[S, T]
 
+pub fn mysql_columns_query(String) -> String raise @moondb.DbError
+
+pub fn mysql_indexes_query() -> String
+
+pub fn mysql_tables_query() -> String
+
 pub fn parse_dsn(String) -> @engine.Dsn raise @engine.DsnError
+
+pub fn postgres_columns_query() -> String
+
+pub fn postgres_indexes_query() -> String
+
+pub fn postgres_tables_query() -> String
+
+pub fn rebuild_table(String, Array[@schema.Column], Array[String]) -> @migrate.Op
 
 pub fn reflect_columns(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
 
@@ -47,11 +91,33 @@ pub fn reflect_columns_mysql(Array[@moondb.Row]) -> Array[@schema.Column] raise 
 
 pub fn reflect_columns_pg(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
 
+pub fn reflect_schema(&@moondb.Driver, @query.Dialect) -> @schema.Schema raise @moondb.DbError
+
 pub fn reflect_table(&@moondb.Driver, String) -> Array[@schema.Column] raise @moondb.DbError
 
 pub fn reflect_table_for(&@moondb.Driver, String, @query.Dialect) -> Array[@schema.Column] raise @moondb.DbError
 
+pub fn rename_column(String, String, String) -> @migrate.Op
+
+pub fn rename_table(String, String) -> @migrate.Op
+
+pub fn revision_bases(Array[@migrate.Revision]) -> Array[String]
+
+pub fn revision_heads(Array[@migrate.Revision]) -> Array[String]
+
+pub fn revisions_table_sql(String) -> String raise @moondb.DbError
+
 pub fn[S : @query.AsSource] select(S) -> @query.Select
+
+pub fn sqlite_columns_query(String) -> String raise @moondb.DbError
+
+pub fn sqlite_index_info_query(String) -> String raise @moondb.DbError
+
+pub fn sqlite_index_list_query(String) -> String raise @moondb.DbError
+
+pub fn sqlite_tables_query() -> String
+
+pub fn table_names_of(Array[@moondb.Row]) -> Array[String] raise @moondb.DbError
 
 pub fn update(String) -> @query.Update
 
@@ -62,6 +128,8 @@ pub fn user_type(sqlite~ : String, postgres~ : String, mysql~ : String) -> @sche
 // Types and methods
 
 // Type aliases
+pub using @migrate {type Change}
+
 pub using @schema {type Column}
 
 pub using @migrate {type ColumnDiff}
@@ -81,6 +149,14 @@ pub using @engine {type DsnError}
 pub using @engine {type Engine}
 
 pub using @schema {type Field}
+
+pub using @migrate {type HistoryEntry}
+
+pub using @session {type HookContext}
+
+pub using @session {type HookEvent}
+
+pub using @query {type Hybrid}
 
 pub using @schema {type Index}
 
@@ -106,15 +182,23 @@ pub using @schema {type Model}
 
 pub using @query {type Nulls}
 
+pub using @migrate {type Op}
+
 pub using @query {type Order}
 
 pub using @query {type Predicate}
 
+pub using @migrate {type ReflectedIndex}
+
 pub using @schema {type Relation}
+
+pub using @migrate {type Revision}
 
 pub using @session {type RowStream}
 
 pub using @session {type Savepoint}
+
+pub using @schema {type Schema}
 
 pub using @query {type Select}
 
@@ -122,7 +206,13 @@ pub using @session {type Session}
 
 pub using @query {type Source}
 
+pub using @migrate {type Statement}
+
+pub using @migrate {type Step}
+
 pub using @query {type Table}
+
+pub using @schema {type TableSpec}
 
 pub using @session {type TxOptions}
 

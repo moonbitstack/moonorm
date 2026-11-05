@@ -105,6 +105,49 @@ fn replace_all(text : String, needle : String, replacement : String) -> String {
 }
 
 ///|
+/// The table a query reads from, when it is one named table — what a hybrid's `{t}`
+/// placeholder is filled with. A derived table or a LATERAL has no name to qualify
+/// with, so those return `None` and the caller has to name one.
+fn Select::qualifier(self : Select) -> String? {
+  match self.from_ {
+    Tbl(name) => Some(name)
+    Alias(_, name) => Some(name)
+    _ => None
+  }
+}
+
+///|
+/// The hybrid's expression, qualified for this query: `table` when the caller names one,
+/// the query's own table when its `FROM` is a named table, and the expression as written
+/// when it has no `{t}` to fill.
+///
+/// Raises when the expression needs a qualifier and the query has none to offer, rather
+/// than splicing a `{t}` into SQL the server would reject.
+fn[T] Select::hybrid_sql(
+  self : Select,
+  h : Hybrid[T],
+  table : String?,
+) -> String raise @moondb.DbError {
+  match table {
+    Some(name) => h.over(name)
+    None =>
+      if !h.expr().contains("{t}") {
+        h.expr()
+      } else {
+        match self.qualifier() {
+          Some(name) => h.over(name)
+          None =>
+            raise @moondb.QueryError(
+              "the hybrid " +
+              h.name() +
+              " uses {t} and this query reads from a derived table: name a table",
+            )
+        }
+      }
+  }
+}
+
+///|
 /// Filter on a hybrid attribute: `expr op ?`. The expression is the hybrid's own, so the
 /// predicate means the same thing the in-memory reading computes, and the value binds
 /// as a parameter like any other.
@@ -114,8 +157,8 @@ pub fn[T] Select::where_hybrid(
   op : String,
   val : Value,
   table? : String,
-) -> Select {
-  self.where_(h.sql(table?), op, val)
+) -> Select raise @moondb.DbError {
+  self.where_(self.hybrid_sql(h, table), op, val)
 }
 
 ///|
@@ -126,8 +169,8 @@ pub fn[T] Select::order_hybrid(
   h : Hybrid[T],
   ord : Order,
   table? : String,
-) -> Select {
-  self.order_by(h.sql(table?), ord)
+) -> Select raise @moondb.DbError {
+  self.order_by(self.hybrid_sql(h, table), ord)
 }
 
 ///|
@@ -138,6 +181,6 @@ pub fn[T] Select::project_hybrid(
   self : Select,
   h : Hybrid[T],
   table? : String,
-) -> Select {
-  self.label(h.sql(table?), h.name())
+) -> Select raise @moondb.DbError {
+  self.label(self.hybrid_sql(h, table), h.name())
 }

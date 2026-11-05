@@ -176,15 +176,15 @@ pub fn[S : AsSource] Select::left_join(Self, S, String) -> Self
 pub fn Select::limit(Self, Int32) -> Self
 pub fn Select::offset(Self, Int32) -> Self
 pub fn Select::order_by(Self, String, Order, nulls? : Nulls) -> Self
-pub fn[T] Select::order_hybrid(Self, Hybrid[T], Order, table? : String) -> Self
-pub fn[T] Select::project_hybrid(Self, Hybrid[T], table? : String) -> Self
+pub fn[T] Select::order_hybrid(Self, Hybrid[T], Order, table? : String) -> Self raise @moondb.DbError
+pub fn[T] Select::project_hybrid(Self, Hybrid[T], table? : String) -> Self raise @moondb.DbError
 pub fn Select::raw(Self, String) -> Self
 pub fn[S : AsSource] Select::right_join(Self, S, String) -> Self
 pub fn Select::union(Self, Self) -> Self
 pub fn Select::union_all(Self, Self) -> Self
 pub fn Select::where_(Self, String, String, @moondb.Value) -> Self
 pub fn Select::where_exists(Self, Self) -> Self
-pub fn[T] Select::where_hybrid(Self, Hybrid[T], String, @moondb.Value, table? : String) -> Self
+pub fn[T] Select::where_hybrid(Self, Hybrid[T], String, @moondb.Value, table? : String) -> Self raise @moondb.DbError
 pub fn Select::where_in(Self, String, Self) -> Self
 pub fn Select::where_in_values(Self, String, Array[@moondb.Value]) -> Self
 pub fn Select::where_not_exists(Self, Self) -> Self
