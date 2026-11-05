@@ -208,3 +208,24 @@ test "identity: a composite key round-trips through get_by" {
   assert_eq(rejected, "grants has a 2-column primary key, given 1")
   sess.close()
 }
+
+///|
+test "an identity-map key tells every kind of value apart, and two arrays by their contents" {
+  let same = "0123456789abcdef"
+  let bytes = b"0123456789abcdef"
+  let keys = [
+    key_part(Text(same)),
+    key_part(Time(same)),
+    key_part(Numeric(same)),
+    key_part(Json(same)),
+    key_part(Blob(bytes)),
+    key_part(Uuid(bytes)),
+    key_part(Array([Text(same)])),
+    key_part(Array([Time(same)])),
+    key_part(Array([Text("a"), Text("b")])),
+    key_part(Array([Text("a;b")])),
+  ]
+  assert_eq(Set::from_array(keys).length(), keys.length())
+  // A key bound as one integer width finds the row a backend handed back as another.
+  assert_eq(key_part(Int(1)), key_part(Int64(1L)))
+}

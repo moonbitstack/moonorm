@@ -90,6 +90,11 @@ fn value_text(v : @moondb.Value) -> String {
     Double(d) => "Double(" + d.to_string() + ")"
     Text(s) => "Text(\"" + s + "\")"
     Blob(b) => "Blob(" + b.length().to_string() + " bytes)"
+    Time(s) => "Time(\"" + s + "\")"
+    Numeric(s) => "Numeric(" + s + ")"
+    Uuid(b) => "Uuid(" + b.length().to_string() + " bytes)"
+    Json(s) => "Json(" + s + ")"
+    Array(items) => "Array(" + items.length().to_string() + " items)"
   }
 }
 

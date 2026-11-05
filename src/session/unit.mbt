@@ -31,17 +31,36 @@ fn key_part(v : @moondb.Value) -> String {
     Int(n) => "i" + n.to_string()
     Int64(n) => "i" + n.to_string()
     Double(d) => "d" + d.to_string()
-    Text(s) => "s" + s.length().to_string() + ":" + s
-    Blob(b) => {
-      // Decimal per byte rather than hex: a binary key is rare enough that the
-      // shorter spelling is not worth a digit table.
-      let mut s = "b" + b.length().to_string() + ":"
-      for i in 0..<b.length() {
-        s = s + b[i].to_int().to_string() + "."
+    Text(s) => sized_part("s", s)
+    Time(s) => sized_part("t", s)
+    Numeric(s) => sized_part("n", s)
+    Json(s) => sized_part("j", s)
+    Blob(b) => bytes_part("b", b)
+    Uuid(b) => bytes_part("u", b)
+    Array(items) => {
+      let mut s = "a" + items.length().to_string() + ":"
+      for item in items {
+        s = s + key_part(item) + ";"
       }
       s
     }
   }
+}
+
+///|
+fn sized_part(tag : String, s : String) -> String {
+  tag + s.length().to_string() + ":" + s
+}
+
+///|
+/// Decimal per byte rather than hex: a binary key is rare enough that the shorter spelling is not
+/// worth a digit table.
+fn bytes_part(tag : String, b : Bytes) -> String {
+  let mut s = tag + b.length().to_string() + ":"
+  for i in 0..<b.length() {
+    s = s + b[i].to_int().to_string() + "."
+  }
+  s
 }
 
 ///|

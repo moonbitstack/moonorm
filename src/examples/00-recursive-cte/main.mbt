@@ -40,6 +40,11 @@ fn render(v : @moondb.Value) -> String {
     Double(d) => "Double(\{d})"
     Text(s) => "Text(\"\{s}\")"
     Blob(b) => "Blob(\{b.length()} bytes)"
+    Time(s) => "Time(\"\{s}\")"
+    Numeric(s) => "Numeric(\{s})"
+    Uuid(b) => "Uuid(\{b.length()} bytes)"
+    Json(s) => "Json(\{s})"
+    Array(items) => "Array(\{items.length()} items)"
   }
 }
 
