@@ -84,7 +84,9 @@ test "migrations round-trip on a real SQLite database" {
   try {
     let applied = migrator.upgrade(sess, revisions)
     assert_eq(applied, ["0001", "0002", "0003", "0004"])
-    let after_upgrade = schema_text(@migrate.reflect_schema(driver, @query.Sqlite))
+    let after_upgrade = schema_text(
+      @migrate.reflect_schema(driver, @query.Sqlite),
+    )
     assert_eq(after_upgrade.contains("table heroes"), true)
     assert_eq(after_upgrade.contains("column strength INTEGER"), true)
     assert_eq(after_upgrade.contains("column power "), false)
@@ -96,7 +98,9 @@ test "migrations round-trip on a real SQLite database" {
     assert_eq(at_base.contains("table heroes"), false)
     let reapplied = migrator.upgrade(sess, revisions)
     assert_eq(reapplied, ["0001", "0002", "0003", "0004"])
-    let after_second = schema_text(@migrate.reflect_schema(driver, @query.Sqlite))
+    let after_second = schema_text(
+      @migrate.reflect_schema(driver, @query.Sqlite),
+    )
     assert_eq(after_second, after_upgrade)
     // Part of the way back, then forward again from that point.
     migrator.downgrade(sess, revisions, target="0002") |> ignore
@@ -109,10 +113,9 @@ test "migrations round-trip on a real SQLite database" {
     )
     // The history knows where it is, and stamping back does not touch the schema.
     assert_eq(migrator.heads(sess, revisions), ["0004"])
-    assert_eq(
-      migrator.history(sess, revisions).map(entry => entry.applied),
-      [true, true, true, true],
-    )
+    assert_eq(migrator.history(sess, revisions).map(entry => entry.applied), [
+      true, true, true, true,
+    ])
     sess.close()
   } catch {
     error => {

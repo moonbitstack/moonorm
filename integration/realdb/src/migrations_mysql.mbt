@@ -5,7 +5,9 @@
 ///|
 /// The schema as MySQL reports it, with the runner's bookkeeping table left out.
 async fn mysql_schema(conn : @mysql.MysqlConn) -> @schema.Schema {
-  let names = @migrate.table_names_of(conn.query(@migrate.mysql_tables_query(), []))
+  let names = @migrate.table_names_of(
+    conn.query(@migrate.mysql_tables_query(), []),
+  )
   let all_indexes = @migrate.indexes_of_rows(
     conn.query(@migrate.mysql_indexes_query(), []),
   )
@@ -20,7 +22,7 @@ async fn mysql_schema(conn : @mysql.MysqlConn) -> @schema.Schema {
     let indexes = all_indexes
       .filter(ix => ix.table == name)
       .map(ix => @schema.index(ix.columns, name=ix.name, unique=ix.unique))
-    tables.push({ name, columns, indexes })
+    tables.push({ name, columns, indexes, })
   }
   @schema.Schema::new(tables)
 }
@@ -52,13 +54,15 @@ async test "revision migrations round-trip on a real MySQL server" {
   let migrator = @migrate.Migrator::new()
   let revisions = portable_revisions()
   defer conn.close()
-  conn.execute(
-    "DROP TABLE IF EXISTS heroes, teams, moonorm_revisions",
-    [],
-  )
+  conn.execute("DROP TABLE IF EXISTS heroes, teams, moonorm_revisions", [])
   |> ignore
   conn.execute(@migrate.revisions_table_sql("moonorm_revisions"), []) |> ignore
-  let up = migrator.upgrade_sql(revisions, [], target="heads", dialect=@query.Mysql)
+  let up = migrator.upgrade_sql(
+    revisions,
+    [],
+    target="heads",
+    dialect=@query.Mysql,
+  )
   assert_eq(up.length(), 4)
   run_mysql_steps(conn, up)
   let after_upgrade = mysql_schema(conn).snapshot(@query.Mysql)

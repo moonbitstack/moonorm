@@ -28,7 +28,11 @@ fn env_port(key : String, fallback : Int32) -> Int32 {
       value = value * 10 + (c - 48)
     }
   }
-  if digits { value } else { fallback }
+  if digits {
+    value
+  } else {
+    fallback
+  }
 }
 
 ///|
@@ -56,7 +60,7 @@ async fn pg_schema(conn : @pg.PgConn) -> @schema.Schema {
     let indexes = all_indexes
       .filter(ix => ix.table == name)
       .map(ix => @schema.index(ix.columns, name=ix.name, unique=ix.unique))
-    tables.push({ name, columns, indexes })
+    tables.push({ name, columns, indexes, })
   }
   @schema.Schema::new(tables)
 }
@@ -100,7 +104,12 @@ fn portable_revisions() -> Array[@migrate.Revision] {
       id="0003",
       parents=["0002"],
       name="add hero team",
-      up=[@migrate.add_column("heroes", @schema.column("team_id", @schema.IntType))],
+      up=[
+        @migrate.add_column(
+          "heroes",
+          @schema.column("team_id", @schema.IntType),
+        ),
+      ],
       down=[@migrate.drop_column("heroes", "team_id")],
     ),
     @migrate.Revision::new(
@@ -147,7 +156,12 @@ async test "revision migrations round-trip on a real PostgreSQL server" {
   |> ignore
   conn.execute(@migrate.revisions_table_sql("moonorm_revisions"), []) |> ignore
   // Upgrade, and snapshot what the server actually holds.
-  let up = migrator.upgrade_sql(revisions, [], target="heads", dialect=@query.Postgres)
+  let up = migrator.upgrade_sql(
+    revisions,
+    [],
+    target="heads",
+    dialect=@query.Postgres,
+  )
   assert_eq(up.length(), 4)
   run_steps(conn, up)
   let after_upgrade = pg_schema(conn).snapshot(@query.Postgres)
@@ -191,7 +205,11 @@ async test "autogenerate reads a real PostgreSQL schema" {
   defer conn.close()
   // A clean slate first: this test reads the whole schema, so a table left by
   // an earlier run would read as a table the models dropped.
-  conn.execute("DROP TABLE IF EXISTS heroes, teams, shapes, moonorm_revisions", []) |> ignore
+  conn.execute(
+    "DROP TABLE IF EXISTS heroes, teams, shapes, moonorm_revisions",
+    [],
+  )
+  |> ignore
   conn.execute(
     "CREATE TABLE shapes (id INTEGER PRIMARY KEY, name TEXT NOT NULL, size INTEGER)",
     [],
@@ -203,17 +221,23 @@ async test "autogenerate reads a real PostgreSQL schema" {
     None => abort("the shapes table was not reflected")
   }
   // No difference against itself.
-  assert_eq(@migrate.autogenerate([shapes], live_schema, dialect=@query.Postgres).length(), 0)
+  assert_eq(
+    @migrate.autogenerate([shapes], live_schema, dialect=@query.Postgres).length(),
+    0,
+  )
   // A declared column the database lacks, and a database column the model dropped.
   let drifted = @schema.TableSpec::new("shapes", [
     @schema.column("id", @schema.IntType, primary_key=true),
     @schema.column("name", @schema.TextType, nullable=false),
     @schema.column("weight", @schema.IntType),
   ])
-  let ops = @migrate.autogenerate([drifted], live_schema, dialect=@query.Postgres)
+  let ops = @migrate.autogenerate(
+    [drifted],
+    live_schema,
+    dialect=@query.Postgres,
+  )
   assert_eq(ops.map(op => op.to_sql(@query.Postgres)[0]), [
-    "ALTER TABLE shapes ADD COLUMN weight INTEGER",
-    "ALTER TABLE shapes DROP COLUMN size",
+    "ALTER TABLE shapes ADD COLUMN weight INTEGER", "ALTER TABLE shapes DROP COLUMN size",
   ])
   conn.execute("DROP TABLE shapes", []) |> ignore
 }

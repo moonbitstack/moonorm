@@ -13,7 +13,7 @@ priv struct Person {
 
 ///|
 fn person_row(r : @moondb.Row) -> Person raise @moondb.DbError {
-  { id: r.int(0), first: r.text(1), last: r.text(2), age: r.int(3) }
+  { id: r.int(0), first: r.text(1), last: r.text(2), age: r.int(3), }
 }
 
 ///|
@@ -29,11 +29,9 @@ fn person_model() -> @schema.Model[Person] {
 
 ///|
 fn full_name() -> @query.Hybrid[Person] {
-  @query.hybrid(
-    "full_name",
-    "{t}.first || ' ' || {t}.last",
-    p => @moondb.Text(p.first + " " + p.last),
-  )
+  @query.hybrid("full_name", "{t}.first || ' ' || {t}.last", p => {
+    @moondb.Text(p.first + " " + p.last)
+  })
 }
 
 ///|
@@ -51,9 +49,9 @@ test "a hybrid's SQL reading selects the rows its value reading names" {
     let model = person_model()
     sess.create_table(model, if_not_exists=true) |> ignore
     let people = [
-      { id: 1, first: "Ada", last: "Lovelace", age: 36 },
-      { id: 2, first: "Alan", last: "Turing", age: 41 },
-      { id: 3, first: "Tim", last: "Berners-Lee", age: 17 },
+      { id: 1, first: "Ada", last: "Lovelace", age: 36, },
+      { id: 2, first: "Alan", last: "Turing", age: 41, },
+      { id: 3, first: "Tim", last: "Berners-Lee", age: 17, },
     ]
     for person in people {
       sess.insert_record(model, person) |> ignore
@@ -65,14 +63,18 @@ test "a hybrid's SQL reading selects the rows its value reading names" {
       model,
       model.select().where_hybrid(name, "=", @moondb.Text("Ada Lovelace")),
     )
-    let by_value = people.filter(p => name.value(p) == @moondb.Text("Ada Lovelace"))
+    let by_value = people.filter(p => {
+      name.value(p) == @moondb.Text("Ada Lovelace")
+    })
     assert_eq(by_sql.length(), by_value.length())
     assert_eq(by_sql[0].id, by_value[0].id)
     let adults_by_sql = sess.fetch_as(
       model,
       model.select().where_hybrid(adult, "=", @moondb.Bool(true)),
     )
-    let adults_by_value = people.filter(p => adult.value(p) == @moondb.Bool(true))
+    let adults_by_value = people.filter(p => {
+      adult.value(p) == @moondb.Bool(true)
+    })
     assert_eq(adults_by_sql.length(), adults_by_value.length())
     // Ordering by the computed expression, which has no column of its own.
     let ordered = sess.fetch_as(
@@ -112,17 +114,17 @@ priv struct Manager {
 
 ///|
 fn employee_row(r : @moondb.Row) -> Employee raise @moondb.DbError {
-  { id: r.int(0), name: r.text(1), kind: r.text(2) }
+  { id: r.int(0), name: r.text(1), kind: r.text(2), }
 }
 
 ///|
 fn engineer_row(r : @moondb.Row) -> Engineer raise @moondb.DbError {
-  { id: r.int(0), name: r.text(1), engineer_name: r.text(2) }
+  { id: r.int(0), name: r.text(1), engineer_name: r.text(2), }
 }
 
 ///|
 fn manager_row(r : @moondb.Row) -> Manager raise @moondb.DbError {
-  { id: r.int(0), name: r.text(1), manager_name: r.text(2) }
+  { id: r.int(0), name: r.text(1), manager_name: r.text(2), }
 }
 
 ///|
@@ -142,8 +144,10 @@ fn engineer_model() -> @schema.Model[Engineer] {
     @schema.field("name", @schema.TextType, e => e.name, nullable=false),
     @schema.field("engineer_name", @schema.TextType, e => e.engineer_name),
   ]
-  @schema.Model::from_fields("employee", fields, engineer_row)
-  .discriminate(column="kind", identity="engineer")
+  @schema.Model::from_fields("employee", fields, engineer_row).discriminate(
+    column="kind",
+    identity="engineer",
+  )
 }
 
 ///|
@@ -153,8 +157,10 @@ fn manager_model() -> @schema.Model[Manager] {
     @schema.field("name", @schema.TextType, e => e.name, nullable=false),
     @schema.field("manager_name", @schema.TextType, e => e.manager_name),
   ]
-  @schema.Model::from_fields("employee", fields, manager_row)
-  .discriminate(column="kind", identity="manager")
+  @schema.Model::from_fields("employee", fields, manager_row).discriminate(
+    column="kind",
+    identity="manager",
+  )
 }
 
 ///|
@@ -171,13 +177,10 @@ test "single-table inheritance reads back what each subclass wrote" {
       @schema.column("engineer_name", @schema.TextType),
       @schema.column("manager_name", @schema.TextType),
     ]
-    sess.execute(
-      @schema.create_table_sql("employee", shared, @query.Sqlite),
-      [],
-    )
+    sess.execute(@schema.create_table_sql("employee", shared, @query.Sqlite), [])
     |> ignore
-    let ada : Engineer = { id: 1, name: "Ada", engineer_name: "ada" }
-    let grace : Manager = { id: 2, name: "Grace", manager_name: "grace" }
+    let ada : Engineer = { id: 1, name: "Ada", engineer_name: "ada", }
+    let grace : Manager = { id: 2, name: "Grace", manager_name: "grace", }
     sess.insert_record(engineer_model(), ada) |> ignore
     sess.insert_record(manager_model(), grace) |> ignore
     // The base model sees both rows; each subclass sees only its own.
@@ -210,7 +213,7 @@ priv struct JoinedEngineer {
 
 ///|
 fn joined_engineer_row(r : @moondb.Row) -> JoinedEngineer raise @moondb.DbError {
-  { id: r.int(0), name: r.text(1), engineer_name: r.text(2) }
+  { id: r.int(0), name: r.text(1), engineer_name: r.text(2), }
 }
 
 ///|
@@ -220,8 +223,10 @@ fn joined_engineer_model() -> @schema.Model[JoinedEngineer] {
     @schema.field("name", @schema.TextType, e => e.name, nullable=false),
     @schema.field("engineer_name", @schema.TextType, e => e.engineer_name),
   ]
-  @schema.Model::from_fields("engineer", fields, joined_engineer_row)
-  .joined(parent_table="person", parent_columns=["id", "name"])
+  @schema.Model::from_fields("engineer", fields, joined_engineer_row).joined(
+    parent_table="person",
+    parent_columns=["id", "name"],
+  )
 }
 
 ///|
@@ -232,23 +237,40 @@ test "joined-table inheritance writes two rows and reads them back as one record
   let sess = @session.Session::new(driver)
   try {
     sess.execute(
-      @schema.create_table_sql("person", [
-        @schema.column("id", @schema.IntType, primary_key=true),
-        @schema.column("name", @schema.TextType, nullable=false),
-      ], @query.Sqlite),
+      @schema.create_table_sql(
+        "person",
+        [
+          @schema.column("id", @schema.IntType, primary_key=true),
+          @schema.column("name", @schema.TextType, nullable=false),
+        ],
+        @query.Sqlite,
+      ),
       [],
     )
     |> ignore
     sess.execute(
-      @schema.create_table_sql("engineer", [
-        @schema.column("id", @schema.IntType, primary_key=true, references=("person", "id")),
-        @schema.column("engineer_name", @schema.TextType, nullable=false),
-      ], @query.Sqlite),
+      @schema.create_table_sql(
+        "engineer",
+        [
+          @schema.column(
+            "id",
+            @schema.IntType,
+            primary_key=true,
+            references=("person", "id"),
+          ),
+          @schema.column("engineer_name", @schema.TextType, nullable=false),
+        ],
+        @query.Sqlite,
+      ),
       [],
     )
     |> ignore
     let model = joined_engineer_model()
-    let grace : JoinedEngineer = { id: 4, name: "Grace", engineer_name: "grace" }
+    let grace : JoinedEngineer = {
+      id: 4,
+      name: "Grace",
+      engineer_name: "grace",
+    }
     sess.add_record(model, grace)
     sess.flush()
     // One read joins the halves back together.
@@ -262,7 +284,11 @@ test "joined-table inheritance writes two rows and reads them back as one record
     assert_eq(parent[0].text(0), "Grace")
     assert_eq(child[0].text(0), "grace")
     // An update splits the same way: one statement per table.
-    let renamed : JoinedEngineer = { id: 4, name: "Grace H.", engineer_name: "gh" }
+    let renamed : JoinedEngineer = {
+      id: 4,
+      name: "Grace H.",
+      engineer_name: "gh",
+    }
     sess.update_record(model, renamed)
     sess.flush()
     let again = sess.all(model)
@@ -295,9 +321,7 @@ test "concrete inheritance reads two tables as one union" {
       @schema.field("engineer_name", @schema.TextType, e => e.engineer_name),
     ]
     let concrete_engineer = @schema.Model::from_fields(
-      "engineer",
-      engineer_fields,
-      engineer_row,
+      "engineer", engineer_fields, engineer_row,
     )
     let manager_fields : Array[@schema.Field[Manager]] = [
       @schema.field("id", @schema.IntType, m => m.id, primary_key=true),
@@ -305,21 +329,18 @@ test "concrete inheritance reads two tables as one union" {
       @schema.field("manager_name", @schema.TextType, m => m.manager_name),
     ]
     let concrete_manager = @schema.Model::from_fields(
-      "manager",
-      manager_fields,
-      manager_row,
+      "manager", manager_fields, manager_row,
     )
     sess.create_table(concrete_engineer) |> ignore
     sess.create_table(concrete_manager) |> ignore
-    let ada : Engineer = { id: 1, name: "Ada", engineer_name: "ada" }
-    let grace : Manager = { id: 1, name: "Grace", manager_name: "grace" }
+    let ada : Engineer = { id: 1, name: "Ada", engineer_name: "ada", }
+    let grace : Manager = { id: 1, name: "Grace", manager_name: "grace", }
     sess.insert_record(concrete_engineer, ada) |> ignore
     sess.insert_record(concrete_manager, grace) |> ignore
     assert_eq(sess.all(concrete_engineer)[0].engineer_name, "ada")
     assert_eq(sess.all(concrete_manager)[0].manager_name, "grace")
     // The polymorphic read is the union of the two, projected to the shared columns.
-    let union = @query
-      .select("engineer")
+    let union = @query.select("engineer")
       .column("id")
       .column("name")
       .union_all(@query.select("manager").column("id").column("name"))

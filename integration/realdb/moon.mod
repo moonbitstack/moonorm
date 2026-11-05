@@ -8,7 +8,14 @@ repository = "https://github.com/moonbitstack/moonorm"
 
 license = "Apache-2.0"
 
-keywords = [ "moonorm", "migration", "sqlite", "postgres", "mysql", "integration" ]
+keywords = [
+  "moonorm",
+  "migration",
+  "sqlite",
+  "postgres",
+  "mysql",
+  "integration",
+]
 
 description = "Real-database round trips for the migration runner, the hybrids and the inheritance mappings, against the working tree."
 
