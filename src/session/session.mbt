@@ -29,6 +29,8 @@ pub struct Session {
   // Drops this session's identity slot out of each model it claimed one in. A model
   // is normally a long-lived top-level value, so nothing else would ever free it.
   detach : Array[() -> Unit]
+  // Event listeners, in registration order (see `Session::on`).
+  hooks : Array[(HookEvent, (HookContext) -> Unit raise @moondb.DbError)]
 }
 
 ///|
@@ -54,6 +56,7 @@ pub fn Session::new(
     dirty: [],
     deleted: [],
     detach: [],
+    hooks: [],
   }
 }
 
@@ -227,18 +230,61 @@ pub fn Session::begin(self : Session) -> Unit raise @moondb.DbError {
 /// the database here if nothing has flushed them yet, which is why a caller can add
 /// and commit without naming `flush` at all. With an empty queue this is the bare
 /// driver commit.
+///
+/// `BeforeCommit` runs before the flush, so a listener sees the queue it is about to
+/// write; `AfterCommit` runs once the driver has committed.
 pub fn Session::commit(self : Session) -> Unit raise @moondb.DbError {
+  self.fire(HookContext::new(BeforeCommit))
   self.flush()
   self.driver.commit()
+  self.fire(HookContext::new(AfterCommit))
+}
+
+///|
+/// Run `body` inside one transaction: begin, run, commit; on failure roll back and
+/// re-raise what `body` raised, so the caller sees the real cause rather than the
+/// rollback's outcome.
+///
+/// The driver's own `begin`/`commit`/`rollback` are used — not SQL text — so a driver
+/// that manages the transaction out of band stays in control. Nothing queued in the
+/// unit of work is flushed here: this brackets statements the caller issues.
+pub fn Session::transaction(
+  self : Session,
+  body : () -> Unit raise @moondb.DbError,
+) -> Unit raise @moondb.DbError {
+  self.driver.begin()
+  let outcome = try {
+    body()
+    Ok(())
+  } catch {
+    e => Err(e)
+  }
+  match outcome {
+    Ok(_) => self.driver.commit()
+    Err(e) => {
+      // A rollback that fails leaves the transaction state unknown, but the error
+      // worth reporting is the one that aborted the body.
+      let undone = try {
+        self.driver.rollback()
+        Ok(())
+      } catch {
+        _ => Err(())
+      }
+      ignore(undone)
+      raise e
+    }
+  }
 }
 
 ///|
 /// Roll back the current transaction, abandoning whatever is still queued and
 /// emptying the identity map. The records held there describe rows the rollback has
 /// just undone, so keeping them would hand out state the database no longer has.
+/// `AfterRollback` runs once the driver has rolled back.
 pub fn Session::rollback(self : Session) -> Unit raise @moondb.DbError {
   self.discard()
   self.driver.rollback()
+  self.fire(HookContext::new(AfterRollback))
 }
 
 ///|
@@ -352,8 +398,11 @@ pub fn[T] Session::create_table(
   model : @schema.Model[T],
   if_not_exists~ : Bool = false,
 ) -> @moondb.ExecResult raise @moondb.DbError {
-  let made = self.driver.execute(model.create_table_sql(if_not_exists~), [])
-  for statement in model.create_indexes_sql(if_not_exists~) {
+  let made = self.driver.execute(
+    model.create_table_sql_for(self.dialect, if_not_exists~),
+    [],
+  )
+  for statement in model.create_indexes_sql_for(self.dialect, if_not_exists~) {
     self.driver.execute(statement, []) |> ignore
   }
   made
@@ -364,13 +413,43 @@ pub fn[T] Session::create_table(
 /// `to_columns` pairs. Returns the affected-row count and new rowid. Nothing is
 /// queued and the identity map is not consulted; `add_record` is the unit-of-work
 /// counterpart that defers to `flush`.
+///
+/// A joined-table subclass is written as two statements here as well — the parent row
+/// first — because the subclass row's foreign key needs it. The `Before*`/`After*`
+/// insert hooks fire around the write exactly as they do at flush.
 pub fn[T] Session::insert_record(
   self : Session,
   model : @schema.Model[T],
   record : T,
 ) -> @moondb.ExecResult raise @moondb.DbError {
-  let (sql, params) = model.insert_of(record).build_for(self.dialect)
-  self.driver.execute(sql, params)
+  let columns = (model.to_columns)(record)
+  let ctx = HookContext::new(BeforeInsert, table=model.table, columns~)
+  self.fire(ctx)
+  let statements = insert_statements(
+    model.split_columns(ctx.columns),
+    self.dialect,
+  )
+  let mut result : @moondb.ExecResult = {
+    rows_affected: 0L,
+    last_insert_id: 0L,
+  }
+  let mut last_sql = ""
+  let mut last_params : Array[@moondb.Value] = []
+  for statement in statements {
+    let (sql, params) = statement
+    result = self.driver.execute(sql, params)
+    last_sql = sql
+    last_params = params
+  }
+  let done = HookContext::new(
+    AfterInsert,
+    table=model.table,
+    columns=ctx.columns,
+  )
+  done.sql = last_sql
+  done.params = last_params
+  self.fire(done)
+  result
 }
 
 ///|
