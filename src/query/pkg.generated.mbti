@@ -15,6 +15,8 @@ pub fn delete(String) -> Delete
 
 pub fn func(String, Array[String]) -> String
 
+pub fn[T] hybrid(String, String, (T) -> @moondb.Value) -> Hybrid[T]
+
 pub fn insert(String) -> Insert
 
 pub fn is_ident(String) -> Bool
@@ -56,6 +58,17 @@ pub(all) enum Dialect {
 }
 pub fn Dialect::equal(Self, Self) -> Bool
 pub fn Dialect::not_equal(Self, Self) -> Bool
+
+pub struct Hybrid[T] {
+  name : String
+  expr : String
+  read : (T) -> @moondb.Value
+}
+pub fn[T] Hybrid::expr(Self[T]) -> String
+pub fn[T] Hybrid::name(Self[T]) -> String
+pub fn[T] Hybrid::over(Self[T], String) -> String
+pub fn[T] Hybrid::sql(Self[T], table? : String) -> String
+pub fn[T] Hybrid::value(Self[T], T) -> @moondb.Value
 
 pub struct Insert {
   table : String
@@ -163,12 +176,15 @@ pub fn[S : AsSource] Select::left_join(Self, S, String) -> Self
 pub fn Select::limit(Self, Int32) -> Self
 pub fn Select::offset(Self, Int32) -> Self
 pub fn Select::order_by(Self, String, Order, nulls? : Nulls) -> Self
+pub fn[T] Select::order_hybrid(Self, Hybrid[T], Order, table? : String) -> Self
+pub fn[T] Select::project_hybrid(Self, Hybrid[T], table? : String) -> Self
 pub fn Select::raw(Self, String) -> Self
 pub fn[S : AsSource] Select::right_join(Self, S, String) -> Self
 pub fn Select::union(Self, Self) -> Self
 pub fn Select::union_all(Self, Self) -> Self
 pub fn Select::where_(Self, String, String, @moondb.Value) -> Self
 pub fn Select::where_exists(Self, Self) -> Self
+pub fn[T] Select::where_hybrid(Self, Hybrid[T], String, @moondb.Value, table? : String) -> Self
 pub fn Select::where_in(Self, String, Self) -> Self
 pub fn Select::where_in_values(Self, String, Array[@moondb.Value]) -> Self
 pub fn Select::where_not_exists(Self, Self) -> Self
