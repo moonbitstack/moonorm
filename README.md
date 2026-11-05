@@ -7,7 +7,7 @@
 [API](https://moonbitstack.github.io/moonorm/api.html) ·
 [mooncakes](https://mooncakes.io/docs/moonbitstack/moonorm)
 
-**An ORM and SQL toolkit for MoonBit: a typed schema, three dialects, and values that are always bound.**
+**An ORM and SQL toolkit for MoonBit: a typed schema, three dialects, values that are always bound, and a migration history that can branch.**
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](./LICENSE)
 [![mooncakes](https://img.shields.io/badge/mooncakes-moonbitstack%2Fmoonorm-brightgreen)](https://mooncakes.io/docs/moonbitstack/moonorm)
@@ -48,9 +48,9 @@ migrations. The root re-exports all of them, so `@moonorm.select` and
 |  Package  | What it holds | Depends on |
 |:--:|:--|:--|
 | `moonorm/query` | dialects, predicates, `select` / `insert` / `update` / `delete`, `Table`, `is_ident` | moondb's `Value` |
-| `moonorm/schema` | `ColumnType`, `Column`, `Field`, `Model`, `Relation`, `ManyToMany` | `query`, moondb |
-| `moonorm/session` | `Session`, row streams, transactions and savepoints, the unit of work, pooled sessions | `schema`, `query`, moondb |
-| `moonorm/migrate` | `Migration`, `Migrator`, `ColumnDiff`, schema reflection and diffing | `session`, `schema`, `query` |
+| `moonorm/schema` | `ColumnType`, `Column`, `Field`, `Model`, `Relation`, `ManyToMany`, `TableSpec`, the three inheritance mappings, table and index DDL | `query`, moondb |
+| `moonorm/session` | `Session`, row streams, transactions and savepoints, the unit of work, event hooks, pooled sessions | `schema`, `query`, moondb |
+| `moonorm/migrate` | `Migration`, `Revision`, `Op`, `Migrator`, `ColumnDiff`, reflection, diffing and autogenerate | `session`, `schema`, `query` |
 | `moonorm/engine` | `Engine`, `Dsn`, `DsnError`: a connection string names the driver and the dialect | `query`, `session`, moondb |
 | `moonorm/mapper` | the runtime behind `#sql.*`: reads a row into what a mapper function returns | moondb |
 | `moonorm/cmd/orm` | the generator behind `#orm.table`, `#orm.column`, `#orm.skip`, `#orm.index`, `#orm.has_many` and `#orm.belongs_to` | moonast |
@@ -633,13 +633,133 @@ pub fn optimistic(sess : @moonorm.Session, current : Int) -> Unit raise {
 }
 ```
 
+## Event hooks
+
+A session fires at eleven points in its write path: before and after each insert,
+update and delete, around the flush, and around the transaction. One context is
+handed to every listener — the table, the row about to be written, and, for an
+`After*` hook, the statement that ran with its bound values.
+
+```moonbit
+pub fn stamp_audit(sess : @moonorm.Session) -> Unit {
+  sess.on(BeforeInsert, ctx => {
+    // The row is mutable here: what the hook leaves behind is what gets written.
+    ctx.set_column("updated_by", @moondb.Text("nightly-job"))
+  })
+  sess.on(BeforeInsert, ctx => {
+    if ctx.table != "audit_log" {
+      return
+    }
+    ctx.set_column("at", @moondb.Text("now"))
+  })
+  sess.on(AfterInsert, ctx => println(ctx.sql))
+}
+```
+
+`set_column` replaces a value the row already carries or appends one it does not;
+`set_columns` swaps the whole list. A handler that raises aborts the flush before
+the statement is sent, and the row stays queued, so a refused flush is not a lost
+row. `Session::listener_count` and `Session::off_all` manage a session's listeners;
+listeners belong to the session that registered them and run in registration order.
+
+The names follow the SQLAlchemy events of the same spelling. A mapper-level listener
+there is a session listener here that checks `ctx.table`, since this layer has no
+mapper object to register on.
+
+## Hybrid attributes
+
+A hybrid is one definition read two ways: as SQL for filtering and ordering, and as
+a value computed off a record. Writing it once is what stops the two readings from
+drifting apart.
+
+```moonbit
+pub fn full_name() -> @moonorm.Hybrid[Person] {
+  @moonorm.hybrid(
+    "full_name",
+    "{t}.first || ' ' || {t}.last",
+    p => @moondb.Text(p.first + " " + p.last),
+  )
+}
+
+pub fn adults(people : @moonorm.Model[Person]) -> @moonorm.Select raise @moondb.DbError {
+  people.select().where_hybrid(full_name(), "=", @moondb.Text("Ada Lovelace"))
+  // SELECT id, first, last FROM people WHERE people.first || ' ' || people.last = ?
+}
+```
+
+`{t}` is the table qualifier: `where_hybrid`, `order_hybrid` and `project_hybrid`
+fill it with the query's own table, or with the `table=` you pass when the query
+joins. A query that reads from a derived table has no name to fill in, and asking for
+one there raises rather than splicing a `{t}` into SQL the server would reject.
+`Hybrid::value` is the in-memory reading, and the two are expected to agree — that is
+what the tests compare, on a real database.
+
+## Inheritance mapping
+
+A class hierarchy is stored three ways, and each is one `Model` over one record type.
+
+**Single table.** The whole hierarchy lives in one table behind a discriminator.
+`discriminate` filters reads on it and forces it into inserts, so a subclass row
+cannot be written as a base row by accident.
+
+```moonbit
+pub fn engineer_model() -> @moonorm.Model[Engineer] {
+  @moonorm.Model::from_fields(
+    "employee",
+    [
+      @moonorm.field("id", IntType, e => e.id, primary_key=true),
+      @moonorm.field("name", TextType, e => e.name, nullable=false),
+      @moonorm.field("engineer_name", TextType, e => e.engineer_name),
+    ],
+    engineer_row,
+  )
+  .discriminate(column="kind", identity="engineer")
+  // SELECT id, name, engineer_name, kind FROM employee WHERE kind = ?
+}
+```
+
+The base model still reads every row of the table; each subclass model reads only its
+own.
+
+**Joined table.** Each class's own columns live in its own table, joined on the key.
+`joined` projects the parent's columns qualified and then the subclass's, joins the
+parent, and splits writes: an insert writes the parent row and then the subclass row,
+which is the only order the foreign key allows, and a delete takes them in the
+opposite order.
+
+```moonbit
+pub fn joined_engineer_model() -> @moonorm.Model[JoinedEngineer] {
+  @moonorm.Model::from_fields("engineer", engineer_fields, joined_engineer_row)
+  .joined(parent_table="person", parent_columns=["id", "name"])
+  // SELECT person.id, person.name, engineer.engineer_name
+  //   FROM engineer JOIN person ON person.id = engineer.id
+}
+```
+
+**Concrete table.** Every class has a table with all of its columns and there is no
+shared table to join through, so each class is simply its own model, and a
+polymorphic read is the union of the per-class reads:
+
+```moonbit
+pub fn everyone(engineers : @moonorm.Select, managers : @moonorm.Select) -> @moonorm.Select {
+  engineers.union_all(managers)
+}
+```
+
+There is no instance dispatch in any of the three: MoonBit has no downcast, so a base
+read returns base records. Which columns exist is decided by the record type, which
+tables they come from by the model.
+
 ## Migrations
 
-Versioned migrations, tracked in a `schema_migrations` table. A `Migration`
-carries an integer version plus its `up` and `down` statement lists; a `Migrator`
-applies pending versions in ascending order, skips ones already applied (so
-re-running is a no-op), rolls back to a target version in descending order, and
-reports the current version.
+Two shapes, for two jobs.
+
+### Versioned steps
+
+The simple form: a `Migration` carries an integer version plus its `up` and `down`
+statement lists; a `Migrator` applies pending versions in ascending order, skips the
+ones already applied (so re-running is a no-op), rolls back to a target version in
+descending order, and reports the current version.
 
 ```moonbit
 pub fn migrations(sess : @moonorm.Session) -> Unit raise @moondb.DbError {
@@ -664,16 +784,101 @@ pub fn migrations(sess : @moonorm.Session) -> Unit raise @moondb.DbError {
 }
 ```
 
-To go the other way — from what a live database has to what your model declares —
-reflect the table and diff it:
+### Revisions
+
+An integer cannot express two people branching from the same point and merging
+later, so the full form is a graph: a `Revision` names its `parents` — none for a
+base, one for a step, two or more for a merge — and a change is a list of `Op` values
+rather than SQL text.
 
 ```moonbit
-pub fn plan_for(db : &@moondb.Driver, declared : Array[@moonorm.Column]) -> Array[@moonorm.ColumnDiff] raise @moondb.DbError {
-  let reflected = @moonorm.reflect_table(db, "accounts")
-  @moonorm.diff_schema(declared, reflected, dialect=Postgres)
-  // Added(name~, col_type~) for a column only the model declares,
-  // Removed(name) for one only the database has,
-  // TypeChanged(name~, from~, to~) when the two disagree on the type.
+pub fn revisions() -> Array[@moonorm.Revision] {
+  [
+    @moonorm.Revision::new(
+      id="0001",
+      name="create_heroes",
+      up=[
+        @moonorm.create_table("heroes", [
+          @moonorm.column("id", IntType, primary_key=true, autoincrement=true),
+          @moonorm.column("name", TextType, nullable=false),
+        ]),
+        @moonorm.create_index("ix_heroes_name", "heroes", ["name"]),
+      ],
+      down=[
+        @moonorm.drop_index("ix_heroes_name"),
+        @moonorm.drop_table("heroes"),
+      ],
+    ),
+    @moonorm.Revision::new(
+      id="0002",
+      parents=["0001"],
+      name="create_teams",
+      up=[@moonorm.create_table("teams", teams_columns)],
+      down=[@moonorm.drop_table("teams")],
+    ),
+  ]
+}
+```
+
+The operations are `create_table`, `drop_table`, `add_column`, `drop_column`,
+`rename_table`, `rename_column`, `alter_column`, `add_foreign_key`,
+`drop_foreign_key`, `create_index`, `drop_index`, `rebuild_table` and `execute`. Being
+values, they render for any dialect, compare in a test, and can be printed before
+anything runs.
+
+```moonbit
+pub fn apply(sess : @moonorm.Session, plan : Array[@moonorm.Revision]) -> Unit raise @moondb.DbError {
+  let m = @moonorm.Migrator::new()
+  m.upgrade(sess, plan) |> ignore        // to the single head; "heads" for every tip
+  m.downgrade(sess, plan, target="0001") |> ignore
+  m.stamp(sess, plan, target="0002") |> ignore  // record it without running it
+  let _ = m.heads(sess, plan)            // where the database sits
+  let _ = m.history(sess, plan)          // newest first, each marked applied
+}
+```
+
+Each revision and the row that records it run in one transaction, so an interrupted
+upgrade resumes at a revision boundary. Running the same set twice applies nothing.
+
+`upgrade_sql` and `downgrade_sql` return exactly the statements the online path
+executes, which is the offline mode and what a driver behind an async seam runs:
+
+```moonbit
+pub fn plan_sql(plan : Array[@moonorm.Revision]) -> Array[@moonorm.Step] raise @moondb.DbError {
+  @moonorm.Migrator::new().upgrade_sql(plan, [], target="heads", dialect=Postgres)
+}
+```
+
+An engine that cannot express an operation is refused, not approximated: SQLite
+cannot add a foreign key or change a column's type in place, and `alter_column` there
+raises and points at `rebuild_table`, which is the four-step swap SQLite's batch alter
+performs.
+
+### Autogenerate
+
+Compare what the models declare against what the database has, and get the operations
+that close the gap — with the operations that undo them:
+
+```moonbit
+pub fn drift(declared : Array[@moonorm.TableSpec], live : Array[@moonorm.TableSpec]) -> Array[@moonorm.Change] {
+  @moonorm.autogenerate_changes(declared, live, dialect=Postgres)
+  // up:   ALTER TABLE heroes ADD COLUMN power INTEGER
+  // down: ALTER TABLE heroes DROP COLUMN power
+}
+```
+
+The comparison covers tables added and dropped, columns added and dropped, type and
+nullability changes (types compared as the dialect spells them, so an `Int64` that
+SQLite stores as `INTEGER` is not a change), and indexes added, dropped and replaced.
+`TableSpec` is a model without its record type — `model.spec()` produces one — and
+`reflect_schema(driver, dialect)` produces the other side.
+
+Because every change carries its inverse, `autogenerate_revision` produces a revision
+with a downgrade already written:
+
+```moonbit
+pub fn next_revision(declared : Array[@moonorm.TableSpec], live : Array[@moonorm.TableSpec]) -> @moonorm.Revision {
+  @moonorm.autogenerate_revision(id="0005", parents=["0004"], name="hero powers", declared, live)
 }
 ```
 

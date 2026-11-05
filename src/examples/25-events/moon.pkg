@@ -1,0 +1,8 @@
+import {
+  "moonbitstack/moonorm",
+  "moonbitstack/moonorm/schema",
+  "moonbitstack/moonorm/session",
+  "moonbitstack/moondb",
+}
+
+pkgtype(kind: "executable")

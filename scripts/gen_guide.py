@@ -31,6 +31,10 @@ REGIONS = {
     "query-code": [("src/examples/guide/report/report.mbt", "query")],
     "insert-code": [("src/examples/guide/report/report.mbt", "insert")],
     "diff-code": [("src/examples/guide/report/report.mbt", "diff")],
+    "revision-code": [("src/examples/guide/next/main.mbt", "revision")],
+    "hooks-code": [("src/examples/guide/next/main.mbt", "hooks")],
+    "hybrid-code": [("src/examples/guide/next/main.mbt", "hybrid")],
+    "inherit-code": [("src/examples/guide/next/main.mbt", "inherit")],
 }
 
 # Each page slot is filled from one `=== name ===` section of the check's output.
@@ -39,6 +43,16 @@ SECTIONS = {
     "query-out": "query",
     "insert-out": "insert",
     "diff-out": "diff",
+}
+
+# The later steps — revisions, hooks, hybrids, inheritance — come from a second runnable
+# package, because they are about the model and session layers rather than the three
+# model styles the check package compares.
+NEXT_SECTIONS = {
+    "revision-out": "revision",
+    "hooks-out": "hooks",
+    "hybrid-out": "hybrid",
+    "inherit-out": "inherit",
 }
 
 
@@ -50,7 +64,7 @@ def read(path):
 def region(path, name):
     text = read(path)
     m = re.search(
-        r"// --8<-- \[start:%s\]\n(.*?)\n// --8<-- \[end:%s\]" % (name, name),
+        r"[ \t]*// --8<-- \[start:%s\]\n(.*?)\n[ \t]*// --8<-- \[end:%s\]" % (name, name),
         text,
         re.S,
     )
@@ -87,6 +101,20 @@ def run_check():
     return r.stdout
 
 
+def run_next():
+    r = subprocess.run(
+        ["moon", "run", "src/examples/guide/next", "--target", "js"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if r.returncode != 0:
+        sys.stderr.write(r.stdout)
+        sys.stderr.write(r.stderr)
+        sys.exit("gen_guide: the later steps did not run")
+    return r.stdout
+
+
 def section(output, name):
     m = re.search(r"^=== %s ===\n(.*?)(?=^=== |\Z)" % name, output, re.S | re.M)
     if not m:
@@ -114,6 +142,9 @@ def main():
         html = inject(html, name, escape(code))
     for name, sec in SECTIONS.items():
         html = inject(html, name, escape(section(output, sec)))
+    later = run_next()
+    for name, sec in NEXT_SECTIONS.items():
+        html = inject(html, name, escape(section(later, sec).replace("=== done ===", "").rstrip("\n")))
     if check:
         if html != read("docs/guide.html"):
             sys.exit(

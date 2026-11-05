@@ -307,6 +307,80 @@ params: [Text("ada@x.io"), Double(0), Int64(2), Text("active"), Int(1)]<!-- /gui
 // + level INTEGER</code></pre>
         <p><code class="inline">Migrator</code> then applies a list of <code class="inline">Migration</code> records — each a version, a name, and the up/down statements — and records what it ran.</p>
 
+        <p>The revision form replaces a version number with a graph: each <code class="inline">Revision</code> names its parents, and a change is a list of operations rather than SQL text. <code class="inline">upgrade_sql</code> prints exactly what <code class="inline">upgrade</code> would run.</p>
+        <pre><code><!-- guide:revision-code -->  let revisions : Array[@moonorm.Revision] = [
+    @moonorm.Revision::new(
+      id="0001",
+      name="create_accounts",
+      up=[
+        @moonorm.create_table("accounts", [
+          @moonorm.column("id", @schema.IntType, primary_key=true),
+          @moonorm.column("email", @schema.VarcharType(255), nullable=false),
+        ]),
+      ],
+      down=[@moonorm.drop_table("accounts")],
+    ),
+    @moonorm.Revision::new(
+      id="0002",
+      parents=["0001"],
+      name="add_updated_by",
+      up=[@moonorm.add_column("accounts", @schema.column("updated_by", @schema.TextType))],
+      down=[@moonorm.drop_column("accounts", "updated_by")],
+    ),
+  ]
+  let plan = @moonorm.Migrator::new().upgrade_sql(
+    revisions,
+    [],
+    target="head",
+    dialect=@query.Postgres,
+  )
+  for step in plan {
+    for statement in step.statements {
+      println(statement.sql)
+    }
+  }
+  "0002"<!-- /guide:revision-code --></code></pre>
+        <pre><code><!-- guide:revision-out -->CREATE TABLE accounts (id INTEGER PRIMARY KEY, email VARCHAR(255) NOT NULL)
+INSERT INTO moonorm_revisions (id, name) VALUES (?, ?)
+ALTER TABLE accounts ADD COLUMN updated_by TEXT
+INSERT INTO moonorm_revisions (id, name) VALUES (?, ?)<!-- /guide:revision-out --></code></pre>
+
+        <h2 id="hooks">7 · Hook the write path</h2>
+        <p>A session fires before and after each insert, update and delete, around the flush, and around the transaction. The row being written is passed to a <code class="inline">Before*</code> hook and is mutable: what the hook leaves behind is what the statement carries.</p>
+        <pre><code><!-- guide:hooks-code -->  sess.on(@session.BeforeInsert, ctx =&gt; {
+    // A creation stamp: the row is mutable here, and what is left behind is written.
+    ctx.set_column("updated_by", @moondb.Text("import"))
+  })
+  sess.on(@session.AfterInsert, ctx =&gt; {
+    println(ctx.sql)
+  })<!-- /guide:hooks-code --></code></pre>
+        <pre><code><!-- guide:hooks-out -->INSERT INTO accounts (id, email, updated_by) VALUES (?, ?, ?)<!-- /guide:hooks-out --></code></pre>
+
+        <h2 id="hybrid">8 · Compute an attribute</h2>
+        <p>A hybrid is one definition read two ways: as SQL inside a predicate or an <code class="inline">ORDER BY</code>, and as a value computed off a record. <code class="inline">{t}</code> is the table qualifier, filled in from the query's own table.</p>
+        <pre><code><!-- guide:hybrid-code -->  let statement = @moonorm
+    .select("people")
+    .where_hybrid(full_name(), "=", @moondb.Text("Ada Lovelace"))
+    .build()
+  // The same definition, read off a record instead of by the database.
+  let person : Person = { first: "Ada", last: "Lovelace" }
+  println(full_name().value(person).to_string())
+  statement.0<!-- /guide:hybrid-code --></code></pre>
+        <pre><code><!-- guide:hybrid-out -->Text("Ada Lovelace")
+SELECT * FROM people WHERE people.first || ' ' || people.last = ?<!-- /guide:hybrid-out --></code></pre>
+
+        <h2 id="inherit">9 · Map a hierarchy</h2>
+        <p>Single-table inheritance puts the hierarchy behind a discriminator, joined-table inheritance gives each class its own table and joins the key, and concrete inheritance gives each class a table of its own. Each is one <code class="inline">Model</code>.</p>
+        <pre><code><!-- guide:inherit-code -->  let fields : Array[@moonorm.Field[Engineer]] = [
+    @moonorm.field("id", @schema.IntType, e =&gt; e.id, primary_key=true),
+    @moonorm.field("name", @schema.TextType, e =&gt; e.name, nullable=false),
+    @moonorm.field("engineer_name", @schema.TextType, e =&gt; e.engineer_name),
+  ]
+  let model = @moonorm.Model::from_fields("engineer", fields, engineer_row)
+    .joined(parent_table="person", parent_columns=["id", "name"])
+  model.select().build().0<!-- /guide:inherit-code --></code></pre>
+        <pre><code><!-- guide:inherit-out -->SELECT person.id, person.name, engineer.engineer_name FROM engineer JOIN person ON person.id = engineer.id<!-- /guide:inherit-out --></code></pre>
+
         <h2 id="dialects">Dialects</h2>
         <p>The <code class="inline">Dialect</code> enum fixes the spelling of types, keys and placeholders. Choose it once per session; the seam renders the rest.</p>
         <table class="map-table">
