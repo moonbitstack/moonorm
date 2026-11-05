@@ -1,8 +1,7 @@
 ///|
 /// A person row as a joined-table subclass reads it: the parent's two columns and the
 /// subclass's one.
-#derive(Eq, Debug)
-struct Staff {
+priv struct Staff {
   id : Int32
   name : String
   staff_name : String

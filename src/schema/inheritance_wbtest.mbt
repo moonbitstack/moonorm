@@ -4,8 +4,7 @@
 
 ///|
 /// The base row of a single-table hierarchy: an id, a name and the discriminator.
-#derive(Eq, Debug)
-struct Employee {
+priv struct Employee {
   id : Int32
   name : String
   kind : String
@@ -13,8 +12,7 @@ struct Employee {
 
 ///|
 /// An engineer row from the same table, carrying the one column only engineers have.
-#derive(Eq, Debug)
-struct Engineer {
+priv struct Engineer {
   id : Int32
   name : String
   engineer_name : String
@@ -22,8 +20,7 @@ struct Engineer {
 
 ///|
 /// A manager row from the same table.
-#derive(Eq, Debug)
-struct Manager {
+priv struct Manager {
   id : Int32
   name : String
   manager_name : String
@@ -31,8 +28,7 @@ struct Manager {
 
 ///|
 /// The engineer half: the person's two columns plus the one only engineers have.
-#derive(Eq, Debug)
-struct JoinedEngineer {
+priv struct JoinedEngineer {
   id : Int32
   name : String
   engineer_name : String
