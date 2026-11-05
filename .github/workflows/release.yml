@@ -76,3 +76,31 @@ jobs:
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/moonbitstack/moonbitstack.github.io/dispatches \
             -d '{"event_type":"released"}'
+
+  # Its own job: the module is already out by now, so rerunning a failure here must not publish it again.
+  skills:
+    needs: publish
+    runs-on: ubuntu-26.04
+    environment: mooncakes
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: install moonbit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+
+      - name: publish the skills, at the module's version
+        env:
+          CREDENTIALS: ${{ secrets.MOONCAKES_CREDENTIALS }}
+        run: |
+          version="$(sed -n 's/^version = "\(.*\)"/\1/p' moon.mod)"
+          trap 'rm -f ~/.moon/credentials.json' EXIT
+          printf '%s' "$CREDENTIALS" > ~/.moon/credentials.json
+          moon update
+          for dir in docs/skills/*/; do
+            [ -f "$dir/SKILL.md" ] || continue
+            moonx moonbit-community/skills --moon-home "$HOME/.moon" publish "$dir" --version "$version"
+          done
