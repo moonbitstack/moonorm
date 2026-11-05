@@ -8,13 +8,20 @@
 // boundary are the same.
 
 ///|
-/// One queued statement: the table it writes, the tables that must be written before
-/// it, the thunk that renders it at flush time, and the identity bookkeeping to run
-/// once it has executed.
+/// One queued write: the table it writes, the tables that must be written before it,
+/// how to read the row's current columns, how to render the statements for those
+/// columns, and the identity bookkeeping to run once they have executed.
+///
+/// The columns are re-read at flush time rather than captured at queue time, so the
+/// row written is the record's state at the flush — and so a `Before*` hook can
+/// rewrite it and have the statement follow.
 struct Work {
   table : String
   parents : Array[String]
-  emit : () -> (String, Array[@moondb.Value])
+  columns : () -> Array[(String, @moondb.Value)]
+  emit : (Array[(String, @moondb.Value)]) -> Array[
+    (String, Array[@moondb.Value]),
+  ]
   settle : () -> Unit
   mut done : Bool
 }
@@ -94,6 +101,108 @@ fn[T] record_key(
     )
   }
   key
+}
+
+///|
+/// The columns that address a row of `table` for this model: the primary key for a
+/// plain model, the parent key in the parent table of a joined mapping, and the
+/// foreign key in the subclass table.
+fn[T] key_columns_of(model : @schema.Model[T], table : String) -> Array[String] {
+  if !model.is_joined() {
+    model.pk_columns()
+  } else if table == model.parent_table() {
+    [model.parent_key()]
+  } else {
+    [model.parent_fk()]
+  }
+}
+
+///|
+/// Render one INSERT per table the row is written to, parent first — the order a
+/// foreign key requires.
+fn insert_statements(
+  rows : Array[(String, Array[(String, @moondb.Value)])],
+  dialect : @query.Dialect,
+) -> Array[(String, Array[@moondb.Value])] {
+  let out : Array[(String, Array[@moondb.Value])] = []
+  for row in rows {
+    let (table, pairs) = row
+    if pairs.length() == 0 {
+      continue
+    }
+    let mut ins = @query.insert(table)
+    for pair in pairs {
+      ins = ins.set(pair.0, pair.1)
+    }
+    out.push(ins.build_for(dialect))
+  }
+  out
+}
+
+///|
+/// Render one UPDATE per table the row spans, setting every non-key column and
+/// addressing the row by that table's key.
+fn[T] update_statements(
+  model : @schema.Model[T],
+  columns : Array[(String, @moondb.Value)],
+  dialect : @query.Dialect,
+) -> Array[(String, Array[@moondb.Value])] {
+  let out : Array[(String, Array[@moondb.Value])] = []
+  for group in model.split_columns(columns) {
+    let (table, pairs) = group
+    let keys = key_columns_of(model, table)
+    let mut stmt = @query.update(table)
+    let mut sets = 0
+    for pair in pairs {
+      if !keys.contains(pair.0) {
+        stmt = stmt.set(pair.0, pair.1)
+        sets = sets + 1
+      }
+    }
+    if sets == 0 {
+      continue
+    }
+    for key in keys {
+      for pair in pairs {
+        if pair.0 == key {
+          stmt = stmt.where_(pair.0, "=", pair.1)
+        }
+      }
+    }
+    out.push(stmt.build_for(dialect))
+  }
+  out
+}
+
+///|
+/// Render one DELETE per table the row spans, subclass first — the reverse of the
+/// order an insert takes, so the row holding the foreign key goes before the one it
+/// points at.
+fn[T] delete_statements(
+  model : @schema.Model[T],
+  columns : Array[(String, @moondb.Value)],
+  dialect : @query.Dialect,
+) -> Array[(String, Array[@moondb.Value])] {
+  let groups = model.split_columns(columns)
+  let out : Array[(String, Array[@moondb.Value])] = []
+  for i = groups.length() - 1; i >= 0; i = i - 1 {
+    let (table, pairs) = groups[i]
+    let keys = key_columns_of(model, table)
+    let mut stmt = @query.delete(table)
+    let mut matched = 0
+    for key in keys {
+      for pair in pairs {
+        if pair.0 == key {
+          stmt = stmt.where_(pair.0, "=", pair.1)
+          matched = matched + 1
+        }
+      }
+    }
+    if matched > 0 {
+      out.push(stmt.build_for(dialect))
+    }
+  }
+  out
 }
 
 ///|
@@ -200,10 +309,12 @@ pub fn[T] Session::add_record(
   model : @schema.Model[T],
   record : T,
 ) -> Unit {
+  let dialect = self.dialect
   self.pending.push({
     table: model.table,
     parents: model.parent_tables(),
-    emit: () => model.insert_of(record).build_for(self.dialect),
+    columns: () => (model.to_columns)(record),
+    emit: columns => insert_statements(model.split_columns(columns), dialect),
     settle: () => self.remember(model, record),
     done: false,
   })
@@ -224,13 +335,13 @@ pub fn[T] Session::update_record(
   model : @schema.Model[T],
   record : T,
 ) -> Unit raise @moondb.DbError {
-  let key = record_key(model, record)
+  // Addressability is checked now, so a record without a key fails at the call that
+  // queued it rather than halfway through a flush.
+  record_key(model, record) |> ignore
   let cols = model.pk_columns()
-  let mut stmt = @query.update(model.table)
   let mut sets = 0
   for pair in (model.to_columns)(record) {
     if !cols.contains(pair.0) {
-      stmt = stmt.set(pair.0, pair.1)
       sets = sets + 1
     }
   }
@@ -240,15 +351,12 @@ pub fn[T] Session::update_record(
       ": every column belongs to the primary key, nothing to update",
     )
   }
-  for i in 0..<cols.length() {
-    stmt = stmt.where_(cols[i], "=", key[i])
-  }
-  // A closure cannot capture a `mut` binding, so freeze the finished statement.
-  let q = stmt
+  let dialect = self.dialect
   self.dirty.push({
     table: model.table,
     parents: model.parent_tables(),
-    emit: () => q.build_for(self.dialect),
+    columns: () => (model.to_columns)(record),
+    emit: columns => update_statements(model, columns, dialect),
     settle: () => self.remember(model, record),
     done: false,
   })
@@ -268,18 +376,14 @@ pub fn[T] Session::delete_record(
   record : T,
 ) -> Unit raise @moondb.DbError {
   let key = record_key(model, record)
-  let cols = model.pk_columns()
-  let mut stmt = @query.delete(model.table)
-  for i in 0..<cols.length() {
-    stmt = stmt.where_(cols[i], "=", key[i])
-  }
-  // A closure cannot capture a `mut` binding, so freeze the finished statement.
-  let q = stmt
+  let dialect = self.dialect
+  let identity = identity_key(key)
   self.deleted.push({
     table: model.table,
     parents: model.parent_tables(),
-    emit: () => q.build_for(self.dialect),
-    settle: () => self.slot(model).remove(identity_key(key)),
+    columns: () => (model.to_columns)(record),
+    emit: columns => delete_statements(model, columns, dialect),
+    settle: () => self.slot(model).remove(identity),
     done: false,
   })
 }
@@ -323,10 +427,34 @@ fn ready(w : Work, left : Array[Work], at : Int32) -> Bool {
 }
 
 ///|
-/// Render one queued statement, run it, and settle its identity bookkeeping.
-fn Session::run(self : Session, w : Work) -> Unit raise @moondb.DbError {
-  let (sql, params) = (w.emit)()
-  self.driver.execute(sql, params) |> ignore
+/// Render one queued write, fire its hooks around it, run its statements, and settle
+/// its identity bookkeeping.
+///
+/// The row's columns are read first, so a `Before*` listener sees what is about to be
+/// written and can rewrite it. The `After*` listener is handed a statement that ran
+/// — the last one, when a joined mapping wrote two — so it can log what reached the
+/// database.
+fn Session::run(
+  self : Session,
+  w : Work,
+  before : HookEvent,
+  after : HookEvent,
+) -> Unit raise @moondb.DbError {
+  let ctx = HookContext::new(before, table=w.table, columns=(w.columns)())
+  self.fire(ctx)
+  let statements = (w.emit)(ctx.columns)
+  let mut last_sql = ""
+  let mut last_params : Array[@moondb.Value] = []
+  for statement in statements {
+    let (sql, params) = statement
+    self.driver.execute(sql, params) |> ignore
+    last_sql = sql
+    last_params = params
+  }
+  let done = HookContext::new(after, table=w.table, columns=ctx.columns)
+  done.sql = last_sql
+  done.params = last_params
+  self.fire(done)
   (w.settle)()
   w.done = true
 }
@@ -346,20 +474,25 @@ fn Session::sweep(self : Session) -> Unit {
 /// precedes any child that references it; then the updates; then the deletes in the
 /// reverse order, so a child goes before its parent. Nothing here commits.
 ///
+/// `BeforeFlush` runs once before the first statement and `AfterFlush` once after the
+/// last, which is where a listener that wants to see the whole batch registers.
+///
 /// A statement that has run leaves the queue even when a later one raises, so the
 /// failed flush can be rolled back without replaying what already executed.
 pub fn Session::flush(self : Session) -> Unit raise @moondb.DbError {
   defer self.sweep()
+  self.fire(HookContext::new(BeforeFlush))
   for w in plan(self.pending) {
-    self.run(w)
+    self.run(w, BeforeInsert, AfterInsert)
   }
   for w in self.dirty {
-    self.run(w)
+    self.run(w, BeforeUpdate, AfterUpdate)
   }
   let order = plan(self.deleted)
   for i = order.length() - 1; i >= 0; i = i - 1 {
-    self.run(order[i])
+    self.run(order[i], BeforeDelete, AfterDelete)
   }
+  self.fire(HookContext::new(AfterFlush))
 }
 
 ///|

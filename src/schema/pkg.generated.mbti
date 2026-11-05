@@ -8,11 +8,23 @@ import {
 }
 
 // Values
+pub fn add_column_sql(String, Column, @query.Dialect) -> String
+
 pub fn[S, T, V : @moondb.ToValue] belongs_to(Model[T], String, (S) -> V) -> Relation[S, T]
 
 pub fn column(String, ColumnType, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Column
 
+pub fn create_index_sql(String, String, Array[String], unique? : Bool, if_not_exists? : Bool, dialect? : @query.Dialect) -> String
+
+pub fn create_table_sql(String, Array[Column], @query.Dialect, if_not_exists? : Bool) -> String
+
 pub fn custom_column_type(sqlite~ : String, postgres~ : String, mysql~ : String) -> CustomColumnType
+
+pub fn drop_column_sql(String, String) -> String
+
+pub fn drop_index_sql(String, String?, if_exists? : Bool, dialect? : @query.Dialect) -> String
+
+pub fn drop_table_sql(String, if_exists? : Bool) -> String
 
 pub fn[T, V : @moondb.ToValue] field(String, ColumnType, (T) -> V, primary_key? : Bool, autoincrement? : Bool, nullable? : Bool, unique? : Bool, default? : String, checks? : Array[String], references? : (String, String), on_delete? : String, on_update? : String) -> Field[T]
 
@@ -20,7 +32,13 @@ pub fn[S, T, V : @moondb.ToValue] has_many(Model[T], String, (S) -> V) -> Relati
 
 pub fn index(Array[String], name? : String, unique? : Bool) -> Index
 
+pub fn index_name(TableSpec, Index) -> String
+
 pub fn[S, T, V : @moondb.ToValue] many_to_many(Model[T], junction~ : String, source_fk~ : String, target_fk~ : String, target_key~ : String, source_key~ : (S) -> V) -> ManyToMany[S, T]
+
+pub fn rename_column_sql(String, String, String) -> String
+
+pub fn rename_table_sql(String, String) -> String
 
 pub fn user_type(sqlite~ : String, postgres~ : String, mysql~ : String) -> ColumnType
 
@@ -114,6 +132,10 @@ pub struct Model[T] {
   from_row : (@moondb.Row) -> T raise @moondb.DbError
   to_columns : (T) -> Array[(String, @moondb.Value)]
   indexes : Array[Index]
+  filter : Array[(String, @moondb.Value)]
+  joins : Array[(String, String)]
+  projection : Array[String]
+  parent : (String, Array[String], String)?
   ident : Map[Int32, Map[String, T]]
 }
 pub fn[T] Model::column_names(Self[T]) -> Array[String]
@@ -121,15 +143,23 @@ pub fn[T] Model::create_indexes_sql(Self[T], if_not_exists? : Bool) -> Array[Str
 pub fn[T] Model::create_indexes_sql_for(Self[T], @query.Dialect, if_not_exists? : Bool) -> Array[String]
 pub fn[T] Model::create_table_sql(Self[T], if_not_exists? : Bool) -> String
 pub fn[T] Model::create_table_sql_for(Self[T], @query.Dialect, if_not_exists? : Bool) -> String
+pub fn[T] Model::discriminate(Self[T], column~ : String, identity~ : String) -> Self[T]
 pub fn[T] Model::from_fields(String, Array[Field[T]], (@moondb.Row) -> T raise @moondb.DbError, indexes? : Array[Index]) -> Self[T]
 pub fn[T] Model::insert_of(Self[T], T) -> @query.Insert
+pub fn[T] Model::is_joined(Self[T]) -> Bool
+pub fn[T] Model::joined(Self[T], parent_table~ : String, parent_columns~ : Array[String], fk? : String) -> Self[T]
 pub fn[T] Model::map_row(Self[T], @moondb.Row) -> T raise @moondb.DbError
 pub fn[T] Model::map_rows(Self[T], Array[@moondb.Row]) -> Array[T] raise @moondb.DbError
 pub fn[T] Model::new(String, Array[Column], (@moondb.Row) -> T raise @moondb.DbError, (T) -> Array[(String, @moondb.Value)], indexes? : Array[Index]) -> Self[T]
+pub fn[T] Model::parent_fk(Self[T]) -> String
+pub fn[T] Model::parent_key(Self[T]) -> String
+pub fn[T] Model::parent_table(Self[T]) -> String
 pub fn[T] Model::parent_tables(Self[T]) -> Array[String]
 pub fn[T] Model::pk_columns(Self[T]) -> Array[String]
 pub fn[T] Model::pk_of(Self[T], T) -> Array[@moondb.Value]
 pub fn[T] Model::select(Self[T]) -> @query.Select
+pub fn[T] Model::spec(Self[T]) -> TableSpec
+pub fn[T] Model::split_columns(Self[T], Array[(String, @moondb.Value)]) -> Array[(String, Array[(String, @moondb.Value)])]
 pub fn[T] Model::table_descriptor(Self[T]) -> @query.Table
 
 pub struct Relation[S, T] {
@@ -142,6 +172,21 @@ pub fn[S, T] Relation::batch_query(Self[S, T], Array[S]) -> @query.Select
 pub fn[S, T] Relation::joined_sql(Self[S, T], Array[S]) -> (String, Array[@moondb.Value])
 pub fn[S, T] Relation::query(Self[S, T], S) -> @query.Select
 pub fn[S, T] Relation::source_value(Self[S, T], S) -> @moondb.Value
+
+pub(all) struct Schema {
+  tables : Array[TableSpec]
+}
+pub fn Schema::names(Self) -> Array[String]
+pub fn Schema::new(Array[TableSpec]) -> Self
+pub fn Schema::snapshot(Self, @query.Dialect) -> String
+pub fn Schema::table(Self, String) -> TableSpec?
+
+pub(all) struct TableSpec {
+  name : String
+  columns : Array[Column]
+  indexes : Array[Index]
+}
+pub fn TableSpec::new(String, Array[Column], indexes? : Array[Index]) -> Self
 
 // Type aliases
 
