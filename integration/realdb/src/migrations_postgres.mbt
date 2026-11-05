@@ -189,7 +189,9 @@ async test "autogenerate reads a real PostgreSQL schema" {
     env_or("PGDATABASE", "orm"),
   )
   defer conn.close()
-  conn.execute("DROP TABLE IF EXISTS shapes", []) |> ignore
+  // A clean slate first: this test reads the whole schema, so a table left by
+  // an earlier run would read as a table the models dropped.
+  conn.execute("DROP TABLE IF EXISTS heroes, teams, shapes, moonorm_revisions", []) |> ignore
   conn.execute(
     "CREATE TABLE shapes (id INTEGER PRIMARY KEY, name TEXT NOT NULL, size INTEGER)",
     [],

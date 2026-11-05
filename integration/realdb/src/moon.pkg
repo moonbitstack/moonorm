@@ -3,6 +3,11 @@
 // ride moonbitlang/async sockets. Native only, on all three.
 supported_targets = "native"
 
+// Every test in this package reads and writes the same three databases, so they run one
+// at a time: two in parallel see each other's tables and one test's reflected schema
+// becomes another's stray table.
+max_concurrent_tests = 1
+
 import {
   "moonbitstack/moonorm/migrate",
   "moonbitstack/moonorm/query",
