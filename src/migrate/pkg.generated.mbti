@@ -9,9 +9,51 @@ import {
 }
 
 // Values
+pub fn add_column(String, @schema.Column) -> Op
+
+pub fn add_foreign_key(String, String, Array[String], String, Array[String], on_delete? : String, on_update? : String) -> Op
+
+pub fn alter_column(String, String, new_name? : String, col_type? : @schema.ColumnType, nullable? : Bool, default? : String, drop_default? : Bool) -> Op
+
+pub fn autogenerate(Array[@schema.TableSpec], Array[@schema.TableSpec], dialect? : @query.Dialect) -> Array[Op]
+
+pub fn autogenerate_changes(Array[@schema.TableSpec], Array[@schema.TableSpec], dialect? : @query.Dialect) -> Array[Change]
+
+pub fn autogenerate_revision(id~ : String, parents? : Array[String], name~ : String, Array[@schema.TableSpec], Array[@schema.TableSpec], dialect? : @query.Dialect) -> Revision
+
+pub fn create_index(String, String, Array[String], unique? : Bool, if_not_exists? : Bool) -> Op
+
+pub fn create_table(String, Array[@schema.Column], if_not_exists? : Bool) -> Op
+
 pub fn diff_schema(Array[@schema.Column], Array[@schema.Column], dialect? : @query.Dialect) -> Array[ColumnDiff]
 
+pub fn drop_column(String, String) -> Op
+
+pub fn drop_foreign_key(String, String) -> Op
+
+pub fn drop_index(String, table? : String, if_exists? : Bool) -> Op
+
+pub fn drop_table(String, if_exists? : Bool) -> Op
+
+pub fn execute(String) -> Op
+
 pub fn index_ddl(String, String, Array[String], unique? : Bool) -> String
+
+pub fn indexes_of_rows(Array[@moondb.Row]) -> Array[ReflectedIndex] raise @moondb.DbError
+
+pub fn mysql_columns_query(String) -> String raise @moondb.DbError
+
+pub fn mysql_indexes_query() -> String
+
+pub fn mysql_tables_query() -> String
+
+pub fn postgres_columns_query() -> String
+
+pub fn postgres_indexes_query() -> String
+
+pub fn postgres_tables_query() -> String
+
+pub fn rebuild_table(String, Array[@schema.Column], Array[String]) -> Op
 
 pub fn reflect_columns(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
 
@@ -19,13 +61,38 @@ pub fn reflect_columns_mysql(Array[@moondb.Row]) -> Array[@schema.Column] raise 
 
 pub fn reflect_columns_pg(Array[@moondb.Row]) -> Array[@schema.Column] raise @moondb.DbError
 
+pub fn reflect_schema(&@moondb.Driver, @query.Dialect) -> @schema.Schema raise @moondb.DbError
+
 pub fn reflect_table(&@moondb.Driver, String) -> Array[@schema.Column] raise @moondb.DbError
 
 pub fn reflect_table_for(&@moondb.Driver, String, @query.Dialect) -> Array[@schema.Column] raise @moondb.DbError
 
+pub fn rename_column(String, String, String) -> Op
+
+pub fn rename_table(String, String) -> Op
+
+pub fn revision_bases(Array[Revision]) -> Array[String]
+
+pub fn revision_heads(Array[Revision]) -> Array[String]
+
+pub fn sqlite_columns_query(String) -> String raise @moondb.DbError
+
+pub fn sqlite_index_info_query(String) -> String raise @moondb.DbError
+
+pub fn sqlite_index_list_query(String) -> String raise @moondb.DbError
+
+pub fn sqlite_tables_query() -> String
+
+pub fn table_names_of(Array[@moondb.Row]) -> Array[String] raise @moondb.DbError
+
 // Errors
 
 // Types and methods
+pub(all) struct Change {
+  up : Op
+  down : Op
+}
+
 #derive(Eq)
 pub(all) enum ColumnDiff {
   Added(name~ : String, col_type~ : @schema.ColumnType)
@@ -34,6 +101,13 @@ pub(all) enum ColumnDiff {
 }
 pub fn ColumnDiff::equal(Self, Self) -> Bool
 pub fn ColumnDiff::not_equal(Self, Self) -> Bool
+
+pub(all) struct HistoryEntry {
+  id : String
+  parents : Array[String]
+  name : String
+  applied : Bool
+}
 
 pub(all) struct Migration {
   version : Int32
@@ -44,13 +118,78 @@ pub(all) struct Migration {
 
 pub struct Migrator {
   table : String
+  revisions_table : String
 }
+pub fn Migrator::applied_revisions(Self, @session.Session, Array[Revision]) -> Array[String] raise @moondb.DbError
 pub fn Migrator::applied_versions(Self, @session.Session) -> Array[Int32] raise @moondb.DbError
 pub fn Migrator::current_version(Self, @session.Session) -> Int32 raise @moondb.DbError
 pub fn Migrator::down_to(Self, @session.Session, Array[Migration], Int32) -> Int32 raise @moondb.DbError
+pub fn Migrator::downgrade(Self, @session.Session, Array[Revision], target? : String) -> Array[String] raise @moondb.DbError
+pub fn Migrator::downgrade_sql(Self, Array[Revision], Array[String], target? : String, dialect? : @query.Dialect) -> Array[Step] raise @moondb.DbError
+pub fn Migrator::ensure_revisions_table(Self, @session.Session) -> Unit raise @moondb.DbError
 pub fn Migrator::ensure_table(Self, @session.Session) -> Unit raise @moondb.DbError
-pub fn Migrator::new(table? : String) -> Self raise @moondb.DbError
+pub fn Migrator::heads(Self, @session.Session, Array[Revision]) -> Array[String] raise @moondb.DbError
+pub fn Migrator::history(Self, @session.Session, Array[Revision]) -> Array[HistoryEntry] raise @moondb.DbError
+pub fn Migrator::new(table? : String, revisions_table? : String) -> Self raise @moondb.DbError
+pub fn Migrator::stamp(Self, @session.Session, Array[Revision], target? : String) -> Unit raise @moondb.DbError
 pub fn Migrator::up(Self, @session.Session, Array[Migration]) -> Int32 raise @moondb.DbError
+pub fn Migrator::upgrade(Self, @session.Session, Array[Revision], target? : String) -> Array[String] raise @moondb.DbError
+pub fn Migrator::upgrade_sql(Self, Array[Revision], Array[String], target? : String, dialect? : @query.Dialect) -> Array[Step] raise @moondb.DbError
+
+pub(all) enum Op {
+  CreateTable(name~ : String, columns~ : Array[@schema.Column], if_not_exists~ : Bool)
+  DropTable(name~ : String, if_exists~ : Bool)
+  AddColumn(table~ : String, column~ : @schema.Column)
+  DropColumn(table~ : String, name~ : String)
+  RenameTable(from~ : String, to~ : String)
+  RenameColumn(table~ : String, from~ : String, to~ : String)
+  AlterColumn(table~ : String, name~ : String, new_name~ : String?, col_type~ : @schema.ColumnType?, nullable~ : Bool?, default~ : String?, drop_default~ : Bool)
+  AddForeignKey(table~ : String, name~ : String, columns~ : Array[String], ref_table~ : String, ref_columns~ : Array[String], on_delete~ : String?, on_update~ : String?)
+  DropForeignKey(table~ : String, name~ : String)
+  CreateIndex(name~ : String, table~ : String, columns~ : Array[String], unique~ : Bool, if_not_exists~ : Bool)
+  DropIndex(name~ : String, table~ : String?, if_exists~ : Bool)
+  RebuildTable(name~ : String, columns~ : Array[@schema.Column], copy~ : Array[String])
+  Execute(sql~ : String)
+}
+pub fn Op::table(Self) -> String
+pub fn Op::to_sql(Self, @query.Dialect) -> Array[String] raise @moondb.DbError
+
+pub(all) struct ReflectedIndex {
+  table : String
+  name : String
+  columns : Array[String]
+  unique : Bool
+}
+
+pub(all) struct Revision {
+  id : String
+  parents : Array[String]
+  name : String
+  up : Array[Op]
+  down : Array[Op]
+}
+pub fn Revision::ancestors(Array[Self], String) -> Array[String]
+pub fn Revision::check(Array[Self]) -> Unit raise @moondb.DbError
+pub fn Revision::doomed(Array[Self], Array[String], String) -> Array[String] raise @moondb.DbError
+pub fn Revision::find(Array[Self], String) -> Self?
+pub fn Revision::history(Array[Self], Array[String]) -> Array[HistoryEntry] raise @moondb.DbError
+pub fn Revision::is_base(Self) -> Bool
+pub fn Revision::new(id~ : String, parents? : Array[String], name~ : String, up~ : Array[Op], down~ : Array[Op]) -> Self
+pub fn Revision::order(Array[Self]) -> Array[String] raise @moondb.DbError
+pub fn Revision::parent(Self) -> String?
+pub fn Revision::pending(Array[Self], Array[String], String) -> Array[String] raise @moondb.DbError
+pub fn Revision::resolve(Array[Self], String) -> Array[String] raise @moondb.DbError
+
+pub(all) struct Statement {
+  sql : String
+  params : Array[@moondb.Value]
+}
+
+pub(all) struct Step {
+  id : String
+  name : String
+  statements : Array[Statement]
+}
 
 // Type aliases
 

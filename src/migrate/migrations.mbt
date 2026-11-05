@@ -21,24 +21,31 @@ pub(all) struct Migration {
 }
 
 ///|
-/// Tracks and applies migrations against a `schema_migrations`-style bookkeeping
-/// table (its name is configurable for coexistence with other tools). Build one
-/// with `Migrator::new`.
+/// Tracks and applies migrations against a bookkeeping table (its name is
+/// configurable for coexistence with other tools). Numeric migrations record their
+/// version in `table`; revision migrations record their ids in `revisions_table`.
+/// Build one with `Migrator::new`.
 pub struct Migrator {
   table : String
+  revisions_table : String
 }
 
 ///|
-/// A migrator recording applied versions in `table` (default `schema_migrations`).
-/// The name must be a bare SQL identifier — it is interpolated as an identifier,
-/// never bound — so a non-identifier is refused up front.
+/// A migrator recording applied versions in `table` (default `schema_migrations`) and
+/// applied revisions in `revisions_table` (default `moonorm_revisions`). Both names
+/// must be bare SQL identifiers — they are interpolated as identifiers, never bound —
+/// so a non-identifier is refused up front.
 pub fn Migrator::new(
   table~ : String = "schema_migrations",
+  revisions_table~ : String = "moonorm_revisions",
 ) -> Migrator raise @moondb.DbError {
   if !@query.is_ident(table) {
     raise @moondb.QueryError("invalid migrations table name: " + table)
   }
-  { table, }
+  if !@query.is_ident(revisions_table) {
+    raise @moondb.QueryError("invalid revisions table name: " + revisions_table)
+  }
+  { table, revisions_table, }
 }
 
 ///|

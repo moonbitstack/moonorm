@@ -88,6 +88,20 @@ pub struct Model[T] {
   from_row : (@moondb.Row) -> T raise @moondb.DbError
   to_columns : (T) -> Array[(String, @moondb.Value)]
   indexes : Array[Index]
+  // A predicate this model's rows satisfy, and the values an INSERT must carry to
+  // keep satisfying it. Single-table inheritance puts the discriminator here, so a
+  // subclass is a model over the shared table that only ever sees its own rows.
+  filter : Array[(String, @moondb.Value)]
+  // Extra `(table, on)` joins. Joined-table inheritance joins the subclass table to
+  // its parent's, so one record carries both halves.
+  joins : Array[(String, String)]
+  // The columns to select, qualified when they come from more than one table. Empty
+  // means this model's own `columns`, in order.
+  projection : Array[String]
+  // For a joined-table subclass: the table its parent's half lives in, which of the
+  // columns belong there, and the subclass column that references the parent key.
+  // Writes split along this line, reads go through `joins`.
+  parent : (String, Array[String], String)?
   // A session's identity map has to hang off the descriptor that carries `T`.
   // MoonBit has no downcast, so a `Session` cannot keep the records of several
   // models in one container and get them back typed; the type-indexed store is the
@@ -117,6 +131,10 @@ pub fn[T] Model::new(
     from_row,
     to_columns,
     indexes: indexes.unwrap_or([]),
+    filter: [],
+    joins: [],
+    projection: [],
+    parent: None,
     ident: Map([]),
   }
 }
@@ -171,6 +189,10 @@ pub fn[T] Model::from_fields(
     from_row,
     to_columns,
     indexes: indexes.unwrap_or([]),
+    filter: [],
+    joins: [],
+    projection: [],
+    parent: None,
     ident: Map([]),
   }
 }
@@ -192,7 +214,9 @@ pub fn[T] Model::column_names(self : Model[T]) -> Array[String] {
 pub fn[T] Model::pk_columns(self : Model[T]) -> Array[String] {
   let names : Array[String] = []
   for c in self.columns {
-    if c.primary_key {
+    // A joined-table subclass declares the parent's key and its own column of the
+    // same name; the row has one key, so it is named once.
+    if c.primary_key && !names.contains(c.name) {
       names.push(c.name)
     }
   }
@@ -246,10 +270,26 @@ pub fn[T] Model::parent_tables(self : Model[T]) -> Array[String] {
 /// explicitly (so the projection order is fixed and known to `from_row`). Add
 /// `where_` / `order_by` / `limit` to it as usual, then run it with
 /// `Session::fetch_as` to get mapped records back.
+///
+/// A subclass model — one built by `discriminate` or `joined` — carries its own
+/// predicate, joins and qualified projection, so this is also the read that returns
+/// only its rows, joined where the mapping spans two tables.
 pub fn[T] Model::select(self : Model[T]) -> @query.Select {
-  let s = @query.select(self.table)
-  for c in self.columns {
-    s.cols.push(c.name)
+  let mut s = @query.select(self.table)
+  if self.projection.length() > 0 {
+    for c in self.projection {
+      s.cols.push(c)
+    }
+  } else {
+    for c in self.columns {
+      s.cols.push(c.name)
+    }
+  }
+  for (table, on) in self.joins {
+    s = s.join(table, on)
+  }
+  for (col, value) in self.filter {
+    s = s.where_(col, "=", value)
   }
   s
 }
@@ -269,35 +309,27 @@ pub fn[T] Model::create_table_sql(
   self : Model[T],
   if_not_exists~ : Bool = false,
 ) -> String {
-  let head = if if_not_exists {
-    "CREATE TABLE IF NOT EXISTS "
-  } else {
-    "CREATE TABLE "
-  }
-  let pks = self.columns.filter(fn(c) { c.primary_key })
-  // A single primary key stays inline (`id INTEGER PRIMARY KEY`); a composite key
-  // becomes a table-level `PRIMARY KEY (a, b)` constraint, since SQL allows only one
-  // inline PRIMARY KEY per table.
-  let composite = pks.length() > 1
-  let defs : Array[String] = []
-  for c in self.columns {
-    defs.push(c.ddl(inline_pk=!composite))
-  }
-  if composite {
-    defs.push("PRIMARY KEY (" + pks.map(fn(c) { c.name }).join(", ") + ")")
-  }
-  head + self.table + " (" + defs.join(", ") + ")"
+  create_table_sql(self.table, self.columns, Sqlite, if_not_exists~)
 }
 
 ///|
 /// Build an `Insert` that persists `record`, binding the pairs from `to_columns`.
 /// Values travel as `?` placeholders exactly like the rest of the builder.
+///
+/// On a joined-table subclass this is the statement for the subclass's own table: the
+/// parent half is a second statement, which `Session::insert_record` and
+/// `Session::add_record` write for you, in the only order the foreign key allows.
 pub fn[T] Model::insert_of(self : Model[T], record : T) -> @query.Insert {
-  let mut ins = @query.insert(self.table)
-  for pair in (self.to_columns)(record) {
-    ins = ins.set(pair.0, pair.1)
+  let groups = self.split_columns((self.to_columns)(record))
+  let mut own = @query.insert(self.table)
+  for group in groups {
+    if group.0 == self.table {
+      for pair in group.1 {
+        own = own.set(pair.0, pair.1)
+      }
+    }
   }
-  ins
+  own
 }
 
 ///|
@@ -332,22 +364,7 @@ pub fn[T] Model::create_table_sql_for(
   dialect : @query.Dialect,
   if_not_exists~ : Bool = false,
 ) -> String {
-  let head = if if_not_exists {
-    "CREATE TABLE IF NOT EXISTS "
-  } else {
-    "CREATE TABLE "
-  }
-  let pks = self.columns.filter(fn(c) { c.primary_key })
-  let composite = pks.length() > 1
-  let defs : Array[String] = []
-  for c in self.columns {
-    defs.push(c.ddl_for(dialect, inline_pk=!composite))
-  }
-  if composite {
-    defs.push("PRIMARY KEY (" + pks.map(fn(c) { c.name }).join(", ") + ")")
-  }
-  let tail = if dialect is Mysql { " ENGINE=InnoDB" } else { "" }
-  head + self.table + " (" + defs.join(", ") + ")" + tail
+  create_table_sql(self.table, self.columns, dialect, if_not_exists~)
 }
 
 ///|
@@ -387,24 +404,14 @@ pub fn[T] Model::create_indexes_sql_for(
   if_not_exists~ : Bool = false,
 ) -> Array[String] {
   self.indexes.map(ix => {
-    let name = match ix.name {
-      Some(n) => n
-      None =>
-        (if ix.unique { "uq_" } else { "ix_" }) +
-        self.table +
-        "_" +
-        ix.columns.join("_")
-    }
-    "CREATE " +
-    (if ix.unique { "UNIQUE " } else { "" }) +
-    "INDEX " +
-    (if if_not_exists && !(dialect is Mysql) { "IF NOT EXISTS " } else { "" }) +
-    name +
-    " ON " +
-    self.table +
-    " (" +
-    ix.columns.join(", ") +
-    ")"
+    create_index_sql(
+      index_name(self.spec(), ix),
+      self.table,
+      ix.columns,
+      unique=ix.unique,
+      if_not_exists~,
+      dialect~,
+    )
   })
 }
 
