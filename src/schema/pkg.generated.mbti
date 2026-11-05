@@ -22,7 +22,7 @@ pub fn custom_column_type(sqlite~ : String, postgres~ : String, mysql~ : String)
 
 pub fn drop_column_sql(String, String) -> String
 
-pub fn drop_index_sql(String, String?, if_exists? : Bool, dialect? : @query.Dialect) -> String
+pub fn drop_index_sql(String, String?, if_exists? : Bool, dialect? : @query.Dialect) -> String raise @moondb.DbError
 
 pub fn drop_table_sql(String, if_exists? : Bool) -> String
 
