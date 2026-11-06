@@ -1,6 +1,6 @@
 name = "moonbitstack/moonorm"
 
-version = "0.11.8"
+version = "0.11.9"
 
 readme = "README.md"
 
