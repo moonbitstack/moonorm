@@ -76,6 +76,15 @@ jobs:
         run: |
           moon info --target all && git diff --exit-code
 
+      - name: the skills are valid
+        if: runner.os == 'Linux'
+        run: |
+          for dir in docs/skills/*/; do
+            case "$dir" in *CHANGE-ME*) continue ;; esac
+            [ -f "$dir/SKILL.md" ] || continue
+            pipx run --spec skills-ref agentskills validate "$dir"
+          done
+
   # End-to-end: the published ORM plus the published SQLite driver, driven against
   # a real SQLite file. It resolves its dependencies from mooncakes, so it runs
   # after those versions are published. Native-only (moonsqlite links C).
