@@ -65,6 +65,9 @@ pub extend FixedDriver with @moondb.Driver::{
   commit,
   query,
   rollback,
+  prepare,
+  dialect,
+  capabilities,
 }
 
 ///|

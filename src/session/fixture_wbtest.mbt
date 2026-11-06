@@ -98,6 +98,9 @@ pub extend SpyDriver with @moondb.Driver::{
   commit,
   query,
   rollback,
+  prepare,
+  dialect,
+  capabilities,
 }
 
 ///|

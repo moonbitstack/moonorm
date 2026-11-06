@@ -54,6 +54,9 @@ pub extend HookDriver with @moondb.Driver::{
   commit,
   query,
   rollback,
+  prepare,
+  dialect,
+  capabilities,
 }
 
 ///|

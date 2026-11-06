@@ -83,6 +83,9 @@ pub extend RevisionDriver with @moondb.Driver::{
   commit,
   query,
   rollback,
+  prepare,
+  dialect,
+  capabilities,
 }
 
 ///|

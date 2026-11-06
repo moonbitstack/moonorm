@@ -124,6 +124,9 @@ pub extend TrackerDriver with @moondb.Driver::{
   commit,
   query,
   rollback,
+  prepare,
+  dialect,
+  capabilities,
 }
 
 ///|
