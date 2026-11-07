@@ -49,7 +49,7 @@ migrations. The root re-exports all of them, so `@moonorm.select` and
 |:--:|:--|:--|
 | `moonorm/query` | dialects, predicates, `select` / `insert` / `update` / `delete`, `Table`, `is_ident` | moondb's `Value` |
 | `moonorm/schema` | `ColumnType`, `Column`, `Field`, `Model`, `Relation`, `ManyToMany`, `TableSpec`, the three inheritance mappings, table and index DDL | `query`, moondb |
-| `moonorm/session` | `Session`, row streams, transactions and savepoints, the unit of work, event hooks, pooled sessions | `schema`, `query`, moondb |
+| `moonorm/session` | `Session` and `AsyncSession`, row streams, transactions and savepoints, the unit of work, event hooks, pooled sessions | `schema`, `query`, moondb |
 | `moonorm/migrate` | `Migration`, `Revision`, `Op`, `Migrator`, `ColumnDiff`, reflection, diffing and autogenerate | `session`, `schema`, `query` |
 | `moonorm/engine` | `Engine`, `Dsn`, `DsnError`: a connection string names the driver and the dialect | `query`, `session`, moondb |
 | `moonorm/mapper` | the runtime behind `#sql.*`: reads a row into what a mapper function returns | moondb |
@@ -69,8 +69,8 @@ nothing gives the type, annotate or name the subpackage:
 A table is an annotated struct, and a statement an annotated function:
 
 ```moonbit
-#orm.table(name="heroes")
-pub struct Hero {
+#orm.table(name="champions")
+pub struct Champion {
   #orm.column(primary_key=true, autoincrement=true)
   id : Int64?
   name : String
@@ -78,12 +78,12 @@ pub struct Hero {
   power : Double
 }
 
-#sql.select("SELECT id, name, power FROM heroes WHERE power > #{power}")
-declare fn strong(db : &@moondb.Driver, power : Double) -> Array[Hero] raise
+#sql.select("SELECT id, name, power FROM champions WHERE power > #{power}")
+declare fn strong(db : &@moondb.Driver, power : Double) -> Array[Champion] raise
 ```
 
-`Hero::model()` is the table for a session and for migrations, and `strong` runs its
-statement with `power` bound. Both come from generators run as build rules: see
+`Champion::model()` is the table for a session and for migrations, and `strong` runs
+its statement with `power` bound. Both come from generators run as build rules: see
 [Annotations](#annotations) and [SQL mappers](#sql-mappers).
 
 ### The query builder
@@ -134,8 +134,10 @@ The builder is half of it — `moonorm` also **executes**, against any
 hands back typed rows. Every fallible operation raises `@moondb.DbError`, so a
 decode or backend error surfaces at the call site instead of as a silent zero:
 
+<!-- nocheck -->
 ```moonbit
-// native target only — moonsqlite links the vendored amalgamation.
+// native target only — moonsqlite links the vendored amalgamation, and it is a
+// separate package (`moonbitstack/moonsqlite`), not a dependency of this one.
 pub fn demo() -> Unit raise @moondb.DbError {
   let sess = @moonorm.Session::new(@sqlite.SqliteDriver::open(":memory:"))
   sess.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)", [])
@@ -237,18 +239,11 @@ pub fn models() -> (Array[@moonorm.Model[Team]], Array[@moonorm.Model[Hero]]) {
 Against a session those models give you the whole cycle:
 
 ```moonbit
-pub struct Team {
-  id : Int
-  name : String
-}
-
-pub struct Hero {
-  id : Int
-  name : String
-  team_id : Int
-}
-
-pub fn mapping(sess : @moonorm.Session, teams : @moonorm.Model[Team], heroes : @moonorm.Model[Hero]) -> Unit raise @moondb.DbError {
+pub fn mapping(
+  sess : @moonorm.Session,
+  teams : @moonorm.Model[Team],
+  heroes : @moonorm.Model[Hero],
+) -> Unit raise @moondb.DbError {
   sess.create_table(teams) |> ignore // CREATE TABLE teams (id INTEGER PRIMARY KEY, name TEXT NOT NULL)
   sess.create_table(heroes) |> ignore
   sess.insert_record(teams, { id: 1, name: "avengers" }) |> ignore
@@ -281,12 +276,6 @@ binds anything that converts to a `Value` (moondb's `ToValue`), so the projectio
 is the attribute itself and `T?` binds `None` as `NULL`:
 
 ```moonbit
-pub struct Hero {
-  id : Int
-  name : String
-  team_id : Int
-}
-
 pub fn declarative() -> @moonorm.Model[Hero] {
   @moonorm.Model::from_fields(
     "heroes",
@@ -410,13 +399,13 @@ open. All three produce the same `Model[T]`, so the rest of a program is unchang
 Functional — a field list plus one row decoder:
 
 ```moonbit
-pub struct Hero {
+pub struct Fighter {
   id : Int64?
   name : String
   power : Double
 }
 
-pub fn hero_model() -> @moonorm.Model[Hero] {
+pub fn fighter_model() -> @moonorm.Model[Fighter] {
   @moonorm.Model::from_fields(
     "heroes",
     [
@@ -432,13 +421,13 @@ pub fn hero_model() -> @moonorm.Model[Hero] {
 Class-style — the same model with both directions written out:
 
 ```moonbit
-pub struct Hero {
+pub struct Warrior {
   id : Int64?
   name : String
   power : Double
 }
 
-pub fn hero_model() -> @moonorm.Model[Hero] {
+pub fn warrior_model() -> @moonorm.Model[Warrior] {
   @moonorm.Model::new(
     "heroes",
     [
@@ -568,21 +557,100 @@ sess.load_batch(teams, children, strategy=JoinedLoad)
 
 `begin_nested` opens a SAVEPOINT and hands back a handle that names and
 depth-tracks it: finish it with `release` to keep the work or `rollback` to
-discard it back to the savepoint, both terminal and idempotent. For an isolation
-level or a read-only transaction, `begin_with` renders the backend's
+discard it back to the savepoint, both terminal and idempotent. A rollback takes the
+session with it: writes queued after the savepoint opened leave the queues, and the
+identity map returns to the records it held then, so a later `flush` cannot write a
+row the database has just undone and a `get` cannot hand out a record whose row is
+gone. A released savepoint keeps its work, and an outer rollback still drops it.
+
+For an isolation level or a read-only transaction, `begin_with` renders the backend's
 `SET TRANSACTION` (or SQLite `PRAGMA`) and orders it correctly around `BEGIN` per
-dialect:
+dialect. SQLite's `PRAGMA`s live on the connection rather than the transaction, so
+`commit` and `rollback` put `query_only` and `read_uncommitted` back before the
+connection goes on to its next borrower — otherwise a read-only transaction would
+leave a pooled connection that cannot write:
 
 ```moonbit
-pub fn tx(sess : @moonorm.Session, stmt : @query.Insert, dialect : @query.Dialect) -> Unit raise @moondb.DbError {
+pub fn tx(sess : @moonorm.Session, stmt : @query.Insert) -> Unit raise @moondb.DbError {
   let sp = sess.begin_nested() // SAVEPOINT moonorm_sp_1; sess.savepoint_depth() == 1
   sess.add(stmt) |> ignore
   sp.rollback() // undo just this savepoint's work; depth back to 0
 
-  sess.begin_with({ isolation: Some(Serializable), read_only: false }, dialect~)
+  sess.begin_with({ isolation: Some(Serializable), read_only: false })
   // BEGIN; SET TRANSACTION ISOLATION LEVEL SERIALIZABLE
 }
 ```
+
+## Asynchronous sessions
+
+An `AsyncSession` is the same unit of work over an `@moondb.AsyncDriver`. It exists
+because a wire backend only ever implements the asynchronous seam: PostgreSQL over a
+socket and MySQL through `moonbitlang/async` cannot be reached through a blocking
+`Session` at all. Every method of `Session` has the same name here, awaited, and the
+state behind both — queues, dependency order, identity map, savepoint marks — is one
+implementation, so the two cannot drift apart:
+
+```moonbit
+pub async fn async_unit(driver : &@moondb.AsyncDriver) -> Unit raise {
+  let sess = @moonorm.AsyncSession::new(driver, dialect=Postgres)
+  sess.begin()
+  sess.add_all(fighter_model(), [{ id: Some(1L), name: "Ada", power: 9.5 }])
+  sess.commit()
+  let rows = sess.all(fighter_model())
+  assert_eq(rows.length(), 1)
+}
+```
+
+One session is one connection and runs one statement at a time, so concurrency comes
+from running several. `AsyncSession::with_pool` takes a connection from an
+`@apool.AsyncPool`, hands it to a session and returns it when the work finishes or
+raises, which is what lets two tasks have two queries in flight:
+
+```moonbit
+pub async fn[D : @moondb.AsyncDriver] pooled(
+  pool : @apool.AsyncPool[D],
+) -> Array[@moondb.Row] raise @moondb.DbError {
+  @moonorm.AsyncSession::with_pool(pool, sess => {
+    sess.query("SELECT 1", [])
+  })
+}
+```
+
+Two tasks that call `pooled` at once take two connections and their statements
+overlap; the test in `integration/realdb` proves it on a live server by running two
+`SELECT pg_sleep(0.3)` statements and requiring the pair to finish inside 550 ms,
+which is what a sequential run would exceed.
+
+`query_stream` and `stream_as` hand back an `@moondb.AsyncCursor` and an
+`AsyncRowStream`, so a large read is pulled off the wire a row at a time; the
+synchronous `Session` cannot offer that to a networked backend. Savepoints, isolation
+options, event hooks, `merge`, `refresh` and the batch loaders are all present with
+the same names and the same semantics.
+
+## Consistency
+
+The ORM half of the library is written against SQLAlchemy 2.x, and the examples in
+its own ORM documentation are the acceptance suite: they are transcribed into
+`integration/realdb` (`orm_tutorial*.mbt`), run on SQLite through `Session` and on
+PostgreSQL 16 and MySQL 8 through `AsyncSession`, and each run must produce the same
+transcript — the filtered read, the ordered read, the relationship join with
+`GROUP BY`, the eager load, the update and the delete. All three agree.
+
+What the transcription cannot carry, and why:
+
+| SQLAlchemy feature | Here |
+|:--|:--|
+| attribute interception (`user.addresses` fires a SELECT) | no interception in MoonBit; `Session::load` / `load_batch` are explicit calls, as Diesel and GORM require |
+| polymorphic instance dispatch (a base read returns subclass instances) | no downcast; a base read returns base records, and the record type decides which columns exist |
+| `automap`, `declarative_base` from a live schema | no runtime-typed records; models are declared or generated from annotations (`#orm.table`) |
+| `Session.delete` cascading to loaded children | no unit-of-work graph over Python objects; delete the children explicitly, or let the foreign key's `ON DELETE` do it |
+| mutable tracked collections (`MutableList`, `MutableDict`) | records are values; hand a changed record to `update_record` rather than tracking in place |
+
+Everything else the ORM documentation exercises — filtered and ordered selects,
+aggregate joins, eager and batched loading, savepoints, unit-of-work flush ordering,
+identity map, optimistic locking, hybrid attributes, the three inheritance mappings,
+schema reflection, autogenerate and the migration history — is implemented and
+covered by the module's tests, which run against the three real engines in CI.
 
 ### Design and boundaries
 
@@ -673,6 +741,28 @@ a value computed off a record. Writing it once is what stops the two readings fr
 drifting apart.
 
 ```moonbit
+pub struct Person {
+  id : Int32
+  first : String
+  last : String
+}
+
+pub fn person_row(r : @moondb.Row) -> Person raise @moondb.DbError {
+  { id: r.int(0), first: r.text(1), last: r.text(2) }
+}
+
+pub fn person_model() -> @moonorm.Model[Person] {
+  @moonorm.Model::from_fields(
+    "people",
+    [
+      @moonorm.field("id", IntType, p => p.id, primary_key=true),
+      @moonorm.field("first", TextType, p => p.first, nullable=false),
+      @moonorm.field("last", TextType, p => p.last, nullable=false),
+    ],
+    person_row,
+  )
+}
+
 pub fn full_name() -> @moonorm.Hybrid[Person] {
   @moonorm.hybrid(
     "full_name",
@@ -681,7 +771,7 @@ pub fn full_name() -> @moonorm.Hybrid[Person] {
   )
 }
 
-pub fn adults(people : @moonorm.Model[Person]) -> @moonorm.Select raise @moondb.DbError {
+pub fn adult_query(people : @moonorm.Model[Person]) -> @moonorm.Select raise @moondb.DbError {
   people.select().where_hybrid(full_name(), "=", @moondb.Text("Ada Lovelace"))
   // SELECT id, first, last FROM people WHERE people.first || ' ' || people.last = ?
 }
@@ -703,16 +793,23 @@ A class hierarchy is stored three ways, and each is one `Model` over one record 
 cannot be written as a base row by accident.
 
 ```moonbit
+pub struct Engineer {
+  id : Int32
+  name : String
+  engineer_name : String
+}
+
+pub fn engineer_row(r : @moondb.Row) -> Engineer raise @moondb.DbError {
+  { id: r.int(0), name: r.text(1), engineer_name: r.text(2) }
+}
+
 pub fn engineer_model() -> @moonorm.Model[Engineer] {
-  @moonorm.Model::from_fields(
-    "employee",
-    [
-      @moonorm.field("id", IntType, e => e.id, primary_key=true),
-      @moonorm.field("name", TextType, e => e.name, nullable=false),
-      @moonorm.field("engineer_name", TextType, e => e.engineer_name),
-    ],
-    engineer_row,
-  )
+  let fields : Array[@moonorm.Field[Engineer]] = [
+    @moonorm.field("id", IntType, e => e.id, primary_key=true),
+    @moonorm.field("name", TextType, e => e.name, nullable=false),
+    @moonorm.field("engineer_name", TextType, e => e.engineer_name),
+  ]
+  @moonorm.Model::from_fields("employee", fields, engineer_row)
   .discriminate(column="kind", identity="engineer")
   // SELECT id, name, engineer_name, kind FROM employee WHERE kind = ?
 }
@@ -728,8 +825,25 @@ which is the only order the foreign key allows, and a delete takes them in the
 opposite order.
 
 ```moonbit
+pub struct JoinedEngineer {
+  id : Int32
+  name : String
+  engineer_name : String
+}
+
+pub fn joined_engineer_row(r : @moondb.Row) -> JoinedEngineer raise @moondb.DbError {
+  { id: r.int(0), name: r.text(1), engineer_name: r.text(2) }
+}
+
+pub fn engineer_fields() -> Array[@moonorm.Field[JoinedEngineer]] {
+  [
+    @moonorm.field("id", IntType, e => e.id, primary_key=true),
+    @moonorm.field("engineer_name", TextType, e => e.engineer_name),
+  ]
+}
+
 pub fn joined_engineer_model() -> @moonorm.Model[JoinedEngineer] {
-  @moonorm.Model::from_fields("engineer", engineer_fields, joined_engineer_row)
+  @moonorm.Model::from_fields("engineer", engineer_fields(), joined_engineer_row)
   .joined(parent_table="person", parent_columns=["id", "name"])
   // SELECT person.id, person.name, engineer.engineer_name
   //   FROM engineer JOIN person ON person.id = engineer.id
@@ -813,7 +927,12 @@ pub fn revisions() -> Array[@moonorm.Revision] {
       id="0002",
       parents=["0001"],
       name="create_teams",
-      up=[@moonorm.create_table("teams", teams_columns)],
+      up=[
+        @moonorm.create_table("teams", [
+          @moonorm.column("id", IntType, primary_key=true, autoincrement=true),
+          @moonorm.column("name", TextType, nullable=false),
+        ]),
+      ],
       down=[@moonorm.drop_table("teams")],
     ),
   ]

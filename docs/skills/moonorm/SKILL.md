@@ -1,6 +1,6 @@
 ---
 name: moonorm
-description: Build SQL from MoonBit values and map rows back into records — a typed schema, a parameterised builder, a unit-of-work session, event hooks, and revision migrations that render for SQLite, PostgreSQL and MySQL. Reach for it when a MoonBit program has to talk to a relational database.
+description: Build SQL from MoonBit values and map rows back into records — a typed schema, a parameterised builder, a unit-of-work session (synchronous or asynchronous), event hooks, and revision migrations that render for SQLite, PostgreSQL and MySQL. Reach for it when a MoonBit program has to talk to a relational database.
 ---
 
 # moonorm
@@ -96,6 +96,32 @@ and what an async driver (PostgreSQL) executes; `autogenerate_changes` returns t
 operations that close the gap between a declared `TableSpec` set and a reflected one,
 each with its inverse.
 
+## Reach a networked backend
+
+PostgreSQL and MySQL only implement `@moondb.AsyncDriver`, so they are driven through
+`AsyncSession`, which has the same methods as `Session`, awaited:
+
+```moonbit
+async fn count(sess : @session.AsyncSession) -> Int32 raise @moondb.DbError {
+  let rows = sess.all(hero_model())
+  rows.length()
+}
+```
+
+One session is one connection and runs one statement at a time. For concurrency, take
+connections from a pool — `AsyncSession::with_pool` returns the connection whatever the
+work does:
+
+```moonbit
+async fn[D : @moondb.AsyncDriver] each(
+  pool : @apool.AsyncPool[D],
+) -> Unit raise @moondb.DbError {
+  @session.AsyncSession::with_pool(pool, sess => {
+    sess.query("SELECT 1", []) |> ignore
+  })
+}
+```
+
 ## Rules that catch people out
 
 - Values travel as `?` placeholders plus a params list. Never build SQL by string
@@ -115,3 +141,10 @@ each with its inverse.
   the table on that dialect.
 - A joined-table subclass is one model: reads join the parent, writes emit two
   statements in the order the foreign key requires. Do not queue the halves yourself.
+- A savepoint rollback takes the session with it: writes queued since the savepoint
+  left the queues and the identity map went back to what it held then. Do not re-flush
+  the same records afterwards, and re-`get` anything a rollback may have undone.
+- A SQLite read-only transaction sets `PRAGMA query_only` on the connection; `commit`
+  and `rollback` clear it. Do not issue your own `PRAGMA query_only = 0` around it.
+- `AsyncSession::close` is the only method that does not raise — it is best-effort, as
+  closing a cursor is.

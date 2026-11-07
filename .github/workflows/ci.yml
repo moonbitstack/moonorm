@@ -85,6 +85,12 @@ jobs:
             pipx run --spec skills-ref agentskills validate "$dir"
           done
 
+      # A reader pastes the blocks of the README and the skill into a project, so they
+      # have to compile as written, against this commit's source.
+      - name: the code in the docs compiles
+        if: runner.os == 'Linux'
+        run: python3 scripts/check_snippets.py
+
   # End-to-end: the published ORM plus the published SQLite driver, driven against
   # a real SQLite file. It resolves its dependencies from mooncakes, so it runs
   # after those versions are published. Native-only (moonsqlite links C).
