@@ -385,6 +385,26 @@ SELECT * FROM people WHERE people.first || ' ' || people.last = ?<!-- /guide:hyb
   model.select().build().0<!-- /guide:inherit-code --></code></pre>
         <pre><code><!-- guide:inherit-out -->SELECT person.id, person.name, engineer.engineer_name FROM engineer JOIN person ON person.id = engineer.id<!-- /guide:inherit-out --></code></pre>
 
+        <h2 id="async">10 · Go async</h2>
+        <p>The same unit of work runs over an <code class="inline">AsyncSession</code>, which drives an <code class="inline">@moondb.AsyncDriver</code> instead of a blocking one. The queues, the dependency order, the identity map and the savepoint rules are shared, so a program that started on a local file moves to a networked server by changing the session type — PostgreSQL and MySQL only ever expose the asynchronous seam.</p>
+        <pre><code><!-- guide:async-code -->  let driver = EchoDriver::new()
+  let sess = @session.AsyncSession::new(driver)
+  sess.begin()
+  sess.add_record(account_model(), {
+    id: 1,
+    email: "ada@x.io",
+    updated_by: "import",
+  })
+  sess.commit()
+  for line in driver.log {
+    println(line)
+  }<!-- /guide:async-code --></code></pre>
+        <pre><code><!-- guide:async-out -->BEGIN
+INSERT INTO accounts (id, email, updated_by) VALUES (?, ?, ?)
+COMMIT
+Total tests: 1, passed: 1, failed: 0.<!-- /guide:async-out --></code></pre>
+        <p>One session is one connection and runs one statement at a time. Concurrency comes from running several at once: <code class="inline">AsyncSession::with_pool</code> borrows a connection from an <code class="inline">@apool.AsyncPool</code> and returns it whatever the work does, so two tasks that call it take two connections and both queries are in flight.</p>
+
         <h2 id="dialects">Dialects</h2>
         <p>The <code class="inline">Dialect</code> enum fixes the spelling of types, keys and placeholders. Choose it once per session; the seam renders the rest.</p>
         <table class="map-table">

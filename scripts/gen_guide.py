@@ -35,6 +35,7 @@ REGIONS = {
     "hooks-code": [("src/examples/guide/next/main.mbt", "hooks")],
     "hybrid-code": [("src/examples/guide/next/main.mbt", "hybrid")],
     "inherit-code": [("src/examples/guide/next/main.mbt", "inherit")],
+    "async-code": [("src/examples/guide/next/main.mbt", "async")],
 }
 
 # Each page slot is filled from one `=== name ===` section of the check's output.
@@ -54,6 +55,13 @@ NEXT_SECTIONS = {
     "hybrid-out": "hybrid",
     "inherit-out": "inherit",
 }
+
+# Printed by the asynchronous step's test rather than by a program.
+ASYNC_SECTIONS = {
+    "async-out": "async",
+}
+
+NEXT_PACKAGE = "moonbitstack/moonorm/examples/guide/next"
 
 
 def read(path):
@@ -115,6 +123,20 @@ def run_next():
     return r.stdout
 
 
+def run_async_tests():
+    r = subprocess.run(
+        ["moon", "test", "-p", NEXT_PACKAGE, "--target", "js"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if r.returncode != 0:
+        sys.stderr.write(r.stdout)
+        sys.stderr.write(r.stderr)
+        sys.exit("gen_guide: the asynchronous step did not run")
+    return r.stdout
+
+
 def section(output, name):
     m = re.search(r"^=== %s ===\n(.*?)(?=^=== |\Z)" % name, output, re.S | re.M)
     if not m:
@@ -145,6 +167,9 @@ def main():
     later = run_next()
     for name, sec in NEXT_SECTIONS.items():
         html = inject(html, name, escape(section(later, sec).replace("=== done ===", "").rstrip("\n")))
+    async_output = run_async_tests()
+    for name, sec in ASYNC_SECTIONS.items():
+        html = inject(html, name, escape(section(async_output, sec)))
     if check:
         if html != read("docs/guide.html"):
             sys.exit(

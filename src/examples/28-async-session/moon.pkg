@@ -1,0 +1,14 @@
+import {
+  "moonbitstack/moonorm/schema",
+  "moonbitstack/moonorm/session",
+  "moonbitstack/moondb",
+  "moonbitlang/async",
+}
+
+// The asynchronous entry point the toolchain wires up exists for native and js in the
+// runtime this module pins; wasm-gc has none, so this example is built for the two that
+// can run it.
+
+supported_targets = "all-wasm-wasm-gc"
+
+pkgtype(kind: "executable")

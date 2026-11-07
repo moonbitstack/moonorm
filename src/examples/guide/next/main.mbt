@@ -151,6 +151,81 @@ fn print_hooks() -> Unit {
 }
 
 ///|
+/// A driver double, so the async step runs without a server: it records the
+/// statements it is handed and answers queries from memory.
+priv struct EchoDriver {
+  log : Array[String]
+}
+
+///|
+fn EchoDriver::new() -> EchoDriver {
+  { log: [], }
+}
+
+///|
+impl @moondb.AsyncDriver for EchoDriver with fn execute(
+  self : EchoDriver,
+  sql : String,
+  _params : Array[@moondb.Value],
+) -> @moondb.ExecResult raise @moondb.DbError {
+  self.log.push(sql)
+  { rows_affected: 1L, last_insert_id: 0L, }
+}
+
+///|
+impl @moondb.AsyncDriver for EchoDriver with fn query(
+  self : EchoDriver,
+  sql : String,
+  _params : Array[@moondb.Value],
+) -> Array[@moondb.Row] raise @moondb.DbError {
+  self.log.push(sql)
+  []
+}
+
+///|
+impl @moondb.AsyncDriver for EchoDriver with fn begin(self : EchoDriver) -> Unit raise @moondb.DbError {
+  self.log.push("BEGIN")
+}
+
+///|
+impl @moondb.AsyncDriver for EchoDriver with fn commit(self : EchoDriver) -> Unit raise @moondb.DbError {
+  self.log.push("COMMIT")
+}
+
+///|
+impl @moondb.AsyncDriver for EchoDriver with fn rollback(self : EchoDriver) -> Unit raise @moondb.DbError {
+  self.log.push("ROLLBACK")
+}
+
+///|
+impl @moondb.AsyncDriver for EchoDriver with fn close(_self : EchoDriver) -> Unit {
+
+}
+
+///|
+/// The asynchronous step runs as a test rather than a program: the pinned runtime has
+/// no asynchronous entry point for every target, while a test is compiled and run on all
+/// four. `moon test` prints what the test prints, and the page's output block is that
+/// text — so the snippet and its result cannot drift apart.
+async test "guide: the asynchronous session" {
+  println("=== async ===")
+  // --8<-- [start:async]
+  let driver = EchoDriver::new()
+  let sess = @session.AsyncSession::new(driver)
+  sess.begin()
+  sess.add_record(account_model(), {
+    id: 1,
+    email: "ada@x.io",
+    updated_by: "import",
+  })
+  sess.commit()
+  for line in driver.log {
+    println(line)
+  }
+  // --8<-- [end:async]
+}
+
+///|
 fn main {
   print_hooks()
   println("=== hybrid ===")
