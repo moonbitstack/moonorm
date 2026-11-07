@@ -18,10 +18,7 @@ import {
   "moonbitstack/moonpostgres" @pg,
   "moonbitstack/moonmysql/client" @mysql,
   "moonbitstack/moondb",
+  "moonbitstack/moondb/apool",
   "moonbitlang/async",
   "moonbitlang/core/env",
 }
-
-import {
-  "moonbitlang/async",
-} for "test"

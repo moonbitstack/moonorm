@@ -7,3 +7,4 @@ target/
 examples/*/pkg.generated.mbti
 src/examples/**/pkg.generated.mbti
 docs/engine/
+moon.work
