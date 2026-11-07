@@ -36,7 +36,7 @@ pub fn Savepoint::release(self : Savepoint) -> Unit raise @moondb.DbError {
   }
   self.sess.driver.execute("RELEASE SAVEPOINT " + self.name, []) |> ignore
   self.finished = true
-  self.sess.sp_depth = self.sess.sp_depth - 1
+  self.sess.core.close_mark(self.name)
 }
 
 ///|
@@ -51,6 +51,11 @@ pub fn Savepoint::commit(self : Savepoint) -> Unit raise @moondb.DbError {
 /// while leaving the enclosing transaction intact. It issues `ROLLBACK TO SAVEPOINT`
 /// followed by `RELEASE SAVEPOINT`, so — like SQLAlchemy's nested `rollback()` — the
 /// savepoint is terminal afterwards and the depth drops. Terminal and idempotent.
+///
+/// The session is rolled back with the database: writes queued since the savepoint
+/// opened leave the queues, and the identity map returns to the records it held then.
+/// Otherwise the next flush would write rows the rollback undid, and a `get` would
+/// hand out a record whose row no longer exists.
 pub fn Savepoint::rollback(self : Savepoint) -> Unit raise @moondb.DbError {
   if self.finished {
     return
@@ -58,7 +63,34 @@ pub fn Savepoint::rollback(self : Savepoint) -> Unit raise @moondb.DbError {
   self.sess.driver.execute("ROLLBACK TO SAVEPOINT " + self.name, []) |> ignore
   self.sess.driver.execute("RELEASE SAVEPOINT " + self.name, []) |> ignore
   self.finished = true
-  self.sess.sp_depth = self.sess.sp_depth - 1
+  self.sess.core.rewind_to(self.name) |> ignore
+  self.sess.core.close_mark(self.name)
+}
+
+///|
+/// The statements that undo what [`to_sql`](TxOptions::to_sql) switches on for
+/// `dialect`, run when the transaction ends. Only SQLite needs any: its `PRAGMA`s are
+/// connection-level, so `query_only` left on would make the next transaction on the
+/// same pooled connection fail to write. `SET TRANSACTION` on PostgreSQL and MySQL
+/// lasts exactly one transaction and needs nothing.
+fn TxOptions::restore_sql(
+  self : TxOptions,
+  dialect : @query.Dialect,
+) -> Array[String] {
+  let out : Array[String] = []
+  match dialect {
+    Sqlite => {
+      if self.read_only {
+        out.push("PRAGMA query_only = 0")
+      }
+      match self.isolation {
+        Some(ReadUncommitted) => out.push("PRAGMA read_uncommitted = 0")
+        _ => ()
+      }
+    }
+    _ => ()
+  }
+  out
 }
 
 ///|

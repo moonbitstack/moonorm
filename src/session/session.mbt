@@ -11,32 +11,17 @@
 /// — the faithful MoonBit equivalent given the absence of attribute interception,
 /// exactly as Diesel and GORM also require. It holds the backend as a
 /// `&@moondb.Driver` trait object, so one `Session` type drives every backend.
+///
+/// The state — queues, identity map, savepoints — is `Core`'s; this type adds the one
+/// thing a synchronous backend needs, a blocking call per rendered statement. Its
+/// asynchronous twin [`AsyncSession`] wraps the same state around an
+/// `@moondb.AsyncDriver`, so a program can move between the two without relearning
+/// the API.
 pub struct Session {
   driver : &@moondb.Driver
   dialect : @query.Dialect
-  // Currently open nested savepoints, so `begin_nested` can auto-name and track
-  // depth the way SQLAlchemy's `begin_nested()` does (the caller never spells a
-  // savepoint name). `sp_seq` only ever increases, giving each savepoint a name
-  // unique within the session even after earlier ones are released.
-  mut sp_depth : Int32
-  mut sp_seq : Int32
-  // Names this session's slot in the identity map of every model it touches (see
-  // `Model::ident`).
-  id : Int32
-  pending : Array[Work]
-  dirty : Array[Work]
-  deleted : Array[Work]
-  // Drops this session's identity slot out of each model it claimed one in. A model
-  // is normally a long-lived top-level value, so nothing else would ever free it.
-  detach : Array[() -> Unit]
-  // Event listeners, in registration order (see `Session::on`).
-  hooks : Array[(HookEvent, (HookContext) -> Unit raise @moondb.DbError)]
+  core : Core
 }
-
-///|
-/// Session serials. Identity maps live in the models rather than the session, so a
-/// session needs a name no other live session shares.
-let session_seq : Ref[Int32] = Ref(0)
 
 ///|
 /// Wrap a connected driver in a session. `dialect` is what the session renders its statements
@@ -45,19 +30,7 @@ pub fn Session::new(
   driver : &@moondb.Driver,
   dialect~ : @query.Dialect = Sqlite,
 ) -> Session {
-  session_seq.val = session_seq.val + 1
-  {
-    driver,
-    dialect,
-    sp_depth: 0,
-    sp_seq: 0,
-    id: session_seq.val,
-    pending: [],
-    dirty: [],
-    deleted: [],
-    detach: [],
-    hooks: [],
-  }
+  { driver, dialect, core: Core::new(), }
 }
 
 ///|
@@ -69,7 +42,7 @@ pub fn Session::dialect(self : Session) -> @query.Dialect {
 ///|
 /// How many nested savepoints opened via `begin_nested` are currently active.
 pub fn Session::savepoint_depth(self : Session) -> Int32 {
-  self.sp_depth
+  self.core.marks.length()
 }
 
 ///|
@@ -119,6 +92,36 @@ pub fn Session::fetch(
 }
 
 ///|
+/// Build and run a `Select` and return the first column of its first row, or `None`
+/// when it matched nothing — SQLAlchemy's `Session.scalar`, and the shape a `COUNT`,
+/// an aggregate or a `RETURNING`-style probe comes back in.
+pub fn Session::scalar(
+  self : Session,
+  stmt : @query.Select,
+) -> @moondb.Value? raise @moondb.DbError {
+  let rows = self.fetch(stmt)
+  if rows.length() == 0 {
+    return None
+  }
+  Some(rows[0].get(0))
+}
+
+///|
+/// Build and run a `Select` and return the first column of every row — SQLAlchemy's
+/// `Session.scalars`. Decoding into a record is `fetch_as`; this is for the queries
+/// whose answer is a single column.
+pub fn Session::scalars(
+  self : Session,
+  stmt : @query.Select,
+) -> Array[@moondb.Value] raise @moondb.DbError {
+  let out : Array[@moondb.Value] = []
+  for row in self.fetch(stmt) {
+    out.push(row.get(0))
+  }
+  out
+}
+
+///|
 /// Stream a raw query's rows through a [`@moondb.Cursor`] instead of materialising
 /// them — the bounded-memory counterpart to [`query`] (SQLAlchemy's
 /// `stream_results`). This seam is synchronous, so only a synchronous driver with
@@ -126,8 +129,8 @@ pub fn Session::fetch(
 /// row by row. A wire driver's cursor is async and cannot come through here at all
 /// — moonpostgres implements `@moondb.AsyncDriver` instead, so it never sits
 /// behind a `Session`; MySQL's synchronous adapter falls back to a materialised
-/// cursor. For lazy streaming over the wire call `PgConn`/`MysqlConn::query_stream`
-/// directly under an event loop.
+/// cursor. For lazy streaming over the wire call [`AsyncSession::query_stream`]
+/// under an event loop.
 pub fn Session::query_stream(
   self : Session,
   sql : String,
@@ -226,18 +229,35 @@ pub fn Session::begin(self : Session) -> Unit raise @moondb.DbError {
 }
 
 ///|
+/// Run the statements that put a connection back the way it was before this session's
+/// transaction changed connection-level state. SQLite's `PRAGMA query_only` is set on
+/// the connection, not the transaction, so a read-only transaction that ends without
+/// clearing it would leave a pooled connection that cannot write — the failure shows
+/// up one borrower later, in a transaction that asked for nothing.
+fn Session::end_transaction(self : Session) -> Unit raise @moondb.DbError {
+  let restore = self.core.restore
+  self.core.restore = []
+  for statement in restore {
+    self.driver.execute(statement, []) |> ignore
+  }
+}
+
+///|
 /// Flush the unit of work, then commit the current transaction. Queued records reach
 /// the database here if nothing has flushed them yet, which is why a caller can add
 /// and commit without naming `flush` at all. With an empty queue this is the bare
 /// driver commit.
 ///
 /// `BeforeCommit` runs before the flush, so a listener sees the queue it is about to
-/// write; `AfterCommit` runs once the driver has committed.
+/// write; `AfterCommit` runs once the driver has committed. Any connection-level
+/// transaction option is put back before `AfterCommit`, so a listener already sees the
+/// connection as the next borrower will.
 pub fn Session::commit(self : Session) -> Unit raise @moondb.DbError {
-  self.fire(HookContext::new(BeforeCommit))
+  self.core.fire(HookContext::new(BeforeCommit))
   self.flush()
   self.driver.commit()
-  self.fire(HookContext::new(AfterCommit))
+  self.end_transaction()
+  self.core.fire(HookContext::new(AfterCommit))
 }
 
 ///|
@@ -260,7 +280,10 @@ pub fn Session::transaction(
     e => Err(e)
   }
   match outcome {
-    Ok(_) => self.driver.commit()
+    Ok(_) => {
+      self.driver.commit()
+      self.end_transaction()
+    }
     Err(e) => {
       // A rollback that fails leaves the transaction state unknown, but the error
       // worth reporting is the one that aborted the body.
@@ -280,11 +303,13 @@ pub fn Session::transaction(
 /// Roll back the current transaction, abandoning whatever is still queued and
 /// emptying the identity map. The records held there describe rows the rollback has
 /// just undone, so keeping them would hand out state the database no longer has.
-/// `AfterRollback` runs once the driver has rolled back.
+/// `AfterRollback` runs once the driver has rolled back and any connection-level
+/// transaction option has been put back.
 pub fn Session::rollback(self : Session) -> Unit raise @moondb.DbError {
-  self.discard()
+  self.core.discard()
   self.driver.rollback()
-  self.fire(HookContext::new(AfterRollback))
+  self.end_transaction()
+  self.core.fire(HookContext::new(AfterRollback))
 }
 
 ///|
@@ -304,13 +329,21 @@ pub fn Session::savepoint(
   if !@query.is_ident(name) {
     raise @moondb.QueryError("invalid savepoint name: " + name)
   }
-  self.driver.execute("SAVEPOINT " + name, [])
+  let res = self.driver.execute("SAVEPOINT " + name, [])
+  self.core.open_mark(name)
+  res
 }
 
 ///|
 /// Roll back to a savepoint (`ROLLBACK TO SAVEPOINT <name>`), undoing everything
 /// done since it was opened while keeping the savepoint (and the outer transaction)
 /// active. Rejects a non-identifier `name` with `QueryError`.
+///
+/// The database is only half of it: the session's queues and identity map are put back
+/// as well, so a record inserted inside the savepoint stops being reachable and an
+/// updated one goes back to the values the database rolled back to. Anything else
+/// would hand a caller rows that no longer exist, or replay a write the rollback
+/// undid at the next flush.
 pub fn Session::rollback_to(
   self : Session,
   name : String,
@@ -318,7 +351,9 @@ pub fn Session::rollback_to(
   if !@query.is_ident(name) {
     raise @moondb.QueryError("invalid savepoint name: " + name)
   }
-  self.driver.execute("ROLLBACK TO SAVEPOINT " + name, [])
+  let res = self.driver.execute("ROLLBACK TO SAVEPOINT " + name, [])
+  self.core.rewind_to(name) |> ignore
+  res
 }
 
 ///|
@@ -331,7 +366,9 @@ pub fn Session::release(
   if !@query.is_ident(name) {
     raise @moondb.QueryError("invalid savepoint name: " + name)
   }
-  self.driver.execute("RELEASE SAVEPOINT " + name, [])
+  let res = self.driver.execute("RELEASE SAVEPOINT " + name, [])
+  self.core.close_mark(name)
+  res
 }
 
 ///|
@@ -345,11 +382,11 @@ pub fn Session::release(
 /// The generated name (`moonorm_sp_<n>`, `n` strictly increasing per session) is a
 /// bare identifier by construction, so it is injection-safe without a runtime check.
 pub fn Session::begin_nested(self : Session) -> Savepoint raise @moondb.DbError {
-  self.sp_seq = self.sp_seq + 1
-  let name = "moonorm_sp_" + self.sp_seq.to_string()
+  self.core.sp_seq = self.core.sp_seq + 1
+  let name = "moonorm_sp_" + self.core.sp_seq.to_string()
   self.driver.execute("SAVEPOINT " + name, []) |> ignore
-  self.sp_depth = self.sp_depth + 1
-  { sess: self, name, depth: self.sp_depth, finished: false, }
+  self.core.open_mark(name)
+  { sess: self, name, depth: self.core.marks.length(), finished: false, }
 }
 
 ///|
@@ -371,11 +408,17 @@ fn tx_opts_before_begin(dialect : @query.Dialect) -> Bool {
 /// renders for the session's dialect, ordered so each backend accepts them: before `BEGIN` for
 /// MySQL and SQLite, after `BEGIN` for PostgreSQL (see `TxOptions::to_sql`). Commit or roll back
 /// with the usual `commit`/`rollback`.
+///
+/// A connection-level option is not undone by the database when the transaction ends,
+/// so `commit` and `rollback` put it back (see `TxOptions::restore_sql`).
 pub fn Session::begin_with(
   self : Session,
   opts : TxOptions,
 ) -> Unit raise @moondb.DbError {
   let stmts = opts.to_sql(self.dialect)
+  // Remember what to undo before any of it is sent: a `begin` that then fails still
+  // leaves the option set on the connection.
+  self.core.restore = opts.restore_sql(self.dialect)
   if tx_opts_before_begin(self.dialect) {
     for s in stmts {
       self.driver.execute(s, []) |> ignore
@@ -424,7 +467,7 @@ pub fn[T] Session::insert_record(
 ) -> @moondb.ExecResult raise @moondb.DbError {
   let columns = (model.to_columns)(record)
   let ctx = HookContext::new(BeforeInsert, table=model.table, columns~)
-  self.fire(ctx)
+  self.core.fire(ctx)
   let statements = insert_statements(
     model.split_columns(ctx.columns),
     self.dialect,
@@ -448,7 +491,7 @@ pub fn[T] Session::insert_record(
   )
   done.sql = last_sql
   done.params = last_params
-  self.fire(done)
+  self.core.fire(done)
   result
 }
 
@@ -488,14 +531,7 @@ pub fn[S, T] Session::load(
   rel : @schema.Relation[S, T],
   strategy~ : @schema.LoadStrategy = @schema.SubqueryLoad,
 ) -> Array[T] raise @moondb.DbError {
-  let (sql, params) = match strategy {
-    @schema.RaiseLoad =>
-      raise @moondb.QueryError(
-        "raiseload: the relation was not loaded explicitly",
-      )
-    @schema.SubqueryLoad => rel.query(source).build()
-    @schema.JoinedLoad => rel.joined_sql([source])
-  }
+  let (sql, params) = relation_sql(rel, source, strategy~)
   rel.target.map_rows(self.driver.query(sql, params))
 }
 
@@ -509,17 +545,7 @@ pub fn[S, T] Session::load_one(
   rel : @schema.Relation[S, T],
   strategy~ : @schema.LoadStrategy = @schema.SubqueryLoad,
 ) -> T? raise @moondb.DbError {
-  let (sql, params) = match strategy {
-    @schema.RaiseLoad =>
-      raise @moondb.QueryError(
-        "raiseload: the relation was not loaded explicitly",
-      )
-    @schema.SubqueryLoad => rel.query(source).limit(1).build()
-    @schema.JoinedLoad => {
-      let (sql, params) = rel.joined_sql([source])
-      (sql + " LIMIT 1", params)
-    }
-  }
+  let (sql, params) = relation_one_sql(rel, source, strategy~)
   let rows = self.driver.query(sql, params)
   if rows.length() == 0 {
     None
@@ -529,18 +555,41 @@ pub fn[S, T] Session::load_one(
 }
 
 ///|
-/// Normalise a key value for in-memory matching so a bound key equals the column
-/// value a backend hands back, even across integer widths. A source key is built as
-/// `Int(1)`, but SQLite (and others) return that column as `Int64(1)`, and the two
-/// are distinct `Value` variants — a naive `==` would miss. Single-row `load` sidesteps
-/// this because the match runs in SQL; a batch load matches in memory and must
-/// reconcile the widths. Integers collapse to `Int64` and booleans to their `0`/`1`
-/// integer (how SQL backends store them); other kinds compare as-is.
-fn canonical_key(v : @moondb.Value) -> @moondb.Value {
-  match v {
-    @moondb.Int(n) => @moondb.Int64(n.to_int64())
-    @moondb.Bool(b) => @moondb.Int64(if b { 1L } else { 0L })
-    other => other
+/// The statement one 1:N load runs: the relationship's own query, or the JOIN form
+/// when the strategy asks for one. A `RaiseLoad` relation refuses instead of quietly
+/// issuing the query it was told not to.
+fn[S, T] relation_sql(
+  rel : @schema.Relation[S, T],
+  source : S,
+  strategy~ : @schema.LoadStrategy,
+) -> (String, Array[@moondb.Value]) raise @moondb.DbError {
+  match strategy {
+    @schema.RaiseLoad =>
+      raise @moondb.QueryError(
+        "raiseload: the relation was not loaded explicitly",
+      )
+    @schema.SubqueryLoad => rel.query(source).build()
+    @schema.JoinedLoad => rel.joined_sql([source])
+  }
+}
+
+///|
+/// The statement one N:1 load runs, capped at one row.
+fn[S, T] relation_one_sql(
+  rel : @schema.Relation[S, T],
+  source : S,
+  strategy~ : @schema.LoadStrategy,
+) -> (String, Array[@moondb.Value]) raise @moondb.DbError {
+  match strategy {
+    @schema.RaiseLoad =>
+      raise @moondb.QueryError(
+        "raiseload: the relation was not loaded explicitly",
+      )
+    @schema.SubqueryLoad => rel.query(source).limit(1).build()
+    @schema.JoinedLoad => {
+      let (sql, params) = rel.joined_sql([source])
+      (sql + " LIMIT 1", params)
+    }
   }
 }
 
@@ -570,7 +619,20 @@ pub fn[S, T] Session::load_batch(
   if sources.length() == 0 {
     return result
   }
-  let (sql, params) = match strategy {
+  let (sql, params) = relation_batch_sql(rel, sources, strategy~)
+  let rows = self.driver.query(sql, params)
+  bucket_children(result, rows, sources, rel)
+  result
+}
+
+///|
+/// The statement a batched 1:N load runs.
+fn[S, T] relation_batch_sql(
+  rel : @schema.Relation[S, T],
+  sources : Array[S],
+  strategy~ : @schema.LoadStrategy,
+) -> (String, Array[@moondb.Value]) raise @moondb.DbError {
+  match strategy {
     @schema.RaiseLoad =>
       raise @moondb.QueryError(
         "raiseload: the relation was not loaded explicitly",
@@ -578,10 +640,18 @@ pub fn[S, T] Session::load_batch(
     @schema.SubqueryLoad => rel.batch_query(sources).build()
     @schema.JoinedLoad => rel.joined_sql(sources)
   }
-  let rows = self.driver.query(sql, params)
-  // Bucket every fetched child to the sources it belongs to. The child's foreign
-  // key lives in the row under `key_column`; a source claims the child when its
-  // extracted key equals that value.
+}
+
+///|
+/// Bucket every fetched child to the sources it belongs to. The child's foreign key
+/// lives in the row under `key_column`; a source claims the child when its extracted
+/// key equals that value.
+fn[S, T] bucket_children(
+  result : Array[Array[T]],
+  rows : Array[@moondb.Row],
+  sources : Array[S],
+  rel : @schema.Relation[S, T],
+) -> Unit raise @moondb.DbError {
   for row in rows {
     let child_key = match row.by_name(rel.key_column) {
       Some(v) => v
@@ -597,7 +667,6 @@ pub fn[S, T] Session::load_batch(
       }
     }
   }
-  result
 }
 
 ///|
@@ -619,14 +688,7 @@ pub fn[S, T] Session::load_one_batch(
   if sources.length() == 0 {
     return result
   }
-  let (sql, params) = match strategy {
-    @schema.RaiseLoad =>
-      raise @moondb.QueryError(
-        "raiseload: the relation was not loaded explicitly",
-      )
-    @schema.SubqueryLoad => rel.batch_query(sources).build()
-    @schema.JoinedLoad => rel.joined_sql(sources)
-  }
+  let (sql, params) = relation_batch_sql(rel, sources, strategy~)
   let rows = self.driver.query(sql, params)
   for row in rows {
     let parent_key = match row.by_name(rel.key_column) {
@@ -651,7 +713,7 @@ pub fn[S, T] Session::load_one_batch(
 /// Close the session's underlying connection, dropping anything still queued and
 /// every record the identity map holds.
 pub fn Session::close(self : Session) -> Unit {
-  self.discard()
+  self.core.discard()
   self.driver.close()
 }
 
@@ -703,25 +765,34 @@ pub fn[S, T] Session::load_many_batch(
     @schema.SubqueryLoad => rel.batch_sql(sources)
     @schema.JoinedLoad => rel.joined_sql(sources)
   }
-  let rows = self.driver.query(sql, params)
-  // The junction's source key rides along as `moonorm_src`, so a fetched target row
-  // buckets to every source whose extracted key matches it.
-  for row in rows {
-    let src = match row.by_name("moonorm_src") {
-      Some(v) => v
-      None =>
-        raise @moondb.QueryError(
-          "load_many_batch: fetched row has no moonorm_src",
-        )
-    }
-    let record = rel.target.map_row(row)
-    for i = 0; i < sources.length(); i = i + 1 {
-      if canonical_key(rel.source_value(sources[i])) == canonical_key(src) {
-        result[i].push(record)
-      }
-    }
+  for row in self.driver.query(sql, params) {
+    bucket_many(result, row, sources, rel)
   }
   result
+}
+
+///|
+/// Bucket one junction row to every source whose key it carries. The junction's source
+/// key rides along as `moonorm_src`.
+fn[S, T] bucket_many(
+  result : Array[Array[T]],
+  row : @moondb.Row,
+  sources : Array[S],
+  rel : @schema.ManyToMany[S, T],
+) -> Unit raise @moondb.DbError {
+  let src = match row.by_name("moonorm_src") {
+    Some(v) => v
+    None =>
+      raise @moondb.QueryError(
+        "load_many_batch: fetched row has no moonorm_src",
+      )
+  }
+  let record = rel.target.map_row(row)
+  for i = 0; i < sources.length(); i = i + 1 {
+    if canonical_key(rel.source_value(sources[i])) == canonical_key(src) {
+      result[i].push(record)
+    }
+  }
 }
 
 ///|

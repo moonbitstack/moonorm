@@ -1,8 +1,13 @@
-// The session: unit of work, row streams, transactions and savepoints, and
-// the pooled session.
+// The session: unit of work, row streams, transactions and savepoints, the pooled
+// session, and the asynchronous twin that drives a wire driver.
 import {
   "moonbitstack/moonorm/query",
   "moonbitstack/moonorm/schema",
   "moonbitstack/moondb",
   "moonbitstack/moondb/pool",
+  "moonbitstack/moondb/apool",
 }
+
+import {
+  "moonbitlang/async",
+} for "wbtest"

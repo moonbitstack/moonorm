@@ -106,14 +106,14 @@ pub fn Session::on(
   event : HookEvent,
   handler : (HookContext) -> Unit raise @moondb.DbError,
 ) -> Unit {
-  self.hooks.push((event, handler))
+  self.core.hooks.push((event, handler))
 }
 
 ///|
 /// How many listeners are registered for `event`.
 pub fn Session::listener_count(self : Session, event : HookEvent) -> Int32 {
   let mut n = 0
-  for hook in self.hooks {
+  for hook in self.core.hooks {
     if hook.0 == event {
       n = n + 1
     }
@@ -122,22 +122,43 @@ pub fn Session::listener_count(self : Session, event : HookEvent) -> Int32 {
 }
 
 ///|
-/// Run every listener registered for `event`, in registration order.
-fn Session::fire(
-  self : Session,
-  ctx : HookContext,
-) -> Unit raise @moondb.DbError {
-  for hook in self.hooks {
-    if hook.0 == ctx.event {
-      (hook.1)(ctx)
-    }
-  }
+/// Remove every listener, so a session can be reused with a fresh set of hooks.
+pub fn Session::off_all(self : Session) -> Unit {
+  self.core.hooks.clear()
 }
 
 ///|
-/// Remove every listener, so a session can be reused with a fresh set of hooks.
-pub fn Session::off_all(self : Session) -> Unit {
-  self.hooks.clear()
+/// Register a listener for `event` on this asynchronous session — the same eleven
+/// points, the same context and the same ordering as [`Session::on`]. A listener is a
+/// plain closure, not an async one: it runs between statements, never instead of one,
+/// so there is nothing for it to await.
+pub fn AsyncSession::on(
+  self : AsyncSession,
+  event : HookEvent,
+  handler : (HookContext) -> Unit raise @moondb.DbError,
+) -> Unit {
+  self.core.hooks.push((event, handler))
+}
+
+///|
+/// How many listeners are registered for `event`.
+pub fn AsyncSession::listener_count(
+  self : AsyncSession,
+  event : HookEvent,
+) -> Int32 {
+  let mut n = 0
+  for hook in self.core.hooks {
+    if hook.0 == event {
+      n = n + 1
+    }
+  }
+  n
+}
+
+///|
+/// Remove every listener from this asynchronous session.
+pub fn AsyncSession::off_all(self : AsyncSession) -> Unit {
+  self.core.hooks.clear()
 }
 
 ///|

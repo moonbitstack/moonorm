@@ -54,6 +54,9 @@ pub using @schema {
 
 ///|
 pub using @session {
+  type AsyncRowStream,
+  type AsyncSavepoint,
+  type AsyncSession,
   type HookContext,
   type HookEvent,
   type IsolationLevel,

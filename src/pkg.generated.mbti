@@ -128,6 +128,12 @@ pub fn user_type(sqlite~ : String, postgres~ : String, mysql~ : String) -> @sche
 // Types and methods
 
 // Type aliases
+pub using @session {type AsyncRowStream}
+
+pub using @session {type AsyncSavepoint}
+
+pub using @session {type AsyncSession}
+
 pub using @migrate {type Change}
 
 pub using @schema {type Column}
