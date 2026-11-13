@@ -188,15 +188,19 @@ jobs:
         run: printf 'members = [\n  ".",\n  "./integration/realdb",\n]\n' > moon.work
 
       # The second implementation the ORM is differenced against: pinned in
-      # integration/reference/requirements.txt, installed here rather than vendored.
-      - name: install the SQLAlchemy reference
-        run: python3 -m pip install --requirement integration/reference/requirements.txt
+      # integration/reference/requirements.txt, installed in a virtual environment
+      # because the runner's system Python is externally managed.
+      - name: install the SQLAlchemy and Alembic references
+        run: |
+          python3 -m venv "$RUNNER_TEMP/reference-venv"
+          "$RUNNER_TEMP/reference-venv/bin/python" -m pip install --requirement integration/reference/requirements.txt
 
       - name: build the reference database
-        run: python3 integration/reference/run.py emit --dir "$RUNNER_TEMP/reference"
+        run: '"$RUNNER_TEMP/reference-venv/bin/python" integration/reference/run.py emit --dir "$RUNNER_TEMP/reference"'
 
       - name: the reference vectors are what the references produce
-        run: python3 scripts/gen_reference_vectors.py --check
+        run: |
+          "$RUNNER_TEMP/reference-venv/bin/python" scripts/gen_reference_vectors.py --check
 
       - name: moon test (native, three real databases)
         working-directory: integration/realdb
@@ -219,7 +223,8 @@ jobs:
       # The other half of the differential: SQLAlchemy reads the file this library
       # wrote, and the two schemas are compared with SQLite's own pragmas.
       - name: SQLAlchemy and this library agree
-        run: python3 integration/reference/run.py compare --dir "$RUNNER_TEMP/reference"
+        run: |
+          "$RUNNER_TEMP/reference-venv/bin/python" integration/reference/run.py compare --dir "$RUNNER_TEMP/reference"
 
       - name: lint (fmt is clean)
         run: |
