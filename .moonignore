@@ -5,3 +5,8 @@
 .git/
 _build/
 target/
+
+# The test and interop modules are their own modules, resolved from the registry or
+# the working tree; a published package needs neither their sources nor the Python
+# reference beside them.
+integration/

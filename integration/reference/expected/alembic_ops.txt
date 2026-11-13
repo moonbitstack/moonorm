@@ -1,0 +1,6 @@
+add_column|article|subtitle
+add_index|article|ix_article_title
+add_table|tag
+alter_type|account|score
+remove_column|account|nickname
+remove_index|account|ix_account_name

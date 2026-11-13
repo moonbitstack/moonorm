@@ -1,0 +1,13 @@
+column|account|created|numeric|nullable|-|-
+column|account|email|text|not-null|-|-
+column|account|id|integer|not-null|pk|-
+column|account|name|text|not-null|-|-
+column|account|score|real|not-null|-|0
+column|article|account_id|integer|not-null|-|-
+column|article|body|text|nullable|-|-
+column|article|id|integer|not-null|pk|-
+column|article|published|integer|not-null|-|0
+column|article|title|text|not-null|-|-
+fk|article|account_id|account|id|cascade|no-action
+index|account|@unique|unique|email
+index|article|ix_article_account_id|-|account_id

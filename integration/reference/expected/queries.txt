@@ -1,0 +1,23 @@
+names-ordered|alice
+names-ordered|bob
+names-ordered|carol
+names-ordered|dave
+article-counts|alice|2
+article-counts|bob|1
+article-counts|carol|1
+silent-accounts|dave
+published-authors|alice
+published-authors|bob
+published-authors|carol
+bodies|Alpha|first
+bodies|Beta|(none)
+bodies|Delta|fourth
+bodies|Gamma|third
+max-score|7.25
+ranked-titles|alice|1|Alpha
+ranked-titles|alice|2|Beta
+ranked-titles|bob|1|Gamma
+ranked-titles|carol|1|Delta
+name-prefix|alice
+upsert-beta|Beta II
+cascade-delete|3|3
