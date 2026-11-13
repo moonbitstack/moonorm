@@ -49,6 +49,31 @@ pub fn Schema::names(self : Schema) -> Array[String] {
 }
 
 ///|
+/// Name order, the one a reader expects of a sorted list: compare the characters and
+/// let the first difference decide, then the shorter name first. `String::compare`
+/// orders by length before content, which would put `ab` after `b`, so the snapshot
+/// compares the names itself.
+fn name_order(a : String, b : String) -> Int32 {
+  let left = a.length()
+  let right = b.length()
+  let common = if left < right { left } else { right }
+  for i = 0; i < common; i = i + 1 {
+    let x = a[i].to_int()
+    let y = b[i].to_int()
+    if x != y {
+      return if x < y { -1 } else { 1 }
+    }
+  }
+  if left < right {
+    -1
+  } else if left > right {
+    1
+  } else {
+    0
+  }
+}
+
+///|
 /// A normalised text rendering of the schema, for comparing two snapshots of the same
 /// database. Column types are written as `dialect` spells them, so an `Int64` and an
 /// `Int` both reflected as `INTEGER` on SQLite compare equal — the physical structure
@@ -59,7 +84,7 @@ pub fn Schema::names(self : Schema) -> Array[String] {
 /// changed. Tables are sorted by name for the same reason.
 pub fn Schema::snapshot(self : Schema, dialect : @query.Dialect) -> String {
   let ordered = self.tables.copy()
-  ordered.sort_by(fn(a, b) { a.name.compare(b.name) })
+  ordered.sort_by(fn(a, b) { name_order(a.name, b.name) })
   let lines : Array[String] = []
   for t in ordered {
     lines.push("table " + t.name)
@@ -78,7 +103,7 @@ pub fn Schema::snapshot(self : Schema, dialect : @query.Dialect) -> String {
       lines.push(line)
     }
     let indexes = t.indexes.copy()
-    indexes.sort_by(fn(a, b) { index_name(t, a).compare(index_name(t, b)) })
+    indexes.sort_by(fn(a, b) { name_order(index_name(t, a), index_name(t, b)) })
     for ix in indexes {
       lines.push(
         "  index " +
