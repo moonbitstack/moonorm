@@ -21,11 +21,11 @@ description = "Real-database round trips for the migration runner, the hybrids a
 
 import {
   "moonbitstack/moonorm@0.11.7",
-  "moonbitstack/moonsqlite@0.3.5",
-  "moonbitstack/moondb@0.2.6",
-  "moonbitstack/moonpostgres@0.6.9",
-  "moonbitstack/moonmysql@0.7.9",
-  "moonbitlang/async@0.22.7",
+  "moonbitstack/moonsqlite@0.4.0",
+  "moonbitstack/moondb@0.3.0",
+  "moonbitstack/moonpostgres@0.7.0",
+  "moonbitstack/moonmysql@0.8.0",
+  "moonbitlang/async@0.22.5",
 }
 
 source = "src"

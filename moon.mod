@@ -33,9 +33,9 @@ keywords = [
 description = "An ORM and SQL toolkit for MoonBit."
 
 import {
-  "moonbitstack/moondb@0.2.8",
-  "moonbitstack/moonast@0.2.7",
-  "moonbitlang/parser@0.4.7",
+  "moonbitstack/moondb@0.3.0",
+  "moonbitstack/moonast@0.3.0",
+  "moonbitlang/parser@0.4.8",
   "moonbitlang/async@0.22.5",
 }
 
