@@ -629,28 +629,54 @@ the same names and the same semantics.
 
 ## Consistency
 
-The ORM half of the library is written against SQLAlchemy 2.x, and the examples in
-its own ORM documentation are the acceptance suite: they are transcribed into
-`integration/realdb` (`orm_tutorial*.mbt`), run on SQLite through `Session` and on
-PostgreSQL 16 and MySQL 8 through `AsyncSession`, and each run must produce the same
-transcript — the filtered read, the ordered read, the relationship join with
-`GROUP BY`, the eager load, the update and the delete. All three agree.
+Two independent implementations are the reference, and both run in CI. SQLAlchemy
+2.0 is the ORM reference: the examples in its own ORM documentation are transcribed
+into `integration/realdb` (`orm_tutorial*.mbt`), run on SQLite through `Session` and
+on PostgreSQL 16 and MySQL 8 through `AsyncSession`, and each run has to produce the
+same transcript — the filtered read, the ordered read, the relationship join with
+`GROUP BY`, the eager load, the update and the delete. All three agree. Alembic 1.16
+is the reference for the migrations.
 
-What the transcription cannot carry, and why:
+Neither ships a conformance runner, so `integration/reference` holds a differential
+instead, and the `realdb` job runs it against both:
 
-| SQLAlchemy feature | Here |
+- **The same ten queries.** Both implementations declare the same two tables with
+  the storage this library gives them on SQLite, seed the same rows and answer the
+  same ten questions: an inner join with `GROUP BY` and `HAVING`, a left join with a
+  null test, `DISTINCT`, `coalesce`, `MAX`, a window function, `LIKE`, an upsert and a
+  cascading delete. The rows have to match line for line.
+- **The same schema.** The two databases are compared through SQLite's own pragmas —
+  the storage class of each column, nullability, key membership, defaults, the
+  indexes the declaration asked for, and the foreign keys with their actions.
+- **The same migration.** One model change — a table and a column appear, a column
+  and an index disappear, a storage type changes — read by Alembic's autogenerate and
+  by `autogenerate_changes`; the two lists of operations have to be the same list.
+- **Both directions at run time.** SQLAlchemy reflects the database this library
+  created, finds the declared columns, key, index and foreign key, and reads its rows;
+  this library reflects the one SQLAlchemy created, and the reads it answers from it
+  match the transcript.
+
+The vectors the comparisons replay are generated from those runs by
+`scripts/gen_reference_vectors.py`, and CI regenerates them and fails when the tree
+holds anything else.
+
+What the comparison cannot carry, and why:
+
+| Reference feature | Here |
 |:--|:--|
 | attribute interception (`user.addresses` fires a SELECT) | no interception in MoonBit; `Session::load` / `load_batch` are explicit calls, as Diesel and GORM require |
 | polymorphic instance dispatch (a base read returns subclass instances) | no downcast; a base read returns base records, and the record type decides which columns exist |
 | `automap`, `declarative_base` from a live schema | no runtime-typed records; models are declared or generated from annotations (`#orm.table`) |
 | `Session.delete` cascading to loaded children | no unit-of-work graph over Python objects; delete the children explicitly, or let the foreign key's `ON DELETE` do it |
 | mutable tracked collections (`MutableList`, `MutableDict`) | records are values; hand a changed record to `update_record` rather than tracking in place |
+| column defaults and foreign keys in autogenerate | reflection reports a column's storage class, nullability and key, so `autogenerate_changes` generates creates, drops, type and nullability changes, and index changes — a default or a foreign key that moved is not detected |
+| the schema differential on the servers | it runs on SQLite, where the two implementations can both build the file; on PostgreSQL and MySQL the transcript above is the equal-output check |
 
 Everything else the ORM documentation exercises — filtered and ordered selects,
 aggregate joins, eager and batched loading, savepoints, unit-of-work flush ordering,
 identity map, optimistic locking, hybrid attributes, the three inheritance mappings,
-schema reflection, autogenerate and the migration history — is implemented and
-covered by the module's tests, which run against the three real engines in CI.
+schema reflection and the migration history — is implemented and covered by the
+module's tests, which run against the three real engines in CI.
 
 ### Design and boundaries
 

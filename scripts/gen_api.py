@@ -236,6 +236,11 @@ def build(site):
         entries = [e for e in parse_mbti(mbti)
                    if not (e[1].split("::")[-1] in DERIVED and not page_docs.get(e[1]))]
         total += len(entries)
+        lost = unaudited(pkg_dir, entries)
+        if lost:
+            raise SystemExit(
+                f"{full}: {', '.join(lost)} declared in the mbti but absent from the "
+                "page")
         sections.append(section(full, label, anchor, entries, page_docs, first, site["eyebrow"]))
         first = False
         nav.append(f'<a href="#{anchor}">{label}<span class="n">{len(entries)}</span></a>')
@@ -243,6 +248,33 @@ def build(site):
 
 
 
+
+
+DECLARED_FN = re.compile(
+    r"pub (?:async )?fn (?:\[[^\]]*\] )?(?:[A-Za-z0-9_]+::)?([a-z_0-9]+)")
+
+
+def unaudited(pkg_dir, entries):
+    """Public functions the mbti declares that never reached the page.
+
+    The page is built from the mbti, so a name missing here is a declaration shape the
+    parser does not recognise — a generic `pub fn[T] f`, an `async fn`, a method on a
+    type — and it would leave the reference incomplete without any other symptom.
+    Compiler-derived methods (`#derive`, `Show`, `Error`) are deliberately left out of
+    the page, so they are not counted.
+    """
+    parsed = {entry[1].split("::")[-1] for entry in entries}
+    missing = []
+    with open(os.path.join(ROOT, pkg_dir, "pkg.generated.mbti"), encoding="utf-8") as fh:
+        for line in fh.read().splitlines():
+            match = DECLARED_FN.match(line)
+            if not match:
+                continue
+            name = match.group(1)
+            if name in DERIVED or name in parsed:
+                continue
+            missing.append(name)
+    return missing
 
 
 def main():
