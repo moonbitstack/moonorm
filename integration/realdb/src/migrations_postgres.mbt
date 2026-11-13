@@ -147,7 +147,7 @@ async test "revision migrations round-trip on a real PostgreSQL server" {
   )
   let migrator = @migrate.Migrator::new()
   let revisions = portable_revisions()
-  defer conn.close()
+  defer @async.protect_from_cancel(() => conn.close())
   // A clean slate: the tables this test owns, and nothing else.
   conn.execute(
     "DROP TABLE IF EXISTS heroes, teams, moonorm_revisions CASCADE",
@@ -202,7 +202,7 @@ async test "autogenerate reads a real PostgreSQL schema" {
     env_or("PGPASSWORD", "pw"),
     env_or("PGDATABASE", "orm"),
   )
-  defer conn.close()
+  defer @async.protect_from_cancel(() => conn.close())
   // A clean slate first: this test reads the whole schema, so a table left by
   // an earlier run would read as a table the models dropped.
   conn.execute(
