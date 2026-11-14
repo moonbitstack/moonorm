@@ -217,12 +217,13 @@ test "e2e: migrations, Session CRUD, CTE select, optimistic lock on real SQLite"
   let rolled = migrator.down_to(sess, migrations(), 0)
   assert_eq(rolled, 3)
   assert_eq(migrator.current_version(sess), 0)
-  // hero is gone: querying it now errors at the engine.
+  // hero is gone: querying it now errors at the engine, classified the way Python's sqlite3
+  // classifies a missing table.
   let gone = try {
     sess.query("SELECT * FROM hero", []) |> ignore
     false
   } catch {
-    @moondb.QueryError(_) => true
+    @moondb.Server(detail) => detail.kind is Operational
     _ => false
   }
   assert_eq(gone, true)
