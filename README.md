@@ -376,7 +376,7 @@ Wire the generator into the build once. In `moon.mod`:
 
 <!-- nocheck -->
 ```
-rule(name: "orm", command: "moonx moonbitstack/moonorm/cmd/orm@0.11.7 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+rule(name: "orm", command: "moonx moonbitstack/moonorm/cmd/orm@0.12.0 -C \"$mod_dir\" \"$input\" -o \"$output\"")
 ```
 
 and in the `moon.pkg` of the package holding the structs:
@@ -505,7 +505,7 @@ The generator wires in like the other one, with `cmd/sql` and the package import
 
 <!-- nocheck -->
 ```
-rule(name: "sql", command: "moonx moonbitstack/moonorm/cmd/sql@0.11.7 -C \"$mod_dir\" \"$input\" -o \"$output\"")
+rule(name: "sql", command: "moonx moonbitstack/moonorm/cmd/sql@0.12.0 -C \"$mod_dir\" \"$input\" -o \"$output\"")
 dev_build(rule: "sql", input: "models.mbt", output: "mapper.g.mbt")
 ```
 
